@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+    This is the service identifier for Nearby Connections.
+    -->
+    <string name="service_id" translatable="false">com.maximum.fastride.service</string>
+    <!-- Please refer to http://oxford-portal.azurewebsites.net/doc/general/subscription-key-mgmt to get your subscription key -->
+    <!-- If you have one subscription key, you can add it here to use the service -->
+    <string name="oxford_subscription_key" translatable="false">f862259efc314bdbbef51000f399f168</string>
+
+    <!-- Google+ -->
+    <string name="server_client_id">1041824085053-ifcq96g2417pi2v8sf0brn23d4cmrdb0.apps.googleusercontent.com</string>
+
+    <string name="app_name" translatable="false">FastRide</string>
+    <string name="app_label" translatable="false">Fast Ride</string>
+    <string name="action_settings">Settings</string>
+    <string name="complete_registration">Complete your info</string>
+    <string name="title_activity_camera">CameraActivity</string>
+    <string name="title_activity_register">Free Ride: Registration</string>
+    <string name="title_activity_confirm_ride">Confirm</string>
+    <string name="title_activity_login">Sign in</string>
+    <!-- Strings related to login -->
+    <string name="prompt_email">Email</string>
+    <string name="prompt_phone">Phone number</string>
+    <string name="phone_hint">050-1234-567</string>
+    <string name="prompt_use_phone">Show your number to others</string>
+    <string name="prompt_password">Password (optional)</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="plus_sign_out">Switch Google+ account</string>
+    <string name="plus_disconnect">Disconnect from Google+</string>
+    <string name="error_invalid_email">This email address is invalid</string>
+    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="action_register">Register</string>
+    <string name="registration_add_title">Performing registration</string>
+    <string name="registration_add_status">Verifying your account</string>
+    <string name="registration_add_status_wait">Just few seconds</string>
+    <string name="default_value">no value</string>
+
+    <string name="no_phone_number">Provide your phone number. You may prefer to not share it with others by switching off the following indicator</string>
+
+    <string name="facebook_app_id" translatable="false">1554616841424048</string>
+    <string name="title_section_user">User Profile</string>
+    <string name="title_section_cars">Cars</string>
+    <string name="mode_name_driver">Driver</string>
+    <string name="mode_name_passenger">Passenger</string>
+    <string name="btnFindRide">Find a ride</string>
+
+    <string name="title_activity_main">Fast Ride</string>
+    <string name="title_activity_driver_role">Driver Mode</string>
+    <string name="subtitle_activity_driver_role">Driver Mode</string>
+
+    <string name="title_activity_passenger_role">Passenger Mode</string>
+    <string name="subtitle_activity_passenger_role">Passenger Mode</string>
+
+    <string name="title_activity_tutorial">Tutorials</string>
+    <string name="subtitle_activity_tutorial">Tutorials</string>
+
+    <string name="title_activity_my_rides">My Rides</string>
+    <string name="subtitle_activity_my_rides">MyRides</string>
+
+    <string name="title_activity_settings">Settings</string>
+    <string name="subtitle_activity_settings">Settings</string>
+
+    <string name="title_activity_ride_details">Ride Details</string>
+
+
+    <string name="passengers_header">Passengers</string>
+    <string name="drivers_header">Select the driver</string>
+
+    <string name="new_version_title">New version is ready</string>
+    <string name="new_version_conent">We strongly recommend to install the newest version. Would you like to do so?</string>
+
+    <string name="generating_ride_code">Generating ride code&#8230;</string>
+    <string name="ride_code_label">Ride Code:</string>
+    <string name="ride_code_title">Type in Ride Code</string>
+    <string name="ride_code_dialog_content">You can see this code on the driver\'s display</string>
+    <string name="ride_code_wrong">You typed wrong ride code. Please try again.</string>
+    <string name="discovery_failure" translatable="false">Discovery failure</string>
+    <string name="ride_same_ids">Same identity for driver and passenger is prohibited</string>
+    <string name="connection_lost">The connection lost. Please try again in a few seconds</string>
+    <string name="ride_code_hint">6 digits without dashes</string>
+    <string name="passenger_confirm">Do you want to join the ride</string>
+    <string name="ride_code_refill"></string>
+    <string name="passenger_details">passenger details</string>
+    <string name="list_of_Carpooling">list of Carpooling</string>
+
+    <string-array name="drawers_array_drawer">
+        <item>Start</item>
+        <item>My rides</item>
+        <item>Settings</item>
+        <item>Tutorials</item>
+    </string-array>
+    <string-array name="tutorial_titles">
+        <item>Intro</item>
+        <item>Driver</item>
+        <item>Passenger</item>
+        <item>Appeal</item>
+    </string-array>
+    <string-array name="my_rides_titles">
+        <item>General</item>
+        <item>Rejected</item>
+    </string-array>
+    <string-array name="about_titles">
+        <item>About</item>
+        <item>Therms of service</item>
+        <item>Privacy policy</item>
+    </string-array>
+
+    <string name="progress_dialog">Logging into Azure</string>
+
+    <string name="ride_details">ride details</string>
+    <string name="drive_details">Driver</string>
+    <string name="list_of_passengers">Passengers</string>
+    <string name="ride_photo">Ride Photo</string>
+    <string name="ride_denied">Driving is not approved</string>
+
+    <string name="operating_modes">Operating modes</string>
+
+    <string name="edit_car_button_title">Edit</string>
+    <string name="edit_car_button_title2">Specify</string>
+    <string name="driver_no_name">No name</string>
+    <string name="offline">You are offline</string>
+    <string name="offline_prompt">Connect your device to the network</string>
+    <string name="edit_car_dialog_caption1">Choose a riding car</string>
+    <string name="edit_car_dialog_caption2">Specify your car(s)</string>
+    <string name="edit_car_dialog_text">You have not yet specified the car(s) belongs to you.</string>
+    <string name="add_car_dialog_caption">Add a car</string>
+    <string name="edit_car_dialog_caption">Edit a car</string>
+    <string name="edit_phone_dialog_caption">Edir Phone Number</string>
+    <string name="add_car_button_add">Add</string>
+    <string name="edit_car_button_save">Save</string>
+    <string name="edit_car_button_delete">Delete</string>
+    <string name="help">Help</string>
+    <string name="add_car_hint">Car number</string>
+    <string name="add_car_nick">Car nickname</string>
+    <string name="car_number_validation_error">Type in a valid car number</string>
+    <string name="enable_wifi_question">Enable Wi-Fi on your device?</string>
+    <string name="enable_location_question">Do you want to enable location services on this device?</string>
+    <string name="code_retry_action">Try search again</string>
+    <string name="code_try_later">I\'ll do this later</string>
+    <string name="registration_finish">Finish</string>
+    <string name="registration_next">Next</string>
+
+    <string name="please_wait">Please wait</string>
+    <string name="processing">Processing</string>
+    <string name="uploading">Uploading</string>
+    <string name="passenger_progress_dialog">Searching for driver</string>
+    <string name="passenger_advertising">Advertising</string>
+    <string name="passenger_adv_description">The device will advertise itself for 30 sec.</string>
+    <string name="done">Done</string>
+    <string name="discover_devices">Discovering devices</string>
+    <string name="ride_code_prompt">Type in the code as displayed at driver\'s  screen</string>
+
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
+    <string name="fb_error">No network access</string>
+    <string name="fb_error_msg">The error was: </string>
+    <string name="title_activity_about">About</string>
+    <string name="version_title">Version </string>
+    <string name="dialog_confirm_registration">Replace previous registration?</string>
+    <string name="registration_already_performed">You already registered with Free Ride app.</string>
+    <string name="add_cars_caption">Add your cars</string>
+    <string name="with">with</string>
+    <string name="close">Close</string>
+    <string name="stop">Stop</string>
+    <string name="thanks">Thank you</string>
+    <string name="confirmation_accepted">Your confirmation was accepted</string>
+    <string name="nofee_request_accepted">Your request was accepted</string>
+    <string name="download_data">Initializing data</string>
+    <string name="download_geofences_desc">Downloading geo-fences</string>
+    <string name="download_classifiers_desc">Downloading classifiers</string>
+    <string name="play_services_error">Google Play services is not available. Registration is impossible.</string>
+    <string name="action_refresh_settings">Update GeoFences</string>
+    <string name="action_refresh_classifiers">Update Classifiers</string>
+    <string name="action_check_updates">Check for Update&#8230;</string>
+    <string name="latest_version">You already have a latest version of FastRide.</string>
+    <string name="about">About</string>
+    <string name="no_face_detection">This camera does not support Face detection feature</string>
+    <string name="copyright">&#169; 2015 FastRide. All rights reserved.</string>
+    <string name="license" translatable="false">Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.</string>
+    <string name="btnSubmitText">Submit</string>
+    <string name="driverTabCaption">Driver</string>
+    <string name="passengerTabCaption">Passenger</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_code">Ride Code</string>
+    <string name="action_debug">Debug</string>
+    <string name="action_camera">FD</string>
+    <string name="action_camera_cv">Camera CV</string>
+    <string name="action_remind">Remind me</string>
+    <string name="passenger_tutorial_fragment">Passenger tutorial</string>
+    <string name="driver_tutorial_fragment">Driver tutorial</string>
+    <string name="reclaim_tutorial_fragment">Appeal tutorial</string>
+    <string name="intro_tutorial_fragment">Introduction tutorial</string>
+    <string name="tutorial_id">tutorial_id</string>
+
+    <!-- Transition type strings -->
+
+    <string name="geofence_transition_entered">You\'ve entered the monitored area: </string>
+    <string name="geofence_transition_dwell">You\'re riding in monitored area: </string>
+    <string name="geofence_transition_exited">You exited geofences area: </string>
+    <string name="unknown_geofence_transition">Unknown Transition</string>
+
+    <string name="geofence_outside_title">You are out of monitored areas</string>
+    <string name="geofence_outside_title_debug">Out of GFs</string>
+    <string name="geofences_inside_title">You are on road:</string>
+    <string name="geofence_positive_answer">Yes, remind me</string>
+    <string name="geofence_negative_answer">No, I\'ll try later</string>
+
+    <string name="permission_location_denied">Location Permission was denied</string>
+    <string name="permission_camera_denied">Camera Permission was denied</string>
+    <string name="permission_storage_denied">Storage Permission was denied</string>
+
+    <!-- Geofences Error strings -->
+    <string name="not_connected">GoogleApiClient no yet connected. Try again.</string>
+    <string name="geofence_not_available">Geofence service is not available now</string>
+    <string name="geofence_too_many_geofences">Your app has registered too many geofences</string>
+    <string name="geofence_too_many_pending_intents">
+        You have provided too many PendingIntents to the addGeofences() call
+    </string>
+    <string name="unknown_geofence_error">
+        Unknown error: the Geofence service is not available now
+    </string>
+    <string name="geofence_transition_invalid_type">
+        Geofence transition error: invalid transition type %1$d
+    </string>
+
+    <!-- Nearby Errors -->
+    <string name="nearby_error_nowifi">Not connected to WiFi network</string>
+    <string name="cabin_image_description">Car cabin</string>
+
+    <string name="geofence_transition_notification_text">Click notification to submit your ride</string>
+    <string name="geofences_added">Geofences added</string>
+    <string name="geofences_removed">Geofences removed</string>
+    <string name="title_activity_register2">Register2Activity</string>
+    <string name="title_activity_gfences">GFencesActivity</string>
+    <string name="title_activity_camera_cv">CameraCVActivity</string>
+    <string name="menu_next_curve_filter">Curve</string>
+    <string name="menu_next_mixed_filter">Mix</string>
+    <string name="menu_next_convultion_filter">Conv</string>
+    <string name="menu_next_detection_filter">Detection</string>
+
+    <!-- OpenCV -->
+    <string name="camera_directive_2">Tracking&#8230;</string>
+    <string name="detection_results">Verification results</string>
+    <string name="detection_success">Verification succeeded. Thank you.</string>
+    <string name="save_error">Failed to save the picture</string>
+    <string name="detection_no_results">No face was verified</string>
+    <string name="try_again">Try again</string>
+    <string name="detection_save">Verified %d faces. Save this picture?</string>
+    <string name="detection_error">Something goes wrong</string>
+    <string name="detection_exception">detection_exception</string>
+    <string name="detection_face_bitmap">face_bitmap</string>
+    <string name="detection_face_id">face_id</string>
+    <string name="detection_face_uri">face_uri</string>
+    <string name="detection_general_exception">Unknown</string>
+    <string name="detection_center_desc">Upload and verify?</string>
+    <string name="detection_send">Verifying picture</string>
+    <string name="detection_wait">Please wait</string>
+    <string name="detection_freeze">Click to snapshot</string>
+    <string name="detection_store">Saving the picture</string>
+    <string name="detection_update">Updating your data</string>
+
+    <string name="no_extra">No extras was passed to received notification</string>
+
+    <string name="request_postponed">Your request is postponed</string>
+    <string name="geofence_outside">Remind you when getting inside?</string>
+
+    <string name="log_start">Application started</string>
+    <string name="log_gf_updated">Geofences updated</string>
+    <string name="log_gf_uptodate">Geofences are up to date</string>
+    <string name="camera_directive_1">Look straight into camera lens</string>
+
+    <string name="ride_started_answers_name" translatable="false">Ride Started</string>
+    <string name="passenger_confirmation_answer_name" translatable="false">Passenger Confirmation</string>
+    <string name="no_fee_answer_name" translatable="false">No-fee request</string>
+    <string name="push_subscription_answer_name" translatable="false">Push subscription</string>
+    <string name="push_subscription_attribute" translatable="false">Subscribed</string>
+    <string name="appeal_answer_name" translatable="false">No-fee request</string>
+    <string name="registration_answer_name" translatable="false">Registration</string>
+    <string name="answer_approved_attribute" translatable="false">Sent</string>
+    <string name="answer_success_attribute" translatable="false">Success</string>
+
+    <string name="selfie">Smart Selfie</string>
+    <string name="selfie_content">A smart self-picture will authorize you. During a capturing, please look at camera lens while your whole face is shown on the screen and it is bounded by the rectangle</string>
+    <string name="selfie_desc_not_show_again">I understood. Don\'t show again.</string>
+
+    <string name="title_activity_camera_appeal">Appeal Activity</string>
+    <string name="appeal">Appeal</string>
+    <string name="appeal_image">Appeal Image</string>
+    <string name="title_activity_appeal_details">Appeal Details</string>
+    <string name="appeal_take_picture">Your request is denied, but you can submit an appeal. Take a picture with all passengers in a cabin, each showing this gesture</string>
+    <string name="appeal_cancel">Cancel</string>
+    <string name="appeal_another_picture">Try again</string>
+    <string name="appeal_send_success">The appeal was sent successfully</string>
+    <string name="appeal_send_title">Appeal</string>
+    <string name="appeal_answer">Send request appeal?</string>
+    <string name="appeal_send">Send</string>
+
+    <string name="instruction_make_additional_selfies">You can make photos of other passengers</string>
+    <string name="instruction_not_enought_passengers">Not enough passengers to submit no-fee request</string>
+    <string name="instruction_can_submit_no_fee">Now you can submit no-fee request</string>
+    <string name="instruction_advanced_mode">Each passenger should make a self-picture</string>
+
+    <string name="ride_uploaded">Your ride is uploaded</string>
+    <string name="ride_not_uploaded">The ride has not been uploaded</string>
+    <string name="location_inaccurate">Location is inaccurate. Considered as out of Gfs</string>
+    <string name="no_passengers">No passengers yet</string>
+
+    <string name="camera_tag" translatable="false">camera_tag</string>
+    <string name="submit_tag" translatable="false">submit_tag</string>
+
+    <string name="title_activity_splash_screen">SplashScreen</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="no">No</string>
+
+
+</resources>

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="tutorial_titles">
+        <item>התחלה</item>
+        <item>נהג</item>
+        <item>נוסע</item>
+        <item>ערעור</item>
+    </string-array>
+    <string-array name="drawers_array_drawer">
+        <item>התחלה</item>
+        <item>נסיעות שלי</item>
+        <item>הגדרות</item>
+        <item>עזרה</item>
+    </string-array>
+    <string-array name="my_rides_titles">
+        <item>כל הנסיעות</item>
+        <item>נדחות</item>
+    </string-array>
+
+    <string name="mode_name_driver">נהג</string>
+    <string name="mode_name_passenger">נוסע</string>
+    <string name="btnFindRide">חפש נסיעה</string>
+    <string name="no_phone_number">חובה להזין מספר טלפון, אך אפשר לבחור לא לשתף אותו עם משתמשים אחרים במתג הבא</string>
+    <string name="btnSubmitText">  בקש פטור</string>
+    <string name="driverTabCaption">נהג</string>
+    <string name="passengerTabCaption">נוסע</string>
+    <string name="action_refresh">רענן</string>
+    <string name="action_register">רישום</string>
+    <string name="action_settings">הגדרות</string>
+    <string name="driver_tutorial_fragment">הדרכת נהג</string>
+    <string name="intro_tutorial_fragment">הדרכה כללית</string>
+    <string name="passenger_tutorial_fragment">הדרכת נוסע</string>
+    <string name="reclaim_tutorial_fragment">הדרכת ערעור</string>
+    <string name="title_activity_driver_role">מצב נהג</string>
+    <string name="title_activity_my_rides">הנסיעות שלי</string>
+    <string name="edit_car_button_title">עריכה</string>
+    <string name="edit_car_dialog_caption1">בחר\י את רכב הנוסע</string>
+    <string name="add_car_dialog_caption">הוסף רכב</string>
+    <string name="yes">כן</string>
+    <string name="dialog_confirm_registration">להחליף רישום קודם?</string>
+    <string name="edit_car_button_save">שמירה</string>
+    <string name="edit_car_button_delete">מחיקה</string>
+    <string name="no">לא</string>
+    <string name="operating_modes">מצבי הפעלה</string>
+    <string name="passengers_header">נוסעים</string>
+    <string name="title_activity_settings">הגדרות</string>
+    <string name="about">מידע על Fast Ride</string>
+    <string name="edit_car_button_title2">בחר</string>
+    <string name="enable_wifi_question">להפעיל שירותי Wi-Fi?</string>
+    <string name="prompt_phone">מספר טלפון</string>
+    <string name="add_car_button_cancel">ביטול</string>
+    <string name="ride_code_label">קוד נסיעה</string>
+    <string name="subtitle_activity_my_rides">הנסיעות שלי</string>
+    <string name="geofence_transition_entered">אתה נכנס לאזור פיקוח</string>
+    <string name="add_car_button_add">הוסף</string>
+    <string name="add_car_hint">מספר רכב</string>
+    <string name="subtitle_activity_tutorial">הדרכות</string>
+    <string name="ride_code_dialog_content">אפשר לראות את הקוד הזה על מסך המכשיר של הנהג</string>
+    <string name="ride_code_title">אנא הזן קוד נסיעה</string>
+    <string name="ride_code_hint">6 ספרות ללא מקף</string>
+    <string name="title_activity_passenger_role">מצב נוסע</string>
+    <string name="registration_finish">סיום</string>
+    <string name="drivers_header">בחר את הנהג</string>
+    <string name="title_activity_about">אודות</string>
+    <string name="title_activity_confirm_ride">אישור</string>
+    <string name="version_title">גרסה </string>
+    <string name="geofence_outside">להזכיר בכניסתך לכביש?</string>
+    <string name="geofence_positive_answer">כן, תזכירו לי</string>
+    <string name="geofence_negative_answer">לא, אני אנסה מאוחר יותר</string>
+    <string name="geofence_outside_title">אינך נמצא באזור מפוקח</string>
+    <string name="close">סגור</string>
+    <string name="complete_registration">השלמת הרישום</string>
+    <string name="registration_next">הבא</string>
+    <string name="add_cars_caption">הוסף רכבים</string>
+    <string name="add_car_nick">כינוי</string>
+    <string name="prompt_use_phone">אפשר להציג מספר זה למשתמשים אחרים</string>
+    <string name="edit_car_dialog_caption2">בחר\י את רכב הנוסע</string>
+    <string name="edit_car_dialog_text">טרם בחרת את הרכבים </string>
+    <string name="registration_add_status">מאמת את הנתונים שלך</string>
+    <string name="registration_add_title">רישום מתבצע</string>
+    <string name="registration_add_status_wait">נשאר רק כמה שניות</string>
+    <string name="download_geofences">אתחול הגדרות המיקום</string>
+    <string name="download_geofences_desc">מוריד הגדרות גיאוגרפיות</string>
+    <string name="new_version_conent">אנו ממליצים להתקין את הגרסה החדשה ביותר של התכנית. האם אתה רוצה לעשות זאת?</string>
+    <string name="new_version_title">גרסה חדשה מוכנה להורדה</string>
+    <string name="geofence_transition_dwell">אתה נוהג באזור פיקוח</string>
+    <string name="action_camera">מצלמה</string>
+    <string name="edit_car_dialog_caption">תאור רכב</string>
+    <string name="edit_phone_dialog_caption">מספר טלפון</string>
+    <string name="title_section_cars">רכבים</string>
+    <string name="detection_freeze">לחץ כדי להפוך לתמונה</string>
+    <string name="detection_center_desc">לשמור?</string>
+    <string name="please_wait">נא להמתין</string>
+    <string name="ride_code_wrong">.קוד לא קיים במערכת. נסו שוב בבקשה.</string>
+    <string name="passenger_progress_dialog">מחפש התקן של הנהג</string>
+    <string name="fb_error_msg">שגיה:</string>
+    <string name="fb_error">אין גישה לרשת</string>
+    <string name="passenger_confirm">להצטרף לנסיעה</string>
+    <string name="passenger_advertising">חושף את המשכיר לנהג</string>
+    <string name="passenger_adv_description">משכיר יהי חשוף לנהג כ 30 שניות</string>
+    <string name="stop">עצור</string>
+    <string name="discover_devices">מחפש התקני נוסעים</string>
+    <string name="cancel">ביטול</string>
+    <string name="code_retry_action">נסה שוב</string>
+    <string name="download_data">מאתחל נתונים</string>
+    <string name="download_classifiers_desc">מוריד מסווגים</string>
+    <string name="generating_ride_code">מחולל קוד נסיעה...</string>
+    <string name="thanks">תודה</string>
+    <string name="confirmation_accepted">אישור הצטרפות לנסיעה התקבל</string>
+    <string name="geofence_transition_exited">אתה יוצא מאזור הפיקוח</string>
+    <string name="connection_lost">החיבור אבד. אנא נסה שוב בעוד מספר שניות.</string>
+    <string name="nofee_request_accepted">בקשתך התקבלה</string>
+    <string name="offline">מכשירך לא מקוון</string>
+    <string name="offline_prompt">חבר את המכשיר לרשת</string>
+    <string name="camera_directive_1">נא להביט לקצה המשכיר בו ממוקמת המצלמה</string>
+    <string name="detection_success">אימות הצליח. תודה.</string>
+    <string name="selfie_desc_not_show_again">הבנתי. אל תציגו שוב</string>
+    <string name="drive_details">נסיעה</string>
+    <string name="list_of_passengers">נוסעים</string>
+    <string name="detection_error">שגיאה בזיהוי</string>
+    <string name="processing">מתבצע</string>
+
+    <string name="appeal">ערעור</string>
+    <string name="appeal_another_picture">נסה שנית</string>
+    <string name="appeal_answer">לשלוח ערעור?</string>
+    <string name="appeal_cancel">ביטול</string>
+    <string name="appeal_send">שלח</string>
+    <string name="appeal_send_success">הערעור נשלח</string>
+    <string name="appeal_send_title">ערעור</string>
+    <string name="appeal_take_picture">בקשתך נדחתה. ניתן להגיש ערעור באמצעות צילום משותף של כל הנוסעים ברכב מציגים כל אחד מחווה הבאה</string>
+    <string name="help">עזרה</string>
+    <string name="code_try_later">אזין מאוחר יותר</string>
+    <string name="detection_no_results">לא זוהו פנים בתמונה</string>
+    <string name="instruction_make_additional_selfies">ניתן לצלם נוסעים נוספים</string>
+    <string name="instruction_not_enought_passengers">לא זוהו מספיק נוסעים להגשת בקשת פטור</string>
+    <string name="instruction_can_submit_no_fee">עכשיו אפשר להגיש בקשה לפטור</string>
+    <string name="instruction_advanced_mode">כל אחד מהנוסעים צריך להצטלם</string>
+    <string name="request_postponed">אי אפשר להגיש את בקשתך</string>
+    <string name="enable_location_question">האם לאפשר שירותי מיקום במכשיר זה?</string>
+    <string name="geofences_inside_title">אתה נמצא באזור מפוקח</string>
+    <string name="permission_location_denied">גישה למיקום המכשיר נדחתה</string>
+    <string name="ride_uploaded">הנסיעה נרשמה במערכת בהצלחה</string>
+    <string name="with">עם</string>
+    <string name="no_passengers">רשימת נוסעים ריקה</string>
+    <string name="ride_same_ids">שימוש באותה זהות לנהג והנוסע אסור </string>
+    <string name="passenger_details">פרטי נוסעים</string>
+    <string name="ride_denied">פרטי נסיעה</string>
+    <string name="try_again">נסה שנית</string>
+    <string name="title_section_user">פרופיל משתמש</string>
+    <string name="title_activity_ride_details">פרטי נסיעה</string>
+    <string name="driver_no_name">ללא שם</string>
+
+
+</resources>

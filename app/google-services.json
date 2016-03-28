@@ -1,0 +1,93 @@
+{
+  "project_info": {
+    "project_id": "third-apex-91200",
+    "project_number": "1041824085053",
+    "name": "FastRide"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1041824085053:android:b2c683a4f2909b65",
+        "client_id": "android:com.labs.okey.fastride",
+        "client_type": 1,
+        "android_client_info": {
+          "package_name": "com.labs.okey.fastride",
+          "certificate_hash": []
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1041824085053-ifcq96g2417pi2v8sf0brn23d4cmrdb0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "cloud_messaging_service": {
+          "status": 1,
+          "apns_config": []
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "google_signin_service": {
+          "status": 1
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1041824085053:android:f80ed8ee012f68c6",
+        "client_id": "android:com.labs.okey.freeride",
+        "client_type": 1,
+        "android_client_info": {
+          "package_name": "com.labs.okey.freeride",
+          "certificate_hash": []
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1041824085053-ufq2ksgqs2ldm9t7t3rdig1g54udkf4m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.labs.okey.freeride",
+            "certificate_hash": "6B3A0D2E52DA8D383C6D63C169AFD7C108E52731"
+          }
+        },
+        {
+          "client_id": "1041824085053-ifcq96g2417pi2v8sf0brn23d4cmrdb0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "cloud_messaging_service": {
+          "status": 1,
+          "apns_config": []
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "google_signin_service": {
+          "status": 2
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "client_info": [],
+  "ARTIFACT_VERSION": "1"
+}

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+android:orientation="vertical"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+    android:padding="@dimen/abc_action_bar_content_inset_material">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_weight="100">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="@string/appeal_take_picture"
+            android:id="@+id/textView2"
+
+            android:layout_weight="85" />
+
+    </LinearLayout>
+
+
+    <ImageView
+        android:id="@+id/appeal_emoji"
+        android:src="@drawable/emoji_2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scaleType="center"
+        android:contentDescription="@string/app_name" />
+
+
+
+</LinearLayout>

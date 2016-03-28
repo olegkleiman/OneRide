@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="tutorial_titles">
+        <item>Начало</item>
+        <item>Водитель</item>
+        <item>Пассажир</item>
+        <item>Апелляция</item>
+    </string-array>
+
+    <string-array name="drawers_array_drawer">
+        <item>Начало</item>
+        <item>Все поездки</item>
+        <item>Настройки</item>
+        <item>Подсказки</item>
+    </string-array>
+
+    <string-array name="my_rides_titles">
+        <item>Все поездки</item>
+        <item>Отклоненные</item>
+    </string-array>
+
+    <string name="mode_name_driver">Водитель</string>
+    <string name="mode_name_passenger">Пассажир</string>
+    <string name="yes">Да</string>
+    <string name="action_register">Регистрация</string>
+    <string name="action_settings">Настройки</string>
+    <string name="add_car_button_add">Добавить</string>
+    <string name="add_car_button_cancel">Отмена</string>
+    <string name="add_car_hint">Номер машины</string>
+    <string name="add_car_dialog_caption">Добавить машину</string>
+    <string name="action_refresh">Обновить</string>
+    <string name="btnSubmitText">Запросить</string>
+    <string name="edit_car_button_save">Сохранить</string>
+    <string name="edit_car_button_delete">Удалить</string>
+    <string name="driverTabCaption">Водитель</string>
+    <string name="btnFindRide">Найти поездку</string>
+    <string name="edit_car_dialog_caption1">Укажите номер машины, которой вы управляете сейчас</string>
+    <string name="dialog_confirm_registration">Заменить предыдущую регистрацию?</string>
+    <string name="driver_tutorial_fragment">Подсказки водителю</string>
+    <string name="edit_car_button_title">Изменить</string>
+    <string name="edit_car_dialog_caption2">Укажите номер машины</string>
+    <string name="enable_wifi_question">Включить Wi-Fi?</string>
+    <string name="no">Нет</string>
+    <string name="registration_already_performed">Вы уже зарегистрированы в апликации</string>
+    <string name="ride_code_label">Код поездки:</string>
+    <string name="subtitle_activity_driver_role">Водитель</string>
+    <string name="subtitle_activity_my_rides">История поездок</string>
+    <string name="subtitle_activity_passenger_role">Пассажир</string>
+    <string name="title_activity_confirm_ride">Подтвердить</string>
+    <string name="title_activity_my_rides">Мои поездки</string>
+    <string name="operating_modes">Кто вы сейчас?</string>
+    <string name="about">О программе</string>
+    <string name="passengers_header">Пассажиры</string>
+    <string name="drivers_header">Укажите водителя</string>
+    <string name="version_title">Версия </string>
+    <string name="subtitle_activity_settings">Настройки</string>
+    <string name="subtitle_activity_tutorial">Подсказки</string>
+    <string name="title_activity_about">О программе</string>
+    <string name="title_activity_settings">Настройки</string>
+    <string name="title_activity_driver_role">Водитель</string>
+    <string name="title_activity_passenger_role">Пассажир</string>
+    <string name="edit_car_button_title2">Указать</string>
+    <string name="prompt_phone">Номер телефона</string>
+    <string name="geofence_transition_entered">Вы пересекли зону контроля</string>
+    <string name="passengerTabCaption">Пассажир</string>
+    <string name="ride_code_dialog_content">Вы можете увидеть этот код на дисплее телефона водителя</string>
+    <string name="ride_code_title">Введите код поездки</string>
+    <string name="ride_code_hint">6 цифр без разделителя</string>
+    <string name="registration_finish">Завершить регистрацию</string>
+    <string name="geofence_outside">Напомнить при въезде на трассу?</string>
+    <string name="geofence_positive_answer">Напомнить</string>
+    <string name="geofence_negative_answer">Отменить</string>
+    <string name="geofence_outside_title">Вы находитесь вне скоростной трассы</string>
+    <string name="close">Закрыть</string>
+    <string name="complete_registration">Завершение регистрации</string>
+    <string name="registration_next">Следующий шаг</string>
+    <string name="add_cars_caption">Добавить описание машин</string>
+    <string name="add_car_nick">Название</string>
+    <string name="prompt_use_phone">Показывать этот номер другим пользователям</string>
+    <string name="edit_car_dialog_text">Не указаны машины, на которых осуществляются поездки.</string>
+    <string name="registration_add_status">Ваши данные проверяются</string>
+    <string name="registration_add_title">Выполняется регистрация</string>
+    <string name="registration_add_status_wait">Подождите несколько секунд</string>
+    <string name="download_geofences">Инициализация</string>
+    <string name="download_geofences_desc">Загрузка привязок к местности</string>
+    <string name="new_version_conent">Мы настоятельно рекомендуем установить новую версию программы. Вы согласны?</string>
+    <string name="new_version_title">Новая версия </string>
+    <string name="geofence_transition_dwell">Вы находитесь в зоне контроля</string>
+    <string name="action_camera">Фотография</string>
+    <string name="edit_car_dialog_caption">Описание машины</string>
+    <string name="edit_phone_dialog_caption">Номер телефона</string>
+    <string name="title_section_cars">Мои машины</string>
+    <string name="detection_center_desc">Сохранять?</string>
+    <string name="detection_freeze">Нажмите чтобы сделать снимок</string>
+    <string name="please_wait">Пожалуйста, подождите</string>
+    <string name="passenger_progress_dialog">Поиск водителя</string>
+    <string name="action_refresh_settings">Обновление координат </string>
+    <string name="fb_error_msg">Ошибка:</string>
+    <string name="fb_error">Нет доступа к сети</string>
+    <string name="title_activity_register">Fast Ride: Регистрация</string>
+    <string name="passenger_confirm">Вы подтверждаете поездку </string>
+    <string name="passenger_advertising">Устройство будет передает информацию о себе водителю</string>
+    <string name="stop">Стоп</string>
+    <string name="passenger_adv_description">Устройство будет передавать информацию о себе водителю в течение 30 сек.</string>
+    <string name="discover_devices">Поиск пассажиров</string>
+    <string name="cancel">Отменить</string>
+    <string name="code_retry_action">Повторить поиск</string>
+    <string name="download_classifiers_desc">Загрузка классификаторов</string>
+    <string name="download_data">Инициализация данных</string>
+    <string name="intro_tutorial_fragment">Первые шаги</string>
+    <string name="reclaim_tutorial_fragment">Как подать апелляцию</string>
+    <string name="ride_code_wrong">Ошибка в коде. Попробуйте еще раз.</string>
+    <string name="title_activity_ride_detail">Подробнее о поездке</string>
+    <string name="generating_ride_code">Генерируется код поездки...</string>
+    <string name="thanks">Спасибо</string>
+    <string name="confirmation_accepted">Ваше подтверждение принято</string>
+    <string name="geofence_transition_exited">Вы выехали из зоны контроля</string>
+    <string name="connection_lost">Соединение потеряно. Пожалуйста, попробуйте еще раз через несколько секунд.</string>
+    <string name="nofee_request_accepted">Ваш запрос принят</string>
+
+    <!-- OpenCV -->
+    <string name="camera_directive_1">Смотрите на тот край телефона, где находится линза видеокамеры</string>
+    <string name="offline">Нет соединения с сетью</string>
+    <string name="offline_prompt">Подключите сеть</string>
+    <string name="detection_success">Проверка завершена успешно. Спасибо.</string>
+    <string name="selfie_desc_not_show_again">Я понял. Не показывать это сообщение снова.</string>
+    <string name="drive_details">Поездка</string>
+    <string name="list_of_passengers">Пассажиры</string>
+    <string name="detection_error">Ошибка распознавания</string>
+    <string name="processing">Обработка</string>
+    <string name="help">Помощь</string>
+    <string name="code_try_later">Я введу код позже</string>
+    <string name="detection_no_results">Не удается обнаружить лицо на фотографии</string>
+    <string name="instruction_make_additional_selfies">Вы можете сделать фотографии других пассажиров</string>
+    <string name="instruction_not_enought_passengers">Не обнаружено достаточно пассажиров для заявки на льготу</string>
+    <string name="instruction_can_submit_no_fee">Сейчас вы можете подать заявку на льготную поездку</string>
+    <string name="instruction_advanced_mode">Каждый пассажир должен сделать селфи</string>
+    <string name="request_postponed">Ваш запорос не может быть обслужен</string>
+    <string name="enable_location_question">Включить службы местоположения на этом устройстве?</string>
+    <string name="geofences_inside_title">Вы находитесь в зоне контроля</string>
+    <string name="permission_location_denied">Отказано в доступе к данным о местоположении устройства</string>
+    <string name="ride_uploaded">Данные о поездке загружены</string>
+    <string name="with">с</string>
+    <string name="no_passengers">Список пассажиров пуст</string>
+    <string name="ride_same_ids">Использование одной и той же регистрации для водителя и пассажира не разрешается.</string>
+    <string name="driver_no_name">Без имени</string>
+
+
+</resources>

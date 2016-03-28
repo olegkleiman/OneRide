@@ -1,0 +1,101 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:opencv="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.labs.okey.freeride.CameraCVActivity">
+
+    <com.labs.okey.oneride.fastcv.FastCVCameraView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        opencv:show_fps="true"
+        android:id="@+id/java_surface_view"/>
+
+    <!--<LinearLayout-->
+        <!--android:id="@+id/passenger_snackbar"-->
+        <!--android:layout_width="fill_parent"-->
+        <!--android:layout_height="@dimen/snackbar_detection_height"-->
+        <!--android:background="@color/ColorPrimary"-->
+        <!--android:orientation="horizontal"-->
+        <!--android:layout_alignParentBottom="true"-->
+        <!--android:layout_alignParentLeft="true"-->
+        <!--android:layout_alignParentStart="true"-->
+        <!--android:animateLayoutChanges="true"-->
+        <!--android:weightSum="10">-->
+
+        <!--<TextView-->
+            <!--android:id="@+id/detection_monitor"-->
+            <!--android:layout_width="0dp"-->
+            <!--android:layout_weight="8"-->
+            <!--android:layout_height="fill_parent"-->
+            <!--android:paddingLeft="@dimen/snackbar_leftpadding"-->
+            <!--android:paddingRight="@dimen/snackbar_rightpadding"-->
+            <!--android:paddingEnd="@dimen/snackbar_rightpadding"-->
+            <!--android:background="@color/ColorPrimary"-->
+            <!--android:textAppearance="?android:attr/textAppearanceMedium"-->
+            <!--android:textColor="@color/white"-->
+            <!--android:text="@string/camera_directive_1"-->
+            <!--android:gravity="center_vertical|start"-->
+            <!--android:clickable="true"-->
+            <!--android:onClick="makeFrame"-->
+            <!--android:layout_gravity="start" />-->
+
+        <!--<TableLayout-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="match_parent"></TableLayout>-->
+
+        <!--<LinearLayout-->
+            <!--android:layout_width="0dp"-->
+            <!--android:layout_height="match_parent"-->
+            <!--android:layout_weight="2"-->
+            <!--style="?android:attr/buttonBarStyle"-->
+            <!--android:background="@color/ColorPrimary"-->
+            <!--android:id="@+id/detection_buttons_bar"-->
+            <!--android:weightSum="2"-->
+            <!--android:orientation="horizontal"-->
+            <!--android:visibility="gone">-->
+            <!--<Button-->
+                <!--android:layout_width="0dp"-->
+                <!--android:layout_weight="1"-->
+                <!--android:layout_height="match_parent"-->
+                <!--android:background="@color/ColorPrimary"-->
+                <!--android:id="@+id/detection_yes"-->
+                <!--android:textColor="@color/white"-->
+                <!--android:onClick="sendToDetect"-->
+                <!--style="?android:attr/buttonBarButtonStyle"-->
+                <!--android:text="@string/yes"/>-->
+            <!--<Button-->
+                <!--android:layout_width="0dp"-->
+                <!--android:layout_weight="1"-->
+                <!--android:layout_height="match_parent"-->
+                <!--android:background="@color/ColorPrimary"-->
+                <!--android:id="@+id/detection_no"-->
+                <!--android:textColor="@color/white"-->
+                <!--android:onClick="restoreFromSendToDetect"-->
+                <!--style="?android:attr/buttonBarButtonStyle"-->
+                <!--android:text="@string/no"/>-->
+        <!--</LinearLayout>-->
+
+    <!--</LinearLayout>-->
+
+    <ImageView
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:id="@+id/imageViewTemplate"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:src="@drawable/ic_smart_selfie"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="20dp" />
+
+    <!--<ImageView-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:id="@+id/imageViewFace"-->
+        <!--android:layout_alignBottom="@+id/imageViewTemplate"-->
+        <!--android:layout_toRightOf="@+id/imageViewTemplate"-->
+        <!--android:layout_toEndOf="@+id/imageViewTemplate" />-->
+
+</RelativeLayout>

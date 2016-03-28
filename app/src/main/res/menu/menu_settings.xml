@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/action_refresh_settings"
+        android:title="@string/action_refresh_settings"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
+
+    <item android:id="@+id/action_refresh_classifiers"
+        android:title="@string/action_refresh_classifiers"
+        android:orderInCategory="200"
+        app:showAsAction="never" />
+
+    <group>
+        <item android:id="@+id/action_debug_without_geofences"
+            android:title="Run without GeoFences"
+            android:orderInCategory="300"
+            android:checkable="true"
+            android:checked="false"
+            app:showAsAction="never" />
+
+    </group>
+
+    <item android:id="@+id/action_logoff"
+        android:title="Log Off"
+        app:showAsAction="never" />
+ </menu>
