@@ -182,6 +182,17 @@ public class RegisterActivity extends FragmentActivity
 
             if (mEx == null)
                 showRegistrationForm();
+            else {
+                MaterialDialog dialog =
+                        new MaterialDialog.Builder(RegisterActivity.this)
+                            .title(R.string.registration_account_validation_failure)
+                            .content(mEx.getMessage())
+                                .positiveText(R.string.ok)
+                                .autoDismiss(false)
+                                .build();
+                dialog.show();
+            }
+
 
         }
 
@@ -547,7 +558,6 @@ public class RegisterActivity extends FragmentActivity
         try{
             usersTable = new MobileServiceClient(
                     Globals.WAMS_URL,
-                    Globals.WAMS_API_KEY,
                     this)
                     .getTable("users", User.class);
 
@@ -944,7 +954,6 @@ public class RegisterActivity extends FragmentActivity
                         MobileServiceClient wamsClient =
                                 new MobileServiceClient(
                                         Globals.WAMS_URL,
-                                        Globals.WAMS_API_KEY,
                                         getApplicationContext());
 
                         MobileServiceSyncTable<GeoFence> gFencesSyncTable = wamsClient.getSyncTable("geofences",
