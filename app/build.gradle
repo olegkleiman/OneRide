@@ -27,7 +27,7 @@ model {
             minSdkVersion.apiLevel = 16
             targetSdkVersion.apiLevel = 23
             versionCode = 4
-            versionName = "4.7"
+            versionName = "4.71"
             multiDexEnabled = true
         }
 
@@ -147,11 +147,10 @@ dependencies {
     compile 'com.facebook.android:facebook-android-sdk:4.9.0'
     compile 'com.google.code.gson:gson:2.4'
     compile 'com.google.guava:guava:18.0'
-    // Uncomment this line when server backend be migrated to App Services
-    //compile 'com.microsoft.azure:azure-mobile-android:3.0'
+
+    compile 'com.microsoft.azure:azure-mobile-android:3.1.0'
     //compile 'com.microsoft.azure:azure-notifications-handler:1.0.1@jar'
     compile(group: 'com.microsoft.azure', name: 'azure-notifications-handler', version: '1.0.1', ext: 'jar')
-    compile 'com.microsoft.azure:azure-mobile-services-android-sdk:2.0.3'
     compile 'com.microsoft.azure.android:azure-storage-android:0.7.0@aar'
 
     compile 'com.microsoft.projectoxford:face:1.0.0'

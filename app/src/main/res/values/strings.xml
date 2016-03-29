@@ -37,6 +37,7 @@
     <string name="action_register">Register</string>
     <string name="registration_add_title">Performing registration</string>
     <string name="registration_add_status">Verifying your account</string>
+    <string name="registration_account_validation_failure">Account Validation Failure</string>
     <string name="registration_add_status_wait">Just few seconds</string>
     <string name="default_value">no value</string>
 
@@ -180,7 +181,7 @@
     <string name="latest_version">You already have a latest version of FastRide.</string>
     <string name="about">About</string>
     <string name="no_face_detection">This camera does not support Face detection feature</string>
-    <string name="copyright">&#169; 2015 FastRide. All rights reserved.</string>
+    <string name="copyright">&#169; 2015&#8211;2016 FastRide. All rights reserved.</string>
     <string name="license" translatable="false">Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -324,9 +325,5 @@ limitations under the License.</string>
     <string name="submit_tag" translatable="false">submit_tag</string>
 
     <string name="title_activity_splash_screen">SplashScreen</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
-    <string name="no">No</string>
-
 
 </resources>
