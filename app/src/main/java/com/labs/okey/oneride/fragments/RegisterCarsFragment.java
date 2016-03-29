@@ -4,6 +4,7 @@ import android.app.Fragment;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.labs.okey.oneride.R;
 import com.labs.okey.oneride.adapters.CarsAdapter;
@@ -24,6 +26,8 @@ import java.util.List;
 import java.util.Set;
 
 public class RegisterCarsFragment extends Fragment {
+
+    private final String LOG_TAG = getClass().getSimpleName();
 
     private EditText mCarInput;
     private EditText mCarNickInput;
@@ -70,12 +74,12 @@ public class RegisterCarsFragment extends Fragment {
                             .negativeText(android.R.string.cancel)
                             .autoDismiss(true)
                             .cancelable(true)
-                            .callback(new MaterialDialog.ButtonCallback() {
+                            .onPositive(new MaterialDialog.SingleButtonCallback() {
                                 @Override
-                                public void onPositive(MaterialDialog dialog) {
-
+                                public void onClick(@NonNull MaterialDialog dialog,
+                                                    @NonNull DialogAction which) {
                                     String carNumber = mCarInput.getText().toString();
-                                    String carNick = ( mCarNickInput.getText().toString().isEmpty() ) ?
+                                    String carNick = (mCarNickInput.getText().toString().isEmpty()) ?
                                             "" : mCarNickInput.getText().toString();
 
                                     RegisteredCar car = new RegisteredCar();
@@ -86,18 +90,20 @@ public class RegisterCarsFragment extends Fragment {
                                     mCarsAdapter.notifyDataSetChanged();
 
                                     saveCars();
+
                                 }
                             })
-                            .build();
+                           .build();
+
                     mCarInput = (EditText) dialog.getCustomView().findViewById(R.id.txtCarNumber);
                     mCarNickInput = (EditText) dialog.getCustomView().findViewById(R.id.txtCarNick);
                     dialog.show();
 
-                    //Toast.makeText(getActivity(), "Not implemented yet", Toast.LENGTH_LONG).show();
+                                    //Toast.makeText(getActivity(), "Not implemented yet", Toast.LENGTH_LONG).show();
                 }
             });
         } catch(Exception ex) {
-            Log.e("FR", ex.getMessage());
+            Log.e(LOG_TAG, ex.getMessage());
         }
         return v;
    }

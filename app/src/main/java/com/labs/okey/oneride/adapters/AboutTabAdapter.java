@@ -26,13 +26,13 @@ public class AboutTabAdapter extends FragmentPagerAdapter {
 
         switch( position) {
             case 0:
-                return AboutFragment.getInstance();
+                return new AboutFragment(); //.getInstance();
 
             case 1:
-                return TermsFragment.getInstance();
+                return new TermsFragment(); //.getInstance();
 
             case 2:
-                return PrivacyFragment.getInstance();
+                return new PrivacyFragment(); //.getInstance();
         }
 
         return  null;

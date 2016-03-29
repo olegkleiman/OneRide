@@ -7,8 +7,8 @@ import android.os.AsyncTask;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.labs.okey.freeride.model.Version;
-import com.labs.okey.freeride.utils.Globals;
+import com.labs.okey.oneride.model.Version;
+import com.labs.okey.oneride.utils.Globals;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
@@ -41,7 +41,6 @@ public class AutoUpdateService extends Service {
                     MobileServiceClient wamsClient =
                             new MobileServiceClient(
                                     Globals.WAMS_URL,
-                                    Globals.WAMS_API_KEY,
                                     getApplicationContext());
 
                     MobileServiceTable<Version> versionTable

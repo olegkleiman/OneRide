@@ -32,6 +32,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
@@ -648,10 +649,11 @@ public class CameraCVActivity extends Activity
                         new MaterialDialog.Builder(CameraCVActivity.this)
                                 .title(getString(R.string.detection_no_results))
                                 .content(getString(R.string.try_again))
-                                .positiveText(android.R.string.ok).callback(new MaterialDialog.ButtonCallback() {
+                                .positiveText(android.R.string.ok)
+                                .onPositive(new MaterialDialog.SingleButtonCallback() {
                                     @Override
-                                    public void onPositive(MaterialDialog dialog) {
-
+                                    public void onClick(@NonNull MaterialDialog dialog,
+                                                        @NonNull DialogAction which) {
                                         // Reset search results and restart camera preview
 
                                         mSearchInitialized = false;
@@ -661,9 +663,10 @@ public class CameraCVActivity extends Activity
                                         nFramesWithNoFaces = 0;
 
                                         mOpenCvCameraView.startPreview();
+
                                     }
                                 })
-                                .show();
+                               .show();
                     } else {
 
                         Face _face = result[0];

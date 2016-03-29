@@ -12,6 +12,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.text.Editable;
 import android.text.InputType;
@@ -295,8 +296,11 @@ public class SettingsActivity extends BaseActivity
                 }
             }
 
-            ListView listView = (ListView)findViewById(R.id.carsListView);
             mCarsAdapter = new CarsAdapter(this, R.layout.car_item_row, mCars);
+            ListView listView = (ListView)findViewById(R.id.carsListView);
+            if( listView == null )
+                return;
+
             listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent,
@@ -313,12 +317,12 @@ public class SettingsActivity extends BaseActivity
                             .neutralText(R.string.edit_car_button_delete)
                             .autoDismiss(false)
                             .cancelable(true)
-                            .callback(new MaterialDialog.ButtonCallback() {
+                            .onPositive(new MaterialDialog.SingleButtonCallback() {
                                 @Override
-                                public void onPositive(MaterialDialog dialog) {
-
+                                public void onClick(@NonNull MaterialDialog dialog,
+                                                    @NonNull DialogAction which) {
                                     String strCarNumber = mCarInput.getText().toString();
-                                    if( strCarNumber.length() < 7 ) {
+                                    if (strCarNumber.length() < 7) {
                                         mCarInput.setError(getString(R.string.car_number_validation_error));
                                         return;
                                     }
@@ -340,26 +344,30 @@ public class SettingsActivity extends BaseActivity
 
 
                                     dialog.dismiss();
-                                }
 
+                                }
+                            })
+                            .onNegative(new MaterialDialog.SingleButtonCallback() {
                                 @Override
-                                public void onNegative(MaterialDialog dialog) {
+                                public void onClick(@NonNull MaterialDialog dialog,
+                                                    @NonNull DialogAction which) {
                                     dialog.dismiss();
                                 }
-
-
+                            })
+                            .onNeutral(new MaterialDialog.SingleButtonCallback() {
                                 @Override
-                                public void onNeutral(MaterialDialog dialog) {
+                                public void onClick(@NonNull MaterialDialog dialog,
+                                                    @NonNull DialogAction which) {
                                     String carNumber = mCarInput.getText().toString();
 
                                     RegisteredCar carToRemove = null;
-                                    for(RegisteredCar car : mCars) {
-                                        if( car.getCarNumber().equals(carNumber) ) {
+                                    for (RegisteredCar car : mCars) {
+                                        if (car.getCarNumber().equals(carNumber)) {
                                             carToRemove = car;
                                         }
                                     }
 
-                                    if( carToRemove!= null ) {
+                                    if (carToRemove != null) {
 
                                         mCarsAdapter.remove(carToRemove);
                                         mCarsAdapter.notifyDataSetChanged();
@@ -489,7 +497,6 @@ public class SettingsActivity extends BaseActivity
                     MobileServiceClient wamsClient =
                             new MobileServiceClient(
                                     Globals.WAMS_URL,
-                                    Globals.WAMS_API_KEY,
                                     getApplicationContext());
 
                     MobileServiceSyncTable<GeoFence> gFencesSyncTable = wamsClient.getSyncTable("geofences",
@@ -536,10 +543,10 @@ public class SettingsActivity extends BaseActivity
                 .negativeText(android.R.string.cancel)
                 .autoDismiss(true)
                 .cancelable(true)
-                .callback(new MaterialDialog.ButtonCallback() {
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
                     @Override
-                    public void onPositive(MaterialDialog dialog) {
-
+                    public void onClick(@NonNull MaterialDialog dialog,
+                                        @NonNull DialogAction which) {
                         String carNumber = mCarInput.getText().toString();
                         String carNick = mCarNick.getText().toString();
 
@@ -551,33 +558,34 @@ public class SettingsActivity extends BaseActivity
                         mCarsAdapter.notifyDataSetChanged();
 
                         saveCars();
+
                     }
                 })
                 .build();
 
-        final View positiveAction = dialog.getActionButton(DialogAction.POSITIVE);
-        mCarNick = (EditText) dialog.getCustomView().findViewById(R.id.txtCarNick);
-        mCarInput = (EditText) dialog.getCustomView().findViewById(R.id.txtCarNumber);
-        mCarInput.addTextChangedListener(new TextWatcher() {
+                final View positiveAction = dialog.getActionButton(DialogAction.POSITIVE);
+                mCarNick = (EditText) dialog.getCustomView().findViewById(R.id.txtCarNick);
+                mCarInput = (EditText) dialog.getCustomView().findViewById(R.id.txtCarNumber);
+                mCarInput.addTextChangedListener(new TextWatcher() {
 
-            @Override
-            public void beforeTextChanged (CharSequence s,int start, int count, int after){
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
-            }
+                    }
 
-            @Override
-            public void onTextChanged (CharSequence s,int start, int before, int count){
-                positiveAction.setEnabled(s.toString().trim().length() > 0);
-            }
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        positiveAction.setEnabled(s.toString().trim().length() > 0);
+                    }
 
-            @Override
-            public void afterTextChanged (Editable s){
+                    @Override
+                    public void afterTextChanged(Editable s) {
 
-            }
-        });
+                    }
+                });
 
-        dialog.show();
-        positiveAction.setEnabled(false); // disabled by default
+                dialog.show();
+                positiveAction.setEnabled(false); // disabled by default
     }
 
     private void saveCars() {
@@ -587,7 +595,7 @@ public class SettingsActivity extends BaseActivity
         for (RegisteredCar car : mCars) {
 
             String _s = car.getCarNumber() + "~";
-            if( car.getCarNick() != null && !car.getCarNick().isEmpty() )
+            if (car.getCarNick() != null && !car.getCarNick().isEmpty())
                 _s = _s.concat(car.getCarNick());
             carsSet.add(_s);
 
@@ -606,13 +614,14 @@ public class SettingsActivity extends BaseActivity
 
                     }
                 })
-                .inputMaxLength(10)
+                .inputRange(1, 10)
                 .inputType(InputType.TYPE_CLASS_PHONE)
                 .positiveText(R.string.edit_car_button_save)
                 .negativeText(android.R.string.cancel)
-                .callback((new MaterialDialog.ButtonCallback() {
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
                     @Override
-                    public void onPositive(MaterialDialog dialog) {
+                    public void onClick(@NonNull MaterialDialog dialog,
+                                        @NonNull DialogAction which) {
                         String phoneNumber = dialog.getInputEditText().getText().toString();
                         mUser.setPhone(phoneNumber);
                         mUser.save(SettingsActivity.this);
@@ -620,12 +629,9 @@ public class SettingsActivity extends BaseActivity
                         // Actually, this is a refresh
                         displayUser();
                     }
-
-                }
-
-                ))
+                })
                 .build();
 
-        dialog.show();
+                dialog.show();
     }
 }

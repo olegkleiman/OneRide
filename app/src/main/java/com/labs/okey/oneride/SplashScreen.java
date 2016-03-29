@@ -21,10 +21,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.labs.okey.oneride.gcm.GCMHandler;
 import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.wamsUtils;
-import com.microsoft.windowsazure.notifications.NotificationsManager;
 
 import java.text.DateFormat;
 import java.util.concurrent.Callable;
@@ -109,9 +107,6 @@ public class SplashScreen extends AppCompatActivity {
         Globals.initializeMonitor(this);
 
         Globals.InitializeVolley(getApplicationContext());
-
-        NotificationsManager.handleNotifications(this, Globals.SENDER_ID,
-                                                GCMHandler.class);
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         Globals.myRides_update_required = sharedPrefs.getBoolean(Globals.UPDATE_MYRIDES_REQUIRED, false);

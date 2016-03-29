@@ -14,6 +14,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AlertDialog;
@@ -27,6 +28,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
@@ -167,10 +169,6 @@ public class RegisterActivity extends FragmentActivity
         @Override
         protected void onPreExecute() {
 
-            LinearLayout loginLayout = (LinearLayout) findViewById(R.id.login_form);
-            if (loginLayout != null)
-                loginLayout.setVisibility(View.GONE);
-
             progress = ProgressDialog.show(RegisterActivity.this,
                     getString(R.string.registration_add_status),
                     getString(R.string.registration_add_status_wait));
@@ -180,20 +178,23 @@ public class RegisterActivity extends FragmentActivity
         protected void onPostExecute(Void result) {
             progress.dismiss();
 
-            if (mEx == null)
+            if (mEx == null) {
+
+                LinearLayout loginLayout = (LinearLayout) findViewById(R.id.login_form);
+                if (loginLayout != null)
+                    loginLayout.setVisibility(View.GONE);
+
                 showRegistrationForm();
-            else {
-                MaterialDialog dialog =
-                        new MaterialDialog.Builder(RegisterActivity.this)
-                            .title(R.string.registration_account_validation_failure)
-                            .content(mEx.getMessage())
-                                .positiveText(R.string.ok)
-                                .autoDismiss(false)
-                                .build();
-                dialog.show();
             }
-
-
+            else {
+                new MaterialDialog.Builder(RegisterActivity.this)
+                    .title(R.string.registration_account_validation_failure)
+                    .iconRes(R.drawable.ic_exclamation)
+                    .content(mEx.getCause().getMessage())
+                    .positiveText(android.R.string.ok)
+                    .autoDismiss(true)
+                    .show();
+            }
         }
 
         @Override
@@ -275,9 +276,6 @@ public class RegisterActivity extends FragmentActivity
         toolbar.setTitleTextColor(getResources().getColor(R.color.white));
         toolbar.setTitle(getString(R.string.title_activity_register));
 
-        if( Answers.getInstance() != null )
-            Answers.getInstance().logCustom(new CustomEvent(getString(R.string.registration_answer_name)));
-
 //        mDigitsAuthCallback = new AuthCallback() {
 //            @Override
 //            public void success(DigitsSession session, String phoneNumber)
@@ -347,7 +345,6 @@ public class RegisterActivity extends FragmentActivity
                     public void success(Result<String> result) {
                         mNewUser.setEmail(result.data);
                         mNewUser.save(getApplicationContext());
-
 
                         new VerifyAccountTask().execute();
                     }
@@ -926,6 +923,12 @@ public class RegisterActivity extends FragmentActivity
                     }
 
                     if( mEx == null ) {
+
+                        if( Answers.getInstance() != null ) {
+                            CustomEvent regEvent = new CustomEvent(getString(R.string.registration_answer_name));
+                            regEvent.putCustomAttribute("User", mNewUser.getFullName());
+                            Answers.getInstance().logCustom(regEvent);
+                        }
 
                         Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
                         startActivity(intent);

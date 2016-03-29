@@ -84,7 +84,6 @@ public class WAMSVersionTable extends AsyncTask<Void, Void, Void> {
             MobileServiceClient wamsClient =
                     new MobileServiceClient(
                     Globals.WAMS_URL,
-                    Globals.WAMS_API_KEY,
                     mContext);
             versionTable = wamsClient.getTable("version", Version.class);
 

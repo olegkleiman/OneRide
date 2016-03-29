@@ -24,7 +24,6 @@ import com.labs.okey.oneride.utils.Globals;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.notifications.MobileServicePush;
-import com.microsoft.windowsazure.mobileservices.notifications.Registration;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import java.net.MalformedURLException;
@@ -60,7 +59,6 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
 
                     MobileServiceClient wamsClient = new MobileServiceClient(
                                                                 Globals.WAMS_URL,
-                                                                Globals.WAMS_API_KEY,
                                                                 context);
 
                     final MobileServicePush msp = wamsClient.getPush();
@@ -71,15 +69,15 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
                         return null;
                     }
 
-                    ListenableFuture<Registration> lf = msp.register(gcmRegistrationId, tags);
+                    ListenableFuture<Void> lf = msp.register(gcmRegistrationId);
 
                     final User user = User.load(context);
                     final CustomEvent subscriptionEvent =
                             new CustomEvent(context.getString(R.string.push_subscription_answer_name));
 
-                    Futures.addCallback(lf, new FutureCallback<Registration>() {
+                    Futures.addCallback(lf, new FutureCallback<Void>() {
                         @Override
-                        public void onSuccess(Registration result) {
+                        public void onSuccess(Void result) {
                             subscriptionEvent.putCustomAttribute(context.getString(R.string.push_subscription_attribute), "Success");
                             if( user != null )
                                 subscriptionEvent.putCustomAttribute("User", user.getFullName());
@@ -184,7 +182,6 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
                 final MobileServiceTable<User> usersTable =
                         new MobileServiceClient(
                                 Globals.WAMS_URL,
-                                Globals.WAMS_API_KEY,
                                 ctx)
                                 .getTable("users", User.class);
 

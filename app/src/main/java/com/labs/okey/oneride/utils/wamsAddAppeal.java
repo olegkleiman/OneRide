@@ -4,9 +4,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Point;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.Display;
 
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
@@ -103,13 +105,13 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
                     .content(mContext.getString(R.string.appeal_send_success))
                     .iconRes(R.drawable.ic_info)
                     .positiveText(android.R.string.ok)
-                    .callback(new MaterialDialog.ButtonCallback() {
-                                  @Override
-                                  public void onPositive(MaterialDialog dialog) {
-                                      mUploader.finished(Globals.APPEAL_UPLOAD_TASK_TAG, true);
-                                  }
-                              }
-                    )
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog,
+                                            @NonNull DialogAction which) {
+                            mUploader.finished(Globals.APPEAL_UPLOAD_TASK_TAG, true);
+                        }
+                    })
                     .show();
         }
         else {

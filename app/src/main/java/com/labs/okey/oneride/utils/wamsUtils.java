@@ -284,7 +284,6 @@ public class wamsUtils {
 
         MobileServiceClient wamsClient = new MobileServiceClient(
                     Globals.WAMS_URL,
-                    Globals.WAMS_API_KEY,
                     context);
 //                .withFilter(new ProgressFilter())
 //                .withFilter(new RefreshTokenCacheFilter());

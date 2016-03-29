@@ -36,7 +36,6 @@ public class AboutFragment extends Fragment {
                              Bundle savedInstanceState) {
 
 
-        View rootView = inflater.inflate(R.layout.fragment_about_about, container, false);
-        return  rootView;
+        return inflater.inflate(R.layout.fragment_about_about, container, false);
     }
 }

@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
+import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 import android.support.design.widget.Snackbar;
 import android.support.v4.view.ViewPager;
@@ -15,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.labs.okey.oneride.adapters.AboutTabAdapter;
 import com.labs.okey.oneride.utils.WAMSVersionTable;
@@ -98,9 +100,10 @@ public class AboutActivity extends BaseActivity
                 .content(getString(R.string.new_version_conent))
                 .positiveText(android.R.string.yes)
                 .negativeText(android.R.string.no)
-                .callback(new MaterialDialog.ButtonCallback() {
+                .onPositive(new MaterialDialog.SingleButtonCallback(){
                     @Override
-                    public void onPositive(MaterialDialog dialog) {
+                    public void onClick(@NonNull MaterialDialog dialog,
+                                        @NonNull DialogAction which) {
                         Intent intent = new Intent(Intent.ACTION_VIEW);
                         intent.setData(Uri.parse(url));
                         //intent.setDataAndType(Uri.parse(url), "application/vnd.android.package-archive");

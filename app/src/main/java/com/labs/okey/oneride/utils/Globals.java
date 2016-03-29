@@ -248,8 +248,8 @@ public class Globals {
     public static final String SERVICE_INSTANCE = "_wififastride";
     public static final String SERVICE_REG_TYPE = "_presence._tcp";
 
-    public static final String WAMS_URL = "https://fastride.azure-mobile.net/";
-    public static final String WAMS_API_KEY = "omCudOMCUJgIGbOklMKYckSiGKajJU91";
+    public static final String WAMS_URL = "https://oneride.azurewebsites.net";
+    //public static final String WAMS_API_KEY = "omCudOMCUJgIGbOklMKYckSiGKajJU91";
 
     public static final String FB_USERNAME_PREF = "username";
     public static final String FB_LASTNAME_PREF = "lastUsername";

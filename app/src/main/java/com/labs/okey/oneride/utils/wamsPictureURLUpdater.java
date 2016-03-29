@@ -4,8 +4,10 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.labs.okey.oneride.R;
 import com.labs.okey.oneride.model.Join;
@@ -73,9 +75,10 @@ public class wamsPictureURLUpdater extends AsyncTask<String, Void, Void> {
                     .title(mContext.getString(R.string.save_error))
                     .content(error.getMessage())
                     .positiveText(android.R.string.ok)
-                    .callback(new MaterialDialog.ButtonCallback() {
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
                         @Override
-                        public void onPositive(MaterialDialog dialog) {
+                        public void onClick(@NonNull MaterialDialog dialog,
+                                            @NonNull DialogAction which) {
                             if (mUrlUpdater != null)
                                 mUrlUpdater.finished(0, false);
                         }
