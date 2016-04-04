@@ -106,6 +106,8 @@ public class SplashScreen extends AppCompatActivity {
         // Setup up Crashlytics as app monitor
         Globals.initializeMonitor(this);
 
+        Globals.initMobileServices(getApplicationContext());
+
         Globals.InitializeVolley(getApplicationContext());
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());

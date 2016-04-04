@@ -18,7 +18,6 @@ import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
-import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import net.steamcrafted.loadtoast.LoadToast;
@@ -46,9 +45,6 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
     String                              mContainerName;
     IUploader                           mUploader;
     Appeal                              mCurrentAppeal;
-
-    private MobileServiceClient         wamsClient;
-    public MobileServiceClient getMobileServiceClient() { return wamsClient; }
 
     LoadToast lt;
 
@@ -149,9 +145,7 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
             appeal.setEmojiId(Integer.toString(mEmojiID));
             appeal.setDriverId(mDriverID);
 
-            wamsClient = wamsUtils.init(mContext);
-
-            MobileServiceTable<Appeal>  wamsAppealTable = getMobileServiceClient().getTable("appeal", Appeal.class);
+            MobileServiceTable<Appeal>  wamsAppealTable = Globals.getMobileServiceClient().getTable("appeal", Appeal.class);
             mCurrentAppeal = wamsAppealTable.insert(appeal).get();
 
         } catch (Exception e) {

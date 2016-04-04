@@ -1,9 +1,7 @@
 package com.labs.okey.oneride.gcm;
 
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -21,12 +19,10 @@ import com.labs.okey.oneride.R;
 import com.labs.okey.oneride.model.PassengerFace;
 import com.labs.okey.oneride.model.User;
 import com.labs.okey.oneride.utils.Globals;
-import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.notifications.MobileServicePush;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
-import java.net.MalformedURLException;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -57,11 +53,7 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
                 try {
                     String[] tags = {userID};
 
-                    MobileServiceClient wamsClient = new MobileServiceClient(
-                                                                Globals.WAMS_URL,
-                                                                context);
-
-                    final MobileServicePush msp = wamsClient.getPush();
+                    final MobileServicePush msp = Globals.getMobileServiceClient().getPush();
                     if( msp == null ) {
                         if( Crashlytics.getInstance() != null )
                             Crashlytics.log(Log.ERROR, LOG_TAG, "Unable to get PUSH");
@@ -179,11 +171,8 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
 
             try {
 
-                final MobileServiceTable<User> usersTable =
-                        new MobileServiceClient(
-                                Globals.WAMS_URL,
-                                ctx)
-                                .getTable("users", User.class);
+                final MobileServiceTable<User> usersTable = Globals.getMobileServiceClient()
+                                                            .getTable("users", User.class);
 
                 new AsyncTask<Void, Void, Void>() {
 
@@ -211,7 +200,7 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
                 }.execute();
 
 
-            } catch(MalformedURLException ex ) {
+            } catch(Exception ex ) {
                 if( Crashlytics.getInstance() != null)
                     Crashlytics.logException(ex);
 

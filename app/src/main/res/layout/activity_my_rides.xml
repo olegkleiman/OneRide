@@ -19,7 +19,7 @@
         <include
             layout="@layout/tool_bar" />
 
-        <com.labs.okey.freeride.views.SlidingTabLayout
+        <com.labs.okey.oneride.views.SlidingTabLayout
             android:id="@+id/sliding_tabs"
             android:background="?attr/colorPrimaryDark"
             android:layout_width="match_parent"

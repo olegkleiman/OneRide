@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/drawer_header_layout"
     android:layout_width="match_parent"
     android:layout_height="178dp"
-    android:background="@drawable/toolbar_bk"
     android:orientation="vertical"
     android:weightSum="1">
 
@@ -35,17 +36,23 @@
             android:layout_marginTop="5dp"
             android:text="oleg_kleyman@hotmail.com"
             android:textSize="14sp"
+            android:scrollHorizontally="true"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:textStyle="normal"/>
 
 
     </LinearLayout>
 
-    <ImageView
+    <com.pkmmte.view.CircularImageView
         android:layout_width="70dp"
         android:layout_height="70dp"
         android:layout_marginStart="16dp"
         android:layout_marginLeft="16dp"
         android:layout_marginTop="38dp"
-        android:id="@+id/circleView" />
+        app:border="true"
+        app:border_color="#FFFFFFFF"
+        app:border_width="4dp"
+        android:id="@+id/setttingsProfileAvatarView" />
 
 </RelativeLayout>

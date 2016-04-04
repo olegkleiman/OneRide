@@ -6,12 +6,10 @@ import android.support.annotation.UiThread;
 import android.util.Log;
 
 import com.labs.okey.oneride.model.Version;
-import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.mobileservices.table.query.QueryOrder;
 
-import java.net.MalformedURLException;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -81,11 +79,7 @@ public class WAMSVersionTable extends AsyncTask<Void, Void, Void> {
     protected Void doInBackground(Void... voids) {
 
         try {
-            MobileServiceClient wamsClient =
-                    new MobileServiceClient(
-                    Globals.WAMS_URL,
-                    mContext);
-            versionTable = wamsClient.getTable("version", Version.class);
+            versionTable = Globals.getMobileServiceClient().getTable("version", Version.class);
 
             MobileServiceList<Version> versions =
                     //versionTable.where().execute().get();
@@ -96,7 +90,7 @@ public class WAMSVersionTable extends AsyncTask<Void, Void, Void> {
                 wamsVerisonMinor = Integer.parseInt(currentVersion.getMinor());
                 wamsURL = currentVersion.getURL();
             }
-        } catch(MalformedURLException | InterruptedException | ExecutionException ex) {
+        } catch(InterruptedException | ExecutionException ex) {
             mEx = ex;
             Log.e(LOG_TAG, ex.getMessage());
         }

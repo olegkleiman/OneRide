@@ -14,7 +14,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AlertDialog;
@@ -28,7 +27,6 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
@@ -56,7 +54,6 @@ import com.labs.okey.oneride.model.GeoFence;
 import com.labs.okey.oneride.model.User;
 import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.wamsUtils;
-import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
@@ -80,7 +77,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.ExecutionException;
 
@@ -552,15 +548,9 @@ public class RegisterActivity extends FragmentActivity
             }
         });
 
-        try{
-            usersTable = new MobileServiceClient(
-                    Globals.WAMS_URL,
-                    this)
+        usersTable = Globals.getMobileServiceClient()
                     .getTable("users", User.class);
 
-        } catch(MalformedURLException ex ) {
-            Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
-        }
     }
 
 //    private Boolean googleHandleSignInResult(GoogleSignInResult result) {
@@ -954,16 +944,11 @@ public class RegisterActivity extends FragmentActivity
                     try {
                         mEx = null;
 
-                        MobileServiceClient wamsClient =
-                                new MobileServiceClient(
-                                        Globals.WAMS_URL,
-                                        getApplicationContext());
-
-                        MobileServiceSyncTable<GeoFence> gFencesSyncTable = wamsClient.getSyncTable("geofences",
+                        MobileServiceSyncTable<GeoFence> gFencesSyncTable = Globals.getMobileServiceClient().getSyncTable("geofences",
                                 GeoFence.class);
-                        wamsUtils.sync(wamsClient, "geofences");
+                        wamsUtils.sync(Globals.getMobileServiceClient(), "geofences");
 
-                        Query pullQuery = wamsClient.getTable(GeoFence.class).where();
+                        Query pullQuery = Globals.getMobileServiceClient().getTable(GeoFence.class).where();
                         gFencesSyncTable.purge(pullQuery);
                         gFencesSyncTable.pull(pullQuery).get();
 

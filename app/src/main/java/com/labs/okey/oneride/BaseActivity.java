@@ -13,6 +13,8 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -48,7 +50,6 @@ import com.labs.okey.oneride.model.User;
 import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.WAMSVersionTable;
 import com.labs.okey.oneride.utils.wamsUtils;
-import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceAuthenticationProvider;
 
 import java.lang.ref.WeakReference;
@@ -56,7 +57,7 @@ import java.net.MalformedURLException;
 import java.util.StringTokenizer;
 
 /**
- * Created by Oleg on 22-Aug-15.
+ * Created by Oleg Kleiman on 22-Aug-15.
  */
 public class BaseActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener{
@@ -80,14 +81,7 @@ public class BaseActivity extends AppCompatActivity
     private GoogleApiClient mGoogleApiClient;
     public GoogleApiClient getGoogleApiClient() { return mGoogleApiClient; }
 
-    private MobileServiceClient wamsClient;
-    public Boolean isWamsInitialized() { return wamsClient != null; }
-    public MobileServiceClient getMobileServiceClient() { return wamsClient; }
-
-    private WAMSVersionTable wamsVersionTable;
-
     private ActionBarDrawerToggle mDrawerToggle;
-    private DrawerLayout mDrawerLayout;
 
     MediaPlayer beepSuccess;
     MediaPlayer beepError;
@@ -155,8 +149,37 @@ public class BaseActivity extends AppCompatActivity
             for (int i = 0; i < ((ViewGroup) view).getChildCount(); i++) {
                 unbindDrawables(((ViewGroup) view).getChildAt(i));
             }
-            ((ViewGroup) view).removeAllViews();
+            try {
+                ((ViewGroup) view).removeAllViews();
+            } catch(UnsupportedOperationException ex) {
+                Log.e(LOG_TAG, ex.getMessage());
+            }
         }
+    }
+
+    public static Drawable scaleImage(Context ctx, Drawable image, float scaleFactor) {
+
+        if( image == null || !(image instanceof BitmapDrawable) )
+            return image;
+
+        Bitmap b = ((BitmapDrawable)image).getBitmap();
+
+//        DisplayMetrics metrics = new DisplayMetrics();
+//        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+//        int density = b.getDensity();
+
+        int sizeX = Math.round(image.getIntrinsicWidth() * scaleFactor);
+        int sizeY = Math.round(image.getIntrinsicHeight() + scaleFactor);
+
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 4;
+        //Bitmap bitmapScaled = BitmapFactory.decodeResource(,,options);
+
+        Bitmap bitmapScaled = Bitmap.createScaledBitmap(b, sizeX, sizeY, false);
+        bitmapScaled.setDensity(Bitmap.DENSITY_NONE);
+
+        image = new BitmapDrawable(ctx.getResources(), bitmapScaled);
+        return image;
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -303,9 +326,11 @@ public class BaseActivity extends AppCompatActivity
         }
 
         mDrawerRecyclerView = (RecyclerView) findViewById(R.id.left_drawer);
-        mDrawerRecyclerView.setHasFixedSize(true);
-        mDrawerRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mDrawerRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        if( mDrawerRecyclerView != null ) {
+            mDrawerRecyclerView.setHasFixedSize(true);
+            mDrawerRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+            mDrawerRecyclerView.setItemAnimator(new DefaultItemAnimator());
+        }
 
         mUser = User.load(this);
 
@@ -325,65 +350,42 @@ public class BaseActivity extends AppCompatActivity
         final Context ctx = this;
 
         LinearLayout aboutLayout = (LinearLayout) findViewById(R.id.about_row);
-        aboutLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(ctx, AboutActivity.class);
-                ctx.startActivity(intent);
+        if( aboutLayout != null )
+            aboutLayout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(ctx, AboutActivity.class);
+                    ctx.startActivity(intent);
+                }
+            });
+
+        DrawerLayout mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if( mDrawerLayout != null ) {
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                // set a custom shadow that overlays the main content when the drawer opens
+                mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
             }
-        });
 
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            // set a custom shadow that overlays the main content when the drawer opens
-            mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
+            mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
+                    R.string.drawer_open, R.string.drawer_close);
+
+            mDrawerToggle.setDrawerIndicatorEnabled(true);
+            mDrawerLayout.addDrawerListener(mDrawerToggle);
         }
-
-        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
-                R.string.drawer_open, R.string.drawer_close);
-
-        mDrawerToggle.setDrawerIndicatorEnabled(true);
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
-
     }
 
     public void wamsInit(Boolean withAutoUpdate) {
 
         try {
-            wamsClient = wamsUtils.init(this);
+            wamsUtils.init(this);
 
             if (withAutoUpdate) {
                 startAutoUpdate();
             }
-        } catch(MalformedURLException ex ) {
+        } catch (MalformedURLException ex) {
             Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
         }
-
-//        try {
-//            wamsClient = new MobileServiceClient(
-//                    Globals.WAMS_URL,
-//                    Globals.WAMS_API_KEY,
-//                    this);
-//
-//            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-//            String userID = sharedPrefs.getString(Globals.USERIDPREF, "");
-//            MobileServiceUser wamsUser = new MobileServiceUser(userID);
-//
-//            String token = sharedPrefs.getString(Globals.WAMSTOKENPREF, "");
-//            // According to this article (http://www.thejoyofcode.com/Setting_the_auth_token_in_the_Mobile_Services_client_and_caching_the_user_rsquo_s_identity_Day_10_.aspx)
-//            // this should be JWT token, so use WAMS_TOKEN
-//            wamsUser.setAuthenticationToken(token);
-//
-//            wamsClient.setCurrentUser(wamsUser);
-//
-//            if( withAutoUpdate ) {
-//                startAutoUpdate();
-//            }
-//
-//        } catch(MalformedURLException ex ) {
-//            Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
-//        }
-
     }
 
     private void startAutoUpdate() {
@@ -393,7 +395,7 @@ public class BaseActivity extends AppCompatActivity
             if (this instanceof WAMSVersionTable.IVersionMismatchListener) {
                 listener = (WAMSVersionTable.IVersionMismatchListener) this;
             }
-            wamsVersionTable = new WAMSVersionTable(this, listener);
+            WAMSVersionTable wamsVersionTable = new WAMSVersionTable(this, listener);
             PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
             String packageVersionName = info.versionName;
             if (!packageVersionName.isEmpty()) {

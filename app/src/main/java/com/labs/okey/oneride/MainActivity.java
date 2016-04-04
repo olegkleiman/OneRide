@@ -12,18 +12,13 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
@@ -49,7 +44,6 @@ import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.IRecyclerClickListener;
 import com.labs.okey.oneride.utils.WAMSVersionTable;
 import com.labs.okey.oneride.utils.wamsUtils;
-import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceAuthenticationProvider;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUser;
@@ -59,7 +53,6 @@ import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTab
 import com.microsoft.windowsazure.notifications.NotificationsManager;
 import com.pkmmte.view.CircularImageView;
 
-import java.net.MalformedURLException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -75,7 +68,6 @@ public class MainActivity extends BaseActivity
 
     static final int            REGISTER_USER_REQUEST = 1;
     private final String        LOG_TAG = getClass().getSimpleName();
-    public static MobileServiceClient wamsClient;
     private boolean             mWAMSLogedIn = false;
 
     @Override
@@ -137,7 +129,7 @@ public class MainActivity extends BaseActivity
         String accessToken = sharedPrefs.getString(Globals.TOKENPREF, "");
         String accessTokenSecret =  sharedPrefs.getString(Globals.TOKENSECRETPREF, "");
 
-        // Don't mess with BaseActivity.wamsInit();
+        // Don't confuse with BaseActivity.wamsInit();
         if( !wamsInit() ) {
             login(accessToken, accessTokenSecret);
 
@@ -147,20 +139,17 @@ public class MainActivity extends BaseActivity
 
         setupUI(getString(R.string.title_activity_main), "");
 
-        Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_start));
+        if( Crashlytics.getInstance() != null)
+            Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_start));
 
         new AsyncTask<Void, Void, Void>() {
 
             MobileServiceSyncTable<GeoFence> gFencesSyncTable;
-            MobileServiceClient wamsClient;
 
             @Override
             protected void onPreExecute() {
                 try {
-                    wamsClient = new MobileServiceClient(
-                            Globals.WAMS_URL,
-                            getApplicationContext());
-                    gFencesSyncTable = wamsClient.getSyncTable("geofences", GeoFence.class);
+                    gFencesSyncTable = Globals.getMobileServiceClient().getSyncTable("geofences", GeoFence.class);
                 }
                 catch(Exception ex){
                     Log.e(LOG_TAG, ex.getMessage());
@@ -172,13 +161,13 @@ public class MainActivity extends BaseActivity
 
                 try {
 
-                    wamsUtils.sync(wamsClient, "geofences");
+                    wamsUtils.sync(Globals.getMobileServiceClient(), "geofences");
 
-                    Query query = wamsClient.getTable(GeoFence.class).where();
+                    Query query = Globals.getMobileServiceClient().getTable(GeoFence.class).where();
 
                     MobileServiceList<GeoFence> geoFences = gFencesSyncTable.read(query).get();
                     if(geoFences.getTotalCount() == 0 ) {
-                        query = wamsClient.getTable(GeoFence.class).where().field("isactive").ne(false);
+                        query = Globals.getMobileServiceClient().getTable(GeoFence.class).where().field("isactive").ne(false);
 
                         gFencesSyncTable.purge(query);
                         gFencesSyncTable.pull(query).get();
@@ -223,6 +212,17 @@ public class MainActivity extends BaseActivity
         Log.d(LOG_TAG, "onDestroy");
 
         //NotificationsManager.stopHandlingNotifications(this);
+    }
+
+    public Boolean wamsInit(){
+
+        if( mWAMSLogedIn )
+            return true;
+
+        if( !wamsUtils.loadUserTokenCache(Globals.getMobileServiceClient(), this) )
+            return false;
+
+        return true;
     }
 
     //
@@ -289,37 +289,15 @@ public class MainActivity extends BaseActivity
     }
 
     public void onDriverClicked(View v) {
+        Globals.clearPassengerFaces();
 
+        Intent intent = new Intent(this, DriverRoleActivity.class);
+        startActivity(intent);
     }
 
     public void onPassengerClicked(View v) {
-
-    }
-
-    public Boolean wamsInit(){
-
-        if( mWAMSLogedIn )
-            return true;
-
-        try {
-            wamsClient = new MobileServiceClient(
-                    Globals.WAMS_URL,
-                    this);
-            //.withFilter(new RefreshTokenCacheFilter());
-            //.withFilter(new wamsUtils.ProgressFilter());
-
-            if( !wamsUtils.loadUserTokenCache(wamsClient, this) )
-                return false;
-
-
-        } catch(MalformedURLException ex ) {
-            if( Crashlytics.getInstance() != null)
-                Crashlytics.logException(ex);
-
-            Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
-        }
-
-        return true;
+        Intent intent = new Intent(this, PassengerRoleActivity.class);
+        startActivity(intent);
     }
 
     private void login(String accessToken, String accessTokenSecret) {
@@ -339,7 +317,7 @@ public class MainActivity extends BaseActivity
         }
 
         ListenableFuture<MobileServiceUser> loginFuture =
-                wamsClient.login(tokenProvider, body);
+                Globals.getMobileServiceClient().login(tokenProvider, body);
 
         Futures.addCallback(loginFuture, new FutureCallback<MobileServiceUser>() {
             @Override
@@ -389,7 +367,7 @@ public class MainActivity extends BaseActivity
 
         if (tokenProvider == MobileServiceAuthenticationProvider.MicrosoftAccount) {
 
-            final MobileServiceTable<User> usersTable = wamsClient.getTable("users", User.class);
+            final MobileServiceTable<User> usersTable = Globals.getMobileServiceClient().getTable("users", User.class);
 
             Callable<Void> updateUserRegistrationTask = new Callable<Void>() {
                 @Override
@@ -419,13 +397,38 @@ public class MainActivity extends BaseActivity
     protected void setupUI(String title, String subTitle) {
         super.setupUI(title, subTitle);
 
+        RecyclerView recycler = (RecyclerView)findViewById(R.id.recyclerViewModes);
+        if( recycler != null ) {
+            recycler.setHasFixedSize(true);
+            recycler.setLayoutManager(new LinearLayoutManager(this));
+            recycler.setItemAnimator(new DefaultItemAnimator());
+
+            List<FRMode> modes = new ArrayList<>();
+            FRMode mode1 = new FRMode();
+            mode1.setName(getString(R.string.mode_name_driver));
+            mode1.setImageId(R.drawable.driver64);
+            modes.add(mode1);
+            FRMode mode2 = new FRMode();
+            mode2.setName(getString(R.string.mode_name_passenger));
+            mode2.setImageId(R.drawable.passenger64);
+            modes.add(mode2);
+
+            ModesPeersAdapter adapter = new ModesPeersAdapter(this, modes);
+            recycler.setAdapter(adapter);
+        }
+
         try {
             User user = User.load(this);
 
             final CircularImageView imageAvatar = (CircularImageView) findViewById(R.id.userAvatarView);
+            if( imageAvatar == null )
+                return;
 
-            // Retrieves an image thru Volley
+            // Retrieves an image through Volley
             String pictureURL = user.getPictureURL();
+            if( pictureURL.isEmpty() )
+                return;
+
             if( !pictureURL.contains("https") )
                 pictureURL = pictureURL.replace("http", "https");
             Cache cache = Globals.volley.getRequestQueue().getCache();
@@ -441,8 +444,11 @@ public class MainActivity extends BaseActivity
                             public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
 
                                 Bitmap bitmap = response.getBitmap();
-                                if (bitmap != null)
+                                if (bitmap != null) {
+                                    int height = imageAvatar.getHeight();
+                                    int width = imageAvatar.getWidth();
                                     imageAvatar.setImageBitmap(bitmap);
+                                }
                             }
 
                             @Override
@@ -460,22 +466,6 @@ public class MainActivity extends BaseActivity
             Log.e(LOG_TAG, e.getMessage());
         }
 
-        RecyclerView recycler = (RecyclerView)findViewById(R.id.recyclerViewModes);
-        recycler.setHasFixedSize(true);
-        recycler.setLayoutManager(new LinearLayoutManager(this));
-        recycler.setItemAnimator(new DefaultItemAnimator());
 
-        List<FRMode> modes = new ArrayList<>();
-        FRMode mode1 = new FRMode();
-        mode1.setName( getString(R.string.mode_name_driver));
-        mode1.setImageId(R.drawable.driver64);
-        modes.add(mode1);
-        FRMode mode2 = new FRMode();
-        mode2.setName(getString(R.string.mode_name_passenger));
-        mode2.setImageId(R.drawable.passenger64);
-        modes.add(mode2);
-
-        ModesPeersAdapter adapter = new ModesPeersAdapter(this, modes);
-        recycler.setAdapter(adapter);
     }
 }

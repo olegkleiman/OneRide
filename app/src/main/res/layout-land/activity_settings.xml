@@ -24,10 +24,10 @@
             android:layout_height="match_parent">
 
             <RelativeLayout
+                android:id="@+id/settings_header_layout"
                 android:layout_width="@dimen/avatar_background_settings_width"
                 android:layout_height="fill_parent"
                 android:orientation="vertical"
-                android:background="@drawable/toolbar_bk"
                 android:layout_gravity="center">
 
                 <com.pkmmte.view.CircularImageView
@@ -107,6 +107,9 @@
                             android:layout_marginStart="12dp"
                             android:layout_marginLeft="12dp"
                             android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:scrollHorizontally="true"
                             android:text="@string/default_value"
                             android:id="@+id/textUserEmail"
                             android:layout_gravity="center_vertical" />

@@ -9,12 +9,10 @@ import android.util.Log;
 
 import com.labs.okey.oneride.model.Version;
 import com.labs.okey.oneride.utils.Globals;
-import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.mobileservices.table.query.QueryOrder;
 
-import java.net.MalformedURLException;
 import java.util.concurrent.ExecutionException;
 
 public class AutoUpdateService extends Service {
@@ -38,13 +36,8 @@ public class AutoUpdateService extends Service {
             protected Void doInBackground(Void... voids) {
 
                 try {
-                    MobileServiceClient wamsClient =
-                            new MobileServiceClient(
-                                    Globals.WAMS_URL,
-                                    getApplicationContext());
-
                     MobileServiceTable<Version> versionTable
-                            = wamsClient.getTable("version", Version.class);
+                            = Globals.getMobileServiceClient().getTable("version", Version.class);
                     MobileServiceList<Version> versions =
                             //versionTable.where().execute().get();
                             versionTable.top(1).orderBy("released", QueryOrder.Descending).execute().get();
@@ -55,7 +48,7 @@ public class AutoUpdateService extends Service {
 //                wamsURL = currentVersion.getURL();
                     }
 
-                } catch(MalformedURLException | InterruptedException | ExecutionException ex) {
+                } catch(InterruptedException | ExecutionException ex) {
                     Log.e(LOG_TAG, ex.getMessage());
                 }
 

@@ -3,19 +3,26 @@ package com.labs.okey.oneride.adapters;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.android.volley.Cache;
+import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageLoader;
+import com.labs.okey.oneride.BaseActivity;
 import com.labs.okey.oneride.MainActivity;
 import com.labs.okey.oneride.MyRidesActivity;
 import com.labs.okey.oneride.R;
@@ -23,6 +30,7 @@ import com.labs.okey.oneride.SettingsActivity;
 import com.labs.okey.oneride.TutorialActivity;
 import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.RoundedDrawable;
+import com.pkmmte.view.CircularImageView;
 
 /**
  * Created by Oleg Kleiman on 25-Apr-15.
@@ -31,8 +39,9 @@ public class DrawerAccountAdapter extends RecyclerView.Adapter<DrawerAccountAdap
 
     private static final String LOG_TAG = "FR.DrawerAdapter";
 
-    private static final int TYPE_HEADER = 0;  // Declaring Variable to Understand which View is being worked on
-    // IF the view under inflation and population is header or Item
+    private static final int TYPE_HEADER = 0;
+    // Declaring Variable to Understand which View is being worked on.
+    // If the view under inflation and population is header or Item
     private static final int TYPE_ITEM = 1;
 
     private Context         mContext;
@@ -115,8 +124,7 @@ public class DrawerAccountAdapter extends RecyclerView.Adapter<DrawerAccountAdap
         }
 
         View.OnClickListener listener = mListeners[viewType];
-        ViewHolder vhItem = new ViewHolder(v,viewType, listener);
-        return vhItem;
+        return new ViewHolder(v,viewType, listener);
     }
 
     @Override
@@ -124,50 +132,64 @@ public class DrawerAccountAdapter extends RecyclerView.Adapter<DrawerAccountAdap
 
         if (holder.holderId == TYPE_HEADER) {
 
-            Drawable drawable = null;
-//            try {
-//                drawable = (Globals.drawMan.userDrawable(mContext,
-//                        "1",
-//                        mPictureURL)).get();
-//                if( drawable != null ) {
-//                    drawable = RoundedDrawable.fromDrawable(drawable);
-//                    ((RoundedDrawable) drawable)
-//                            .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-//                            .setBorderColor(Color.LTGRAY)
-//                            .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
-//                            .setOval(true);
-//
-//                    holder.imageProfile.setImageDrawable(drawable);
-//                }
-//            } catch (InterruptedException | ExecutionException e) {
-//                Log.e(LOG_TAG, e.getMessage());
-//            }
+            Drawable d = BaseActivity.scaleImage(mContext,
+                    ContextCompat.getDrawable(mContext, R.drawable.rsz_toolbar_bk),
+                    0.3f);
 
-            // Retrieves an image thru Volley
-            com.android.volley.toolbox.ImageRequest request =
-                    new com.android.volley.toolbox.ImageRequest(mPictureURL,
-                            new Response.Listener<Bitmap>() {
+            holder.headerLayout.setBackground(d);
+
+            // Retrieves an image through Volley
+            if( !mPictureURL.isEmpty() ) {
+                RequestQueue requestQueue = Globals.volley.getRequestQueue();
+                if (requestQueue == null)
+                    return;
+
+                Cache cache = requestQueue.getCache();
+                if (cache == null)
+                    return;
+
+                Cache.Entry entry = cache.get(mPictureURL);
+                if (entry != null) {
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(entry.data, 0, entry.data.length);
+                    holder.imageProfile.setImageBitmap(bitmap);
+                } else {
+                    ImageLoader imageLoader = Globals.volley.getImageLoader();
+
+                    if (!mPictureURL.contains("https"))
+                        mPictureURL = mPictureURL.replace("http", "https");
+
+                    imageLoader.get(mPictureURL,
+                            new ImageLoader.ImageListener() {
                                 @Override
-                                public void onResponse(Bitmap bitmap) {
-                                    Drawable drawable = new BitmapDrawable(mContext.getResources(), bitmap);
-
-                                    drawable = RoundedDrawable.fromDrawable(drawable);
-                                    ((RoundedDrawable) drawable)
-                                            .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-                                            .setBorderColor(Color.WHITE)
-                                            .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
-                                            .setOval(true);
-
-                                    holder.imageProfile.setImageDrawable(drawable);
+                                public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
+                                    Bitmap bitmap = response.getBitmap();
+                                    if (bitmap != null)
+                                        holder.imageProfile.setImageBitmap(bitmap);
                                 }
-                            }, 0, 0, null,
-                            new Response.ErrorListener(){
-                                public void onErrorResponse(VolleyError error){
+
+                                @Override
+                                public void onErrorResponse(VolleyError error) {
                                     Log.e(LOG_TAG, error.toString());
                                 }
                             });
-            request.setShouldCache(true);
-            Globals.volley.addToRequestQueue(request);
+                }
+            }
+
+//            com.android.volley.toolbox.ImageRequest request =
+//                    new com.android.volley.toolbox.ImageRequest(mPictureURL,
+//                            new Response.Listener<Bitmap>() {
+//                                @Override
+//                                public void onResponse(Bitmap bitmap) {
+//                                    holder.imageProfile.setImageBitmap(bitmap);
+//                                }
+//                            }, 0, 0, ImageView.ScaleType.CENTER_INSIDE, null,
+//                            new Response.ErrorListener(){
+//                                public void onErrorResponse(VolleyError error){
+//                                    Log.e(LOG_TAG, error.toString());
+//                                }
+//                            });
+//            request.setShouldCache(true);
+//            Globals.volley.addToRequestQueue(request);
 
             holder.txtName.setText(mName);
             holder.txtEmail.setText(mEmail);
@@ -206,9 +228,10 @@ public class DrawerAccountAdapter extends RecyclerView.Adapter<DrawerAccountAdap
         int holderId;
 
         // Header views
-        TextView txtName;
-        TextView txtEmail;
-        ImageView imageProfile;
+        TextView            txtName;
+        TextView            txtEmail;
+        CircularImageView   imageProfile;
+        RelativeLayout      headerLayout;
 
         // Row views
         ImageView rowImageView;
@@ -222,7 +245,8 @@ public class DrawerAccountAdapter extends RecyclerView.Adapter<DrawerAccountAdap
 
                 txtName = (TextView) itemLayoutView.findViewById(R.id.name);
                 txtEmail = (TextView) itemLayoutView.findViewById(R.id.email);
-                imageProfile = (ImageView) itemLayoutView.findViewById(R.id.circleView);
+                imageProfile = (CircularImageView) itemLayoutView.findViewById(R.id.setttingsProfileAvatarView);
+                headerLayout = (RelativeLayout) itemLayoutView.findViewById(R.id.drawer_header_layout);
 
                 if( listener != null ) {
                     itemLayoutView.setOnClickListener(listener);

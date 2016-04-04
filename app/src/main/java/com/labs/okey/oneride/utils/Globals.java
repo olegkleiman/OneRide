@@ -7,6 +7,7 @@ import android.renderscript.Matrix4f;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
+import com.crashlytics.android.ndk.CrashlyticsNdk;
 import com.digits.sdk.android.Digits;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
@@ -16,10 +17,12 @@ import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
 import com.labs.okey.oneride.model.PassengerFace;
 import com.labs.okey.oneride.model.User;
+import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -116,6 +119,27 @@ public class Globals {
             mFbAccessTokenTracker.stopTracking();
     }
 
+    private static MobileServiceClient wamsClient;
+    public static boolean initMobileServices(Context ctx) {
+        try {
+            wamsClient = new MobileServiceClient(Globals.WAMS_URL,
+                                                 ctx);
+            //.withFilter(new RefreshTokenCacheFilter());
+            //.withFilter(new wamsUtils.ProgressFilter());
+        } catch(MalformedURLException ex) {
+
+            if( Crashlytics.getInstance() != null)
+                Crashlytics.logException(ex);
+
+            return false;
+        }
+
+        return true;
+    }
+    public static MobileServiceClient getMobileServiceClient() {
+        return wamsClient;
+    }
+
     private static Boolean _monitorInitialized = false;
     private static Boolean isMonitorInitialized() {
         return _monitorInitialized;
@@ -129,8 +153,7 @@ public class Globals {
 
             TwitterAuthConfig authConfig =  new TwitterAuthConfig(TWITTER_CONSUMER_KEY,
                                                                   TWITTER_CONSUMER_SECRET);
-            Fabric.with(ctx, new Twitter(authConfig), new Crashlytics(), new Digits());
-//            Fabric.with(ctx, new Crashlytics(), new CrashlyticsNdk());
+            Fabric.with(ctx, new Twitter(authConfig), new Crashlytics(), new CrashlyticsNdk(), new Digits());
 
             User user = User.load(ctx);
             Crashlytics.setUserIdentifier(user.getRegistrationId());

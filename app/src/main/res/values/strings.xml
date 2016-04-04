@@ -326,4 +326,5 @@ limitations under the License.</string>
 
     <string name="title_activity_splash_screen">SplashScreen</string>
 
+    <string name="error_no_google_map">Unable to connect to Google Maps API</string>
 </resources>

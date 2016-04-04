@@ -35,8 +35,7 @@ public class MobileServiceTableTests extends InstrumentationTestCase {
     public void testNewMobileServiceTableShouldReturnMobileServiceTable() throws MalformedURLException {
         String tableName = "rides";
         MobileServiceClient client = new MobileServiceClient(Globals.WAMS_URL,
-                Globals.WAMS_API_KEY,
-                getInstrumentation().getTargetContext());
+                                    getInstrumentation().getTargetContext());
         MobileServiceTable<Ride> msTable = new MobileServiceTable<Ride>(tableName, client, Ride.class);
 
         assertEquals(tableName, msTable.getTableName());
@@ -48,7 +47,6 @@ public class MobileServiceTableTests extends InstrumentationTestCase {
         MobileServiceClient wamsClient = null;
         try {
             wamsClient = new MobileServiceClient(Globals.WAMS_URL,
-                    Globals.WAMS_API_KEY,
                     getInstrumentation().getTargetContext());
         } catch (MalformedURLException e) {
             e.printStackTrace();

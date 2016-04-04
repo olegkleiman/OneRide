@@ -47,8 +47,7 @@ public class MyRidesActivity extends BaseActivity
             Globals.userID = sharedPrefs.getString(Globals.USERIDPREF, "");
         }
 
-        wamsInit(false);
-        mRidesSyncTable = getMobileServiceClient().getSyncTable("rides", Ride.class);
+        mRidesSyncTable = Globals.getMobileServiceClient().getSyncTable("rides", Ride.class);
 
         setupUI(getString(R.string.subtitle_activity_my_rides), "");
 
@@ -109,9 +108,9 @@ public class MyRidesActivity extends BaseActivity
 
                 try {
 
-                    Query pullQueryRides = getMobileServiceClient().getTable(Ride.class)
+                    Query pullQueryRides = Globals.getMobileServiceClient().getTable(Ride.class)
                             .where().field("driverid").eq(Globals.userID);
-                    wamsUtils.sync(getMobileServiceClient(), "rides");
+                    wamsUtils.sync(Globals.getMobileServiceClient(), "rides");
 
                     if( Globals.myRides_update_required ) {
 

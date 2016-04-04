@@ -280,13 +280,7 @@ public class wamsUtils {
 
     }
 
-    static public MobileServiceClient init(Context context) throws MalformedURLException {
-
-        MobileServiceClient wamsClient = new MobileServiceClient(
-                    Globals.WAMS_URL,
-                    context);
-//                .withFilter(new ProgressFilter())
-//                .withFilter(new RefreshTokenCacheFilter());
+    static public void init(Context context) throws MalformedURLException {
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
         String userID = sharedPrefs.getString(Globals.USERIDPREF, "");
@@ -297,9 +291,9 @@ public class wamsUtils {
         // this should be JWT token, so use WAMS_TOKEN
         wamsUser.setAuthenticationToken(token);
 
-        wamsClient.setCurrentUser(wamsUser);
+        Globals.getMobileServiceClient().setCurrentUser(wamsUser);
 
-        return  wamsClient;
+        return;
 
     }
 

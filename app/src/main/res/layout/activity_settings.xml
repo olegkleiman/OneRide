@@ -18,10 +18,10 @@
             layout="@layout/tool_bar" />
 
         <RelativeLayout
+            android:id="@+id/settings_header_layout"
             android:layout_width="fill_parent"
             android:layout_height="@dimen/avatar_settings_height"
             android:orientation="vertical"
-            android:background="@drawable/toolbar_bk"
             android:layout_gravity="center">
 
             <com.pkmmte.view.CircularImageView
@@ -34,7 +34,8 @@
                 app:border_width="4dp"
                 android:layout_gravity="center_vertical"
                 android:layout_centerVertical="true"
-                android:layout_centerHorizontal="true" />
+                android:layout_centerHorizontal="true"
+                android:scaleType="fitXY" />
 
             <LinearLayout
                 android:layout_width="wrap_content"

@@ -71,9 +71,7 @@ public class ModesPeersAdapter extends RecyclerView.Adapter<ModesPeersAdapter.Vi
             FRMode mode = items.get(position - 1);
 
             holder.modeName.setText(mode.getName());
-            holder.modeImage.setImageDrawable(mContext
-                    .getResources()
-                    .getDrawable(mode.getimageId()));
+            holder.modeImage.setImageResource(mode.getimageId());
         }
     }
 

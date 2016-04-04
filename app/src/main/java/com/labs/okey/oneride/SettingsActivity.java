@@ -4,8 +4,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -14,6 +12,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -31,6 +30,7 @@ import android.widget.Toast;
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.android.volley.Cache;
+import com.android.volley.RequestQueue;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -39,10 +39,9 @@ import com.labs.okey.oneride.model.GeoFence;
 import com.labs.okey.oneride.model.RegisteredCar;
 import com.labs.okey.oneride.model.User;
 import com.labs.okey.oneride.utils.Globals;
-import com.labs.okey.oneride.utils.RoundedDrawable;
+import com.labs.okey.oneride.utils.VolleySingletone;
 import com.labs.okey.oneride.utils.WAMSVersionTable;
 import com.labs.okey.oneride.utils.wamsUtils;
-import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
@@ -54,7 +53,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -82,6 +80,15 @@ public class SettingsActivity extends BaseActivity
         setContentView(R.layout.activity_settings);
 
         setupUI(getString(R.string.title_activity_settings), "");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        View headerLayout = findViewById(R.id.settings_header_layout);
+        if( headerLayout != null )
+            headerLayout.setBackground(null);
     }
 
     @Override
@@ -166,18 +173,19 @@ public class SettingsActivity extends BaseActivity
     private void displayUser() {
         mUser = getUser();
 
-//        try {
-
         TextView txtView = (TextView)findViewById(R.id.textUserName);
-        txtView.setText(String.format("%s %s", mUser.getFirstName(), mUser.getLastName()));
+        if( txtView != null )
+            txtView.setText(String.format("%s %s", mUser.getFirstName(), mUser.getLastName()));
 
         txtView = (TextView)findViewById(R.id.textUserEmail);
-        txtView.setText(mUser.getEmail());
+        if( txtView != null )
+            txtView.setText(mUser.getEmail());
 
         txtView = (TextView)findViewById(R.id.textUserPhone);
-        txtView.setText(mUser.getPhone());
+        if( txtView != null )
+            txtView.setText(mUser.getPhone());
 
-        ImageView providerLogoImageView = (ImageView) findViewById(R.id.provider_logo);
+
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String provider = sharedPrefs.getString(Globals.REG_PROVIDER_PREF, "");
         int drawableLogoId = 0;
@@ -190,19 +198,37 @@ public class SettingsActivity extends BaseActivity
         } else if( provider.equals(Globals.TWITTER_PROVIDER)) {
             drawableLogoId = R.drawable.twitter_logo;
         }
+
+        ImageView providerLogoImageView = (ImageView) findViewById(R.id.provider_logo);
+        if( providerLogoImageView == null )
+            return;
+
         if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             providerLogoImageView.setImageDrawable(getResources()
                                 .getDrawable(drawableLogoId,
                                             getApplicationContext().getTheme()));
         } else {
-            providerLogoImageView.setImageDrawable(getResources()
-                                .getDrawable(drawableLogoId));
+            providerLogoImageView.setImageDrawable(ContextCompat
+                                .getDrawable(this, drawableLogoId));
         }
 
-        // Retrieves an image thru Volley
+        // Retrieves an image through Volley
         final CircularImageView profileImageView = (CircularImageView)findViewById(R.id.imageProfileView);
+        if( profileImageView == null )
+            return;
 
-        Cache cache = Globals.volley.getRequestQueue().getCache();
+        VolleySingletone volley = Globals.volley;
+        if( volley == null )
+            return;
+
+        RequestQueue requestQueue = Globals.volley.getRequestQueue();
+        if( requestQueue == null )
+            return;
+
+        Cache cache = requestQueue.getCache();
+        if( cache == null )
+            return;
+
         Cache.Entry entry = cache.get(mUser.getPictureURL());
         if( entry != null ) {
             Bitmap bitmap = BitmapFactory.decodeByteArray(entry.data, 0, entry.data.length);
@@ -211,6 +237,9 @@ public class SettingsActivity extends BaseActivity
 
             ImageLoader imageLoader = Globals.volley.getImageLoader();
             String pictureURL = mUser.getPictureURL();
+            if( pictureURL.isEmpty() )
+                return;
+
             if( !pictureURL.contains("https") )
                 pictureURL = pictureURL.replace("http", "https");
             imageLoader.get(pictureURL,
@@ -219,7 +248,7 @@ public class SettingsActivity extends BaseActivity
                     public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
 
                         Bitmap bitmap = response.getBitmap();
-                        if (bitmap != null)
+                        if (bitmap != null )
                             profileImageView.setImageBitmap(bitmap);
                     }
 
@@ -230,50 +259,33 @@ public class SettingsActivity extends BaseActivity
             });
         }
 
-//        Drawable drawable = profileImageView.getDrawable();
+    }
+
+//    private void setUserPicture(Bitmap bitmap) {
+//        Drawable drawable = new BitmapDrawable(getResources(), bitmap);
+//
 //        drawable = RoundedDrawable.fromDrawable(drawable);
 //        ((RoundedDrawable) drawable)
 //                .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
 //                .setBorderColor(Color.WHITE)
 //                .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
 //                .setOval(true);
-//        profileImageView.setImageDrawable(drawable);
-
-//            drawable = (Globals.drawMan.userDrawable(this,
-//                    "1",
-//                    mUser.getPictureURL())).get();
 //
-//            drawable = RoundedDrawable.fromDrawable(drawable);
-//            ((RoundedDrawable) drawable)
-//                    .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-//                    .setBorderColor(Color.WHITE)
-//                    .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
-//                    .setOval(true);
-//
+//        ImageView userPicture = (ImageView)findViewById(R.id.imageProfileView);
+//        if( userPicture != null )
 //            userPicture.setImageDrawable(drawable);
-//        } catch(InterruptedException | ExecutionException ex) {
-//            Log.e(LOG_TAG, ex.getMessage());
-//        }
-
-    }
-
-    private void setUserPicture(Bitmap bitmap) {
-        Drawable drawable = new BitmapDrawable(getResources(), bitmap);
-
-        drawable = RoundedDrawable.fromDrawable(drawable);
-        ((RoundedDrawable) drawable)
-                .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-                .setBorderColor(Color.WHITE)
-                .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
-                .setOval(true);
-
-        ImageView userPicture = (ImageView)findViewById(R.id.imageProfileView);
-        userPicture.setImageDrawable(drawable);
-    }
+//    }
 
     @Override
     protected void setupUI(String title, String subTitle) {
         super.setupUI(title, subTitle);
+
+        View headerLayout = findViewById(R.id.settings_header_layout);
+        Drawable d = BaseActivity.scaleImage(this,
+                ContextCompat.getDrawable(this, R.drawable.rsz_toolbar_bk),
+                0.3f);
+        if( headerLayout != null )
+           headerLayout.setBackground(d);
 
         displayUser();
 
@@ -494,16 +506,12 @@ public class SettingsActivity extends BaseActivity
             protected Void doInBackground(Void... voids) {
 
                 try {
-                    MobileServiceClient wamsClient =
-                            new MobileServiceClient(
-                                    Globals.WAMS_URL,
-                                    getApplicationContext());
 
-                    MobileServiceSyncTable<GeoFence> gFencesSyncTable = wamsClient.getSyncTable("geofences",
+                    MobileServiceSyncTable<GeoFence> gFencesSyncTable = Globals.getMobileServiceClient().getSyncTable("geofences",
                             GeoFence.class);
-                    MobileServiceTable<GeoFence> gFencesTbl = wamsClient.getTable(GeoFence.class);
+                    MobileServiceTable<GeoFence> gFencesTbl = Globals.getMobileServiceClient().getTable(GeoFence.class);
 
-                    wamsUtils.sync(wamsClient, "geofences");
+                    wamsUtils.sync(Globals.getMobileServiceClient(), "geofences");
 
                     Query pullQuery = gFencesTbl.where().field("isactive").ne(false);
                     gFencesSyncTable.purge(pullQuery);
@@ -522,7 +530,7 @@ public class SettingsActivity extends BaseActivity
                         Log.i(LOG_TAG, "GFence: " + lat + " " + lon);
                     }
 
-                } catch(MalformedURLException | InterruptedException | ExecutionException ex ) {
+                } catch(InterruptedException | ExecutionException ex ) {
                     Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
                     mEx = ex;
                 }
@@ -610,7 +618,7 @@ public class SettingsActivity extends BaseActivity
                 .title(R.string.edit_phone_dialog_caption)
                 .input(mUser.getPhone(), mUser.getPhone(), new MaterialDialog.InputCallback() {
                     @Override
-                    public void onInput(MaterialDialog dialog, CharSequence input) {
+                    public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
 
                     }
                 })
@@ -630,8 +638,6 @@ public class SettingsActivity extends BaseActivity
                         displayUser();
                     }
                 })
-                .build();
-
-                dialog.show();
+                .show();
     }
 }

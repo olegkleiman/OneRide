@@ -11,10 +11,8 @@ import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.labs.okey.oneride.R;
 import com.labs.okey.oneride.model.Join;
-import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
-import java.net.MalformedURLException;
 import java.util.Date;
 import java.util.concurrent.ExecutionException;
 
@@ -28,7 +26,6 @@ public class wamsPictureURLUpdater extends AsyncTask<String, Void, Void> {
     Context mContext;
     IUploader mUrlUpdater;
 
-    MobileServiceClient wamsClient;
     MobileServiceTable<Join> mJoinsTable;
     Exception error;
 
@@ -56,11 +53,9 @@ public class wamsPictureURLUpdater extends AsyncTask<String, Void, Void> {
 
 
         try {
-            wamsClient = wamsUtils.init(mContext);
+            mJoinsTable = Globals.getMobileServiceClient().getTable("joins", Join.class);
 
-            mJoinsTable = wamsClient.getTable("joins", Join.class);
-
-        } catch (MalformedURLException e) {
+        } catch (Exception e) {
             error = e;
         }
     }

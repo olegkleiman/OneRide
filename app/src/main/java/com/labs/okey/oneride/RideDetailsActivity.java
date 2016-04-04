@@ -214,7 +214,7 @@ public class RideDetailsActivity extends BaseActivity
 
                             wamsInit(false);
 
-                            MobileServiceTable<Appeal> appealsTable = getMobileServiceClient()
+                            MobileServiceTable<Appeal> appealsTable = Globals.getMobileServiceClient()
                                     .getTable("appeal", Appeal.class);
 
                             final MobileServiceList<Appeal> mslAppeals =

@@ -44,6 +44,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -62,7 +63,7 @@ public class BaseActivityWithGeofences extends BaseActivity
     protected Boolean isGeoFencesInitialized() { return isGeoFencesInitialized; }
 
     private android.location.LocationListener       mLocationListener;
-    protected ArrayList<GFCircle>                   mGFCircles = new ArrayList<GFCircle>();
+    protected CopyOnWriteArrayList<GFCircle>        mGFCircles = new CopyOnWriteArrayList<GFCircle>();
 
 
     @Override
@@ -161,7 +162,7 @@ public class BaseActivityWithGeofences extends BaseActivity
         super.onPause();
     }
 
-    protected ListenableFuture<ArrayList<GFCircle>> _initGeofences() {
+    protected ListenableFuture<CopyOnWriteArrayList<GFCircle>> _initGeofences() {
         ExecutorService service = Executors.newFixedThreadPool(1);
         ListeningExecutorService executor = MoreExecutors.listeningDecorator(service);
 
@@ -169,25 +170,25 @@ public class BaseActivityWithGeofences extends BaseActivity
                 new Callable<MobileServiceList<GeoFence>>() {
                 @Override
                 public MobileServiceList<GeoFence> call() throws Exception {
-                    wamsUtils.sync(getMobileServiceClient(), "geofences");
+                    wamsUtils.sync(Globals.getMobileServiceClient(), "geofences");
 
-                    Query pullQuery = getMobileServiceClient().getTable(GeoFence.class).where();
+                    Query pullQuery = Globals.getMobileServiceClient().getTable(GeoFence.class).where();
                     return mGFencesSyncTable.read(pullQuery).get();
                 }
         };
 
         if (mGFencesSyncTable == null)
-            mGFencesSyncTable = getMobileServiceClient().getSyncTable("geofences", GeoFence.class);
+            mGFencesSyncTable = Globals.getMobileServiceClient().getSyncTable("geofences", GeoFence.class);
 
         ListenableFuture<MobileServiceList<GeoFence>> future = executor.submit(getGeoFencesTask);
         return Futures.transform(future, toCircles);
     }
 
 
-    final Function<MobileServiceList<GeoFence>, ArrayList<GFCircle>> toCircles =
-            new Function<MobileServiceList<GeoFence>, ArrayList<GFCircle>>() {
+    final Function<MobileServiceList<GeoFence>, CopyOnWriteArrayList<GFCircle>> toCircles =
+            new Function<MobileServiceList<GeoFence>, CopyOnWriteArrayList<GFCircle>>() {
                 @Override
-                public ArrayList<GFCircle> apply(MobileServiceList<GeoFence> gFences){
+                public CopyOnWriteArrayList<GFCircle> apply(MobileServiceList<GeoFence> gFences){
 
                     for (GeoFence _gFence : gFences) {
                         if( _gFence.isActive() ) {
@@ -211,11 +212,9 @@ public class BaseActivityWithGeofences extends BaseActivity
     }};
 
     protected void initGeofences(final IInitializeNotifier notifier) {
-        if (!isWamsInitialized())
-            return;
 
         if (mGFencesSyncTable == null)
-            mGFencesSyncTable = getMobileServiceClient().getSyncTable("geofences", GeoFence.class);
+            mGFencesSyncTable = Globals.getMobileServiceClient().getSyncTable("geofences", GeoFence.class);
 
         new AsyncTask<Object, Void, Void>() {
 
@@ -255,9 +254,9 @@ public class BaseActivityWithGeofences extends BaseActivity
 
                 try {
 
-                    wamsUtils.sync(getMobileServiceClient(), "geofences");
+                    wamsUtils.sync(Globals.getMobileServiceClient(), "geofences");
 
-                    Query pullQuery = getMobileServiceClient().getTable(GeoFence.class).where();
+                    Query pullQuery = Globals.getMobileServiceClient().getTable(GeoFence.class).where();
                     gFences = mGFencesSyncTable.read(pullQuery).get();
 
                 } catch (Exception ex) {
@@ -310,13 +309,11 @@ public class BaseActivityWithGeofences extends BaseActivity
     }
 
     protected void initGeofencesAPI() {
-        if( !isWamsInitialized() )
-            return;
 
         final ResultCallback<Status> resultCallback = this;
 
         if( mGFencesSyncTable == null )
-            mGFencesSyncTable = getMobileServiceClient().getSyncTable("geofences", GeoFence.class);
+            mGFencesSyncTable = Globals.getMobileServiceClient().getSyncTable("geofences", GeoFence.class);
 
         new AsyncTask<Object, Void, Void>() {
 
@@ -380,9 +377,9 @@ public class BaseActivityWithGeofences extends BaseActivity
                 try {
 
                     //wamsUtils.sync(getMobileServiceClient(), "gfences");
-                    wamsUtils.sync(getMobileServiceClient(), "geofences");
+                    wamsUtils.sync(Globals.getMobileServiceClient(), "geofences");
 
-                    Query pullQuery = getMobileServiceClient().getTable(GeoFence.class).where();
+                    Query pullQuery = Globals.getMobileServiceClient().getTable(GeoFence.class).where();
                     gFences = mGFencesSyncTable.read(pullQuery).get();
 
                 } catch (Exception ex) {
