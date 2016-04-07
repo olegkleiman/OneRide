@@ -300,12 +300,12 @@ public class Globals {
 
     // 'Project number' of project 'FastRide"
     // See Google Developer Console -> Billing & settings
-    // https://console.developers.google.com/project/third-apex-91200/settings
-    public static final String SENDER_ID = "1041824085053";
+    // https://console.developers.google.com/project/oneride-1273/settings
+    public static final String SENDER_ID = "982244912173";
 
     public static final String NOTIFICATION_ID_EXTRA = "NOTIFICATION_ID";
-    public static final String ACTION_CONFIRM = "fastride.intent.action.CONFIRM";
-    public static final String ACTION_CANCEL = "fastride.intent.action.CANCEL";
+    public static final String ACTION_CONFIRM = "oneride.intent.action.CONFIRM";
+    public static final String ACTION_CANCEL = "oneride.intent.action.CANCEL";
 
 
     // Names of shared preferences
