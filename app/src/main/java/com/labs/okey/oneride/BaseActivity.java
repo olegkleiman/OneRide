@@ -57,7 +57,8 @@ import java.net.MalformedURLException;
 import java.util.StringTokenizer;
 
 /**
- * Created by Oleg Kleiman on 22-Aug-15.
+ * @author Oleg Kleiman
+ * created 22-Aug-15.
  */
 public class BaseActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener{

@@ -43,11 +43,15 @@ import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.GoogleAuthUtil;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.plus.Plus;
-import com.google.android.gms.plus.model.people.Person;
+
+import com.google.android.gms.common.api.Status;
 import com.labs.okey.oneride.fragments.ConfirmRegistrationFragment;
 import com.labs.okey.oneride.fragments.RegisterCarsFragment;
 import com.labs.okey.oneride.model.GeoFence;
@@ -82,7 +86,6 @@ import java.util.concurrent.ExecutionException;
 
 public class RegisterActivity extends FragmentActivity
         implements ConfirmRegistrationFragment.RegistrationDialogListener,
-        GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
 
     private final String LOG_TAG = getClass().getSimpleName();
@@ -218,25 +221,6 @@ public class RegisterActivity extends FragmentActivity
         }
     }
 
-    // Implementation of GoogleApiClient.ConnectionCallbacks
-    // for Google Play
-
-    // After this callback, the application can make requests on other methods provided
-    // by the client and expect that no user intervention is required to call methods
-    // that use account and scopes provided to the client constructor.
-    @Override
-    public void onConnected(Bundle bundle) {
-        if( mGoogleProgressDialog != null )
-            mGoogleProgressDialog.dismiss();
-
-        // This approach (described at https://developers.google.com/identity/sign-in/android/v1/people)is deprecated!
-        // When app will be migrated to use Azure App Services and hence
-        // it will be possible to use play services ver. 8.3 or greater,
-        // change this approach to new one as described here: https://developers.google.com/identity/sign-in/android/
-        String email = Plus.AccountApi.getAccountName(Globals.googleApiClient);
-        getTokenAndLogin(email);
-    }
-
     @Override
     public void onConnectionFailed(ConnectionResult result) {
         if( result.hasResolution() ) {
@@ -247,11 +231,6 @@ public class RegisterActivity extends FragmentActivity
                 Globals.googleApiClient.connect();
             }
         }
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-
     }
 
     @Override
@@ -360,11 +339,14 @@ public class RegisterActivity extends FragmentActivity
         });
 
         // Google+ stuff
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.server_client_id))
+                .requestEmail()
+                .build();
+
         Globals.googleApiClient = new GoogleApiClient.Builder(this)
-                                .addApi(Plus.API)
-                                .addScope(Plus.SCOPE_PLUS_PROFILE)
-                                .addConnectionCallbacks(this)
-                                .addOnConnectionFailedListener(this)
+                                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                                .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
                                 .build();
 
         SignInButton googleSignInButton = (SignInButton)findViewById(R.id.google_login);
@@ -374,11 +356,8 @@ public class RegisterActivity extends FragmentActivity
             @Override
             public void onClick(View v) {
 
-                if (!Globals.googleApiClient.isConnected()) {
-                    mGoogleProgressDialog.show();
-                    Globals.googleApiClient.connect();
-
-                }
+                Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(Globals.googleApiClient);
+                startActivityForResult(signInIntent, RC_SIGN_IN);
             }
         });
         mGoogleProgressDialog = new MaterialDialog.Builder(this)
@@ -553,36 +532,48 @@ public class RegisterActivity extends FragmentActivity
 
     }
 
-//    private Boolean googleHandleSignInResult(GoogleSignInResult result) {
-//        if ( !result.isSuccess())
-//            return false;
-//
-//        mNewUser = new User();
-//
-//        GoogleSignInAccount acct = result.getSignInAccount();
-//        if( acct == null )
-//            return false;
-//
-//        mAccessToken = acct.getIdToken();
-//        String regId = acct.getId();
-//        mNewUser.setRegistrationId(Globals.GOOGLE_PROVIDER_FOR_STORE + regId);
-//        saveProviderAccessToken(Globals.GOOGLE_PROVIDER, regId);
-//
-//        mNewUser.setFullName(acct.getDisplayName());
-//        mNewUser.setEmail(acct.getEmail());
-//        if (acct.getPhotoUrl() != null)
-//            mNewUser.setPictureURL(acct.getPhotoUrl().toString());
-//
-//        final ContentResolver contentResolver = this.getContentResolver();
-//        String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
-//        mNewUser.setDeviceId(android_id);
-//        mNewUser.setPlatform(Globals.PLATFORM);
-//
-//        new VerifyAccountTask().execute();
-//
-//        return true;
-//
-//    }
+    private Boolean googleHandleSignInResult(GoogleSignInResult result) {
+        if ( !result.isSuccess()) {
+            Status status = result.getStatus();
+            String msg = status.getStatusMessage();
+
+            new MaterialDialog.Builder(RegisterActivity.this)
+                    .title(R.string.registration_account_validation_failure)
+                    .iconRes(R.drawable.ic_exclamation)
+                    .content(msg)
+                    .positiveText(android.R.string.ok)
+                    .autoDismiss(true)
+                    .show();
+
+            return false;
+        }
+
+        mNewUser = new User();
+
+        GoogleSignInAccount acct = result.getSignInAccount();
+        if( acct == null )
+            return false;
+
+        mAccessToken = acct.getIdToken();
+        String regId = acct.getId();
+        mNewUser.setRegistrationId(Globals.GOOGLE_PROVIDER_FOR_STORE + regId);
+        saveProviderAccessToken(Globals.GOOGLE_PROVIDER, regId);
+
+        mNewUser.setFullName(acct.getDisplayName());
+        mNewUser.setEmail(acct.getEmail());
+        if (acct.getPhotoUrl() != null)
+            mNewUser.setPictureURL(acct.getPhotoUrl().toString());
+
+        final ContentResolver contentResolver = this.getContentResolver();
+        String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
+        mNewUser.setDeviceId(android_id);
+        mNewUser.setPlatform(Globals.PLATFORM);
+
+        new VerifyAccountTask().execute();
+
+        return true;
+
+    }
 
     private void completeFBRegistration(AccessToken accessToken, final String regId){
         GraphRequest request = GraphRequest.newMeRequest(
@@ -650,8 +641,8 @@ public class RegisterActivity extends FragmentActivity
             mFBCallbackManager.onActivityResult(requestCode, resultCode, data);
         else if( requestCode == RC_SIGN_IN ) { // Google
 
-            String accountName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
-            getTokenAndLogin(accountName);
+            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            googleHandleSignInResult(result);
 
         } else if( requestCode == REQUEST_CODE_RESOLVE_ERR && resultCode == RESULT_OK ) {
             // Make sure the app is not already connected or attempting to connect
@@ -667,68 +658,69 @@ public class RegisterActivity extends FragmentActivity
 
     static final String GOOGLE_SCOPE_TAKE2 = "audience:server:client_id:";
 
-    private void getTokenAndLogin(String accountName) {
-        final String GOOGLE_ID_TOKEN_SCOPE = GOOGLE_SCOPE_TAKE2 + getString(R.string.server_client_id);
-        // Getting Google token (thru the call to GoogleAuthUtil.getToken)
-        // requires the substantial network IO, and therefore it it running off the UI thread
-        new GetTokenAndLoginTask(GOOGLE_ID_TOKEN_SCOPE, accountName).execute((Void)null);
+//    private void getGoogleTokenAndLogin(String accountName) {
+//
+//        final String GOOGLE_ID_TOKEN_SCOPE = GOOGLE_SCOPE_TAKE2 + getString(R.string.server_client_id);
+//        // Getting Google token (thru the call to GoogleAuthUtil.getToken)
+//        // requires the substantial network IO, and therefore it it running off the UI thread
+//        new GetTokenAndLoginTask(GOOGLE_ID_TOKEN_SCOPE, accountName).execute((Void)null);
+//
+//    }
 
-    }
-
-    class GetTokenAndLoginTask extends AsyncTask<Void, Void, Void> {
-        String mScope;
-        String mEmail;
-
-        public GetTokenAndLoginTask(String scope, String email) {
-            this.mScope = scope;
-            this.mEmail = email;
-        }
-
-        @Override
-        protected void onPostExecute(Void res) {
-            final ContentResolver contentResolver = getApplicationContext().getContentResolver();
-
-            String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
-            if( mNewUser != null ) {
-                mNewUser.setDeviceId(android_id);
-                mNewUser.setPlatform(Globals.PLATFORM);
-
-                new VerifyAccountTask().execute();
-            }
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            try {
-
-                mAccessToken = GoogleAuthUtil.getToken(getApplicationContext(), mEmail, mScope);
-                String userId = GoogleAuthUtil.getAccountId(getApplicationContext(), mEmail);
-
-                mNewUser = new User();
-
-                mNewUser.setEmail(mEmail);
-                mNewUser.setRegistrationId(Globals.GOOGLE_PROVIDER_FOR_STORE + userId);
-
-                Person person = Plus.PeopleApi.getCurrentPerson(Globals.googleApiClient);
-                if( person != null ) {
-                    if( person.hasImage() )
-                        mNewUser.setPictureURL(person.getImage().getUrl());
-                    if( person.hasName() ) {
-                        Person.Name _name =  person.getName();
-                        mNewUser.setFirstName(_name.getGivenName());
-                        mNewUser.setLastName(_name.getFamilyName());
-                    }
-
-                }
-
-                saveProviderAccessToken(Globals.GOOGLE_PROVIDER, userId);
-
-            } catch (Exception e) {
-                Log.e(LOG_TAG, e.getMessage());
-            }
-            return null;
-        }
-    }
+//    class GetTokenAndLoginTask extends AsyncTask<Void, Void, Void> {
+//        String mScope;
+//        String mEmail;
+//
+//        public GetTokenAndLoginTask(String scope, String email) {
+//            this.mScope = scope;
+//            this.mEmail = email;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(Void res) {
+//            final ContentResolver contentResolver = getApplicationContext().getContentResolver();
+//
+//            String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
+//            if( mNewUser != null ) {
+//                mNewUser.setDeviceId(android_id);
+//                mNewUser.setPlatform(Globals.PLATFORM);
+//
+//                new VerifyAccountTask().execute();
+//            }
+//        }
+//
+//        @Override
+//        protected Void doInBackground(Void... params) {
+//            try {
+//
+//                mAccessToken = GoogleAuthUtil.getToken(getApplicationContext(), mEmail, mScope);
+//                String userId = GoogleAuthUtil.getAccountId(getApplicationContext(), mEmail);
+//
+//                mNewUser = new User();
+//
+//                mNewUser.setEmail(mEmail);
+//                mNewUser.setRegistrationId(Globals.GOOGLE_PROVIDER_FOR_STORE + userId);
+//
+//                Person person = Plus.PeopleApi.getCurrentPerson(Globals.googleApiClient);
+//                if( person != null ) {
+//                    if( person.hasImage() )
+//                        mNewUser.setPictureURL(person.getImage().getUrl());
+//                    if( person.hasName() ) {
+//                        Person.Name _name =  person.getName();
+//                        mNewUser.setFirstName(_name.getGivenName());
+//                        mNewUser.setLastName(_name.getFamilyName());
+//                    }
+//
+//                }
+//
+//                saveProviderAccessToken(Globals.GOOGLE_PROVIDER, userId);
+//
+//            } catch (Exception e) {
+//                Log.e(LOG_TAG, e.getMessage());
+//            }
+//            return null;
+//        }
+//    }
 
     @Override
     public void onPause() {

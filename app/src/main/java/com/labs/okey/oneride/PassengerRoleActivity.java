@@ -56,7 +56,8 @@ import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Created by Oleg on 04-Apr-16.
+ * @author Oleg Kleiman
+ * created 04-Apr-16.
  */
 public class PassengerRoleActivity extends BaseActivityWithGeofences
         implements android.location.LocationListener,

@@ -49,7 +49,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Created by Oleg Kleiman on 09-Jun-15.
+ * @author Oleg Kleiman
+ * created 09-Jun-15.
  */
 public class BaseActivityWithGeofences extends BaseActivity
         implements ResultCallback<Status>,
