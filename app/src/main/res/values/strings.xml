@@ -23,6 +23,7 @@
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
     <string name="prompt_phone">Phone number</string>
+    <string name="prompt_sms_confirm">Code received</string>
     <string name="phone_hint">050-1234-567</string>
     <string name="prompt_use_phone">Show your number to others</string>
     <string name="prompt_password">Password (optional)</string>
@@ -327,4 +328,7 @@ limitations under the License.</string>
     <string name="title_activity_splash_screen">SplashScreen</string>
 
     <string name="error_no_google_map">Unable to connect to Google Maps API</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
