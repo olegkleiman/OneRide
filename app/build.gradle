@@ -9,10 +9,42 @@ buildscript {
     }
 }
 
+//apply plugin: 'com.android.application'
+//apply plugin: 'io.fabric'
+//
+//android {
+//        compileSdkVersion 23
+//        buildToolsVersion "23.0.2"
+//
+//    defaultConfig {
+//        applicationId "com.labs.okey.freeride"
+//        minSdkVersion 16
+//        targetSdkVersion 23
+//        versionCode 4
+//        versionName "4.7"
+//        multiDexEnabled true
+//    }
+//    sourceSets {
+//        main {
+//            jni.srcDirs = []
+//        }
+//    }
+//
+//    buildTypes {
+//
+//        release {
+//            minifyEnabled false
+//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+//        }
+//    }
+//}
+
+//apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.android.model.application'
 
 model {
 
+    // We use JDK 1.8, so set the Java target to 1.7
     compileOptions.with {
         sourceCompatibility = JavaVersion.VERSION_1_7
         targetCompatibility = JavaVersion.VERSION_1_7
@@ -20,7 +52,8 @@ model {
 
     android {
         compileSdkVersion = 23
-        buildToolsVersion = "23.0.3"
+        buildToolsVersion = "23.0.2"
+        packagingOptions.excludes = ['LICENSE.txt']
 
         defaultConfig.with {
             applicationId = "com.labs.okey.oneride"
@@ -30,7 +63,6 @@ model {
             versionName = "4.71"
             multiDexEnabled = true
         }
-
     }
 
     android.ndk {
@@ -67,26 +99,43 @@ model {
         }
 
 
-        stl = "gnustl_shared" //  GNU Standard C++ Library runtime
+        stl = "gnustl_static" //  GNU Standard C++ Library runtime
         debuggable = true
     }
 
-    android.buildTypes {
-        release {
-            minifyEnabled = false
-            proguardFiles.add(file('proguard-rules.pro'))
-        }
-    }
-
-//    android.sources {
-//        main {
-//            java {
-//                source {
-//                    srcDir "src"
+//        sources {
+//            main {
+//                java {
+//                    source {
+//                        srcDir "src"
+//                    }
+//                }
+//                jni {
+//                    exportedHeaders {
+//                        srcDir "src/main/headers"
+//                    }
 //                }
 //            }
 //        }
-//    }
+
+    android.buildTypes {
+        release {
+            minifyEnabled = true
+            proguardFiles += file('proguard-rules.pro')
+            debuggable = false
+            ndk.with {
+                debuggable = false
+            }
+        }
+
+        debug {
+            debuggable = true
+            ndk.with {
+                debuggable = true
+            }
+        }
+    }
+
 }
 
 repositories {
@@ -98,6 +147,7 @@ repositories {
         dirs 'aars'
     }
 }
+
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
@@ -130,7 +180,6 @@ dependencies {
     compile 'com.android.support:support-v4:23.2.1'
     compile 'com.android.support:appcompat-v7:23.2.1'
     compile 'com.android.support:design:23.2.1'
-    compile 'com.android.support:appcompat-v7:23.2.1'
     compile 'com.android.support:cardview-v7:23.2.1'
     compile 'com.android.support:recyclerview-v7:23.2.1'
     compile 'com.android.support:multidex:1.0.1'
@@ -142,9 +191,8 @@ dependencies {
     compile 'com.google.code.gson:gson:2.6.2'
     compile 'com.google.guava:guava:19.0'
 
-    compile 'com.microsoft.azure:azure-mobile-android:3.1.0'
-    //compile 'com.microsoft.azure:azure-notifications-handler:1.0.1@jar'
     compile(group: 'com.microsoft.azure', name: 'azure-notifications-handler', version: '1.0.1', ext: 'jar')
+    compile 'com.microsoft.azure:azure-mobile-android:3.1.0'
     compile 'com.microsoft.azure.android:azure-storage-android:0.7.0@aar'
 
     compile 'com.microsoft.projectoxford:face:1.0.0'
@@ -157,3 +205,6 @@ dependencies {
     compile 'com.pkmmte.view:circularimageview:1.1'
     compile 'com.sothree.slidinguppanel:library:3.3.0'
 }
+
+
+
