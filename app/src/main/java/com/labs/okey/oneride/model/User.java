@@ -88,6 +88,12 @@ public class User implements Parcelable {
         _wasSelfPictured = value;
     }
 
+    @com.google.gson.annotations.SerializedName("confirmation_code")
+    private String confirmationCode;
+    public String getConfiramtionCode() { return confirmationCode; }
+    public void setConfirmationCode(String code) { confirmationCode = code; }
+
+
     public boolean compare(User _user) {
         return this.registration_id.compareTo(_user.registration_id) == 0
                 && this.deviceId.compareTo(_user.deviceId) == 0;
