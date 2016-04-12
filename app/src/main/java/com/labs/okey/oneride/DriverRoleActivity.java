@@ -18,6 +18,7 @@ import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationProvider;
 import android.net.Uri;
+import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -37,6 +38,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -69,11 +71,14 @@ import com.labs.okey.oneride.model.GFCircle;
 import com.labs.okey.oneride.model.PassengerFace;
 import com.labs.okey.oneride.model.Ride;
 import com.labs.okey.oneride.model.User;
+import com.labs.okey.oneride.model.WifiP2pDeviceUser;
 import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.ITrace;
 import com.labs.okey.oneride.utils.RoundedDrawable;
 import com.labs.okey.oneride.utils.UiThreadExecutor;
 import com.labs.okey.oneride.utils.wamsAddAppeal;
+import com.labs.okey.oneride.utils.wifip2p.P2pConversator;
+import com.labs.okey.oneride.utils.wifip2p.P2pPreparer;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import junit.framework.Assert;
@@ -84,6 +89,7 @@ import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -106,7 +112,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * created 04-Apr-16
  */
 public class DriverRoleActivity extends BaseActivityWithGeofences
-        implements ITrace,
+        implements P2pConversator.IPeersChangedListener,
+                ITrace,
                 Handler.Callback,
                 android.location.LocationListener,
                 // Added for Google Map support within sliding panel
@@ -134,6 +141,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     private ScheduledExecutorService            mCheckPasengersTimer = Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?>                  mCheckPassengerTimerResult;
+
+    private P2pPreparer                         mP2pPreparer;
+    private P2pConversator                      mP2pConversator;
 
     private TextSwitcher                        mTextSwitcher;
     private RecyclerView                        mPeersRecyclerView;
@@ -245,18 +255,199 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         setupUI(getString(R.string.title_activity_driver_role), "");
         mRideCodeUploaded.set(false);
 
-        wamsInit();
-        geoFencesInit();
+        if (savedInstanceState != null) {
+            wamsInit();
+            geoFencesInit();
+
+            restoreState(savedInstanceState);
+        } else {
+            if( isConnectedToNetwork() ) {
+
+                wamsInit();
+                geoFencesInit();
+
+                setupNetwork();
+            }
+        }
     }
 
     private void restoreState(Bundle savedInstanceState) {
+        boolean bInitializedBeforeRotation = false;
 
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_RIDE_CODE)) {
+            bInitializedBeforeRotation = true;
+
+            mRideCode = savedInstanceState.getString(Globals.PARCELABLE_KEY_RIDE_CODE);
+            mRideCodeUploaded.set( savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_RIDE_CODE_UPLOADED) );
+
+            TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
+            txtRideCode.setVisibility(View.VISIBLE);
+            txtRideCode.setText(mRideCode);
+
+            TextView txtRideCodeCaption = (TextView) findViewById(R.id.code_label_caption);
+            txtRideCodeCaption.setText(R.string.ride_code_label);
+
+            ImageView imageTransmit = (ImageView) findViewById(R.id.img_transmit);
+            imageTransmit.setVisibility(View.VISIBLE);
+            AnimationDrawable animationDrawable = (AnimationDrawable) imageTransmit.getDrawable();
+            animationDrawable.start();
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_CURRENT_RIDE)) {
+            bInitializedBeforeRotation = true;
+            mCurrentRide = savedInstanceState.getParcelable(Globals.PARCELABLE_KEY_CURRENT_RIDE);
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_PASSENGERS)) {
+            bInitializedBeforeRotation = true;
+            ArrayList<User> passengers = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS);
+            if (passengers != null) {
+
+                mPassengers.addAll(passengers);
+                mPassengersAdapter.notifyDataSetChanged();
+
+                for (User passenger : passengers) {
+                    Globals.addMyPassenger(passenger);
+                }
+
+                if (passengers.size() >= Globals.REQUIRED_PASSENGERS_NUMBER) {
+                    FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
+                    Context ctx = getApplicationContext();
+                    fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
+                    fab.setTag(getString(R.string.submit_tag));
+                }
+
+            }
+
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_CABIN_PICTURES_BUTTON_SHOWN)) {
+            bInitializedBeforeRotation = true;
+
+            mCabinPictureButtonShown = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_CABIN_PICTURES_BUTTON_SHOWN);
+            if (mCabinPictureButtonShown)
+                findViewById(R.id.submit_ride_button).setVisibility(View.VISIBLE);
+            else
+                findViewById(R.id.submit_ride_button).setVisibility(View.GONE);
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS)) {
+            bInitializedBeforeRotation = true;
+
+            mCapturedPassengersIDs =
+                    savedInstanceState.getIntegerArrayList(Globals.PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS);
+
+            if (mCapturedPassengersIDs != null) {
+                for (int i = 0; i < mCapturedPassengersIDs.size(); i++) {
+
+                    int nCaptured = mCapturedPassengersIDs.get(i);
+
+                    int fabID = getResources().getIdentifier("passenger" + Integer.toString(i + 1),
+                            "id", this.getPackageName());
+
+                    FloatingActionButton fab = (FloatingActionButton) findViewById(fabID);
+                    if (fab != null) {
+                        if (nCaptured == 1) {
+
+                            fab.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.green)));
+
+                            String parcelableKey = Globals.PARCELABLE_KEY_PASSENGER_PREFIX + (i + 1);
+                            if (savedInstanceState.containsKey(parcelableKey)) {
+                                Bitmap passengerThumb = savedInstanceState.getParcelable(parcelableKey);
+                                fab.setImageBitmap(passengerThumb);
+                            } else
+                                fab.setImageResource(R.drawable.ic_action_done);
+                        } else
+                            fab.setImageResource(R.drawable.ic_action_camera);
+                    } else {
+                        String msg = String.format("onCreate: Passenger FAB %d is not found", i + 1);
+                        Log.e(LOG_TAG, msg);
+                    }
+                }
+            }
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS)) {
+            bInitializedBeforeRotation = true;
+
+            HashMap<Integer, PassengerFace> hash_map =
+                    (HashMap) savedInstanceState.getSerializable(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS);
+
+            Globals.set_PassengerFaces(hash_map);
+
+            // See the explanation of covariance in Java here
+            // http://stackoverflow.com/questions/6951306/cannot-cast-from-arraylistparcelable-to-arraylistclsprite
+//                ArrayList<PassengerFace> _temp = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS);
+//                Globals.set_PassengerFaces(_temp);
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI)) {
+            bInitializedBeforeRotation = true;
+
+            String str = savedInstanceState.getString(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI);
+            mUriPhotoAppeal = Uri.parse(str);
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_EMOJIID)) {
+            bInitializedBeforeRotation = true;
+
+            mEmojiID = savedInstanceState.getInt(Globals.PARCELABLE_KEY_EMOJIID);
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_DRIVER_CABIN_SHOWN)) {
+            bInitializedBeforeRotation = true;
+
+            mCabinShown = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_DRIVER_CABIN_SHOWN);
+
+            if (mCabinShown)
+                showCabinView();
+        }
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_SUBMIT_BUTTON_SHOWN)) {
+            bInitializedBeforeRotation = true;
+
+            mSubmitButtonShown = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_SUBMIT_BUTTON_SHOWN);
+
+            if (mSubmitButtonShown)
+                showSubmitPicsButton();
+
+        }
+
+        View vEmptyText = findViewById(R.id.empty_view);
+        if( vEmptyText != null && savedInstanceState.containsKey(Globals.PARCELABLE_KEY_EMPTY_TEXT_SHOWN )) {
+
+            mEmptyTextShown = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_EMPTY_TEXT_SHOWN );
+            if( mEmptyTextShown )
+                vEmptyText.setVisibility(View.VISIBLE);
+            else
+                vEmptyText.setVisibility(View.GONE);
+        }
+
+
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_DIALOG_SHOWN)) {
+            bInitializedBeforeRotation = true;
+
+            View view = mAppealDialog.getCustomView();
+            if (view != null) {
+                ImageView imageViewAppeal = (ImageView) view.findViewById(R.id.imageViewAppeal);
+                if (imageViewAppeal != null)
+                    imageViewAppeal.setImageURI(mUriPhotoAppeal);
+            }
+            mAppealDialog.show();
+        }
+
+        if( !bInitializedBeforeRotation )
+            setupNetwork();
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
 
         TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
+        if( txtRideCode == null )
+            return;
+
         String rideCode = txtRideCode.getText().toString();
         if( !rideCode.isEmpty() ) {
 
@@ -507,6 +698,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     private void setupNetwork() {
 
+        startAdvertise(this,
+                getUser().getRegistrationId(),
+                mRideCode,
+                getUser().getFullName());
+
         getHandler().postDelayed(mEnableCabinPictureButtonRunnable,
                 Globals.CABIN_PICTURES_BUTTON_SHOW_INTERVAL);
 
@@ -656,6 +852,14 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     }
 
+    //
+    // Implementations of WifiUtil.IPeersChangedListener
+    //
+    @Override
+    public void addDeviceUser(final WifiP2pDeviceUser device) {
+
+    }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
 
@@ -743,7 +947,27 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 // to be continued on onRequestPermissionsResult() in permissionsHandler's activity
             }
         }
+
+        try {
+
+            if (!isConnectedToNetwork()) {
+                TextView txtRideCodeLabel = (TextView) findViewById(R.id.code_label_caption);
+                if( txtRideCodeLabel != null )
+                    txtRideCodeLabel.setText("");
+                mOfflineDialog.show();
+            } else {
+                if (mOfflineDialog != null && mOfflineDialog.isShowing()) {
+                    mOfflineDialog.dismiss();
+                }
+
+                setupNetwork();
+
+            }
+        }catch(Exception ex) {
+            Log.e(LOG_TAG, ex.getMessage());
+        }
     }
+
 
     @TargetApi(Build.VERSION_CODES.M)
     @Override
@@ -785,6 +1009,18 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     @Override
     @CallSuper
     public void onPause() {
+
+        if( mP2pPreparer != null ) {
+
+            mP2pPreparer.undo(new Runnable() {
+                @Override
+                public void run() {
+                    if( mP2pConversator != null )
+                        mP2pConversator.stopConversation();
+                }
+            });
+        }
+
         try {
             stopLocationUpdates(this);
         } catch (SecurityException sex) {
@@ -1017,6 +1253,36 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     }
 
+    private void startAdvertise(final P2pConversator.IPeersChangedListener peersListener,
+                                final String userID,
+                                final String rideCode,
+                                final String userName) {
+        mP2pPreparer = new P2pPreparer(this);
+        mP2pPreparer.prepare(new P2pPreparer.P2pPreparerListener() {
+            @Override
+            public void prepared() {
+                Map<String, String> record = new HashMap<>();
+                record.put(Globals.TXTRECORD_PROP_PORT, Globals.SERVER_PORT);
+                if( !rideCode.isEmpty() )
+                    record.put(Globals.TXTRECORD_PROP_RIDECODE, rideCode);
+                record.put(Globals.TXTRECORD_PROP_USERID, userID);
+                record.put(Globals.TXTRECORD_PROP_USERNAME, userName);
+
+                mP2pConversator = new P2pConversator(DriverRoleActivity.this,
+                        mP2pPreparer,
+                        getHandler());
+                mP2pConversator.startConversation(record,
+                        null); // This param is null because Driver is not interested in peers findings
+
+            }
+
+            @Override
+            public void interrupted() {
+
+            }
+        });
+    }
+
     //
     // Implementation of Handler.Callback
     //
@@ -1247,5 +1513,40 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             mSubmitButtonShown = true;
         }
+    }
+
+    private void showCabinView() {
+
+        findViewById(R.id.drive_internal_layout).setVisibility(View.GONE);
+        findViewById(R.id.driver_status_layout).setVisibility(View.GONE);
+        findViewById(R.id.status_strip).setVisibility(View.GONE);
+
+        findViewById(R.id.cabin_background_layout).setVisibility(View.VISIBLE);
+
+        final ImageView cabinImageView = (ImageView)findViewById(R.id.centerImage);
+        ViewTreeObserver observer = cabinImageView.getViewTreeObserver();
+        if( observer.isAlive() ) {
+            observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    cabinImageView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+
+                    loadBitmap(R.drawable.cabin_portrait, cabinImageView);
+                }
+            });
+        }
+
+        mCabinShown = true;
+    }
+
+    public void hideCabinView(View v){
+
+        findViewById(R.id.cabin_background_layout).setVisibility(View.GONE);
+
+        findViewById(R.id.status_strip).setVisibility(View.VISIBLE);
+        findViewById(R.id.driver_status_layout).setVisibility(View.VISIBLE);
+        findViewById(R.id.drive_internal_layout).setVisibility(View.VISIBLE);
+
+        mCabinShown = false;
     }
 }

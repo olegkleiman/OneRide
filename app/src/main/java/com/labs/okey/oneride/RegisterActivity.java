@@ -53,6 +53,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 
 import com.google.android.gms.common.api.Status;
 import com.labs.okey.oneride.fragments.ConfirmRegistrationFragment;
+import com.labs.okey.oneride.fragments.PhoneConfirmFragment;
 import com.labs.okey.oneride.fragments.RegisterCarsFragment;
 import com.labs.okey.oneride.model.GeoFence;
 import com.labs.okey.oneride.model.User;
@@ -88,21 +89,21 @@ public class RegisterActivity extends FragmentActivity
         implements ConfirmRegistrationFragment.RegistrationDialogListener,
         GoogleApiClient.OnConnectionFailedListener {
 
-    private final String LOG_TAG = getClass().getSimpleName();
-    private final String PENDING_ACTION_BUNDLE_KEY = "com.labs.okey.freeride:PendingAction";
+    private final String        LOG_TAG = getClass().getSimpleName();
+    private final String        PENDING_ACTION_BUNDLE_KEY = "com.labs.okey.freeride:PendingAction";
 
-    private CallbackManager mFBCallbackManager;
-    private LoginButton mFBLoginButton;
-    private ProfileTracker mFbProfileTracker;
+    private CallbackManager     mFBCallbackManager;
+    private LoginButton         mFBLoginButton;
+    private ProfileTracker      mFbProfileTracker;
 
 //    DigitsAuthButton        mDigitsButton;
 //    private AuthCallback    mDigitsAuthCallback;
 //    public AuthCallback     getAuthCallback(){
 //        return mDigitsAuthCallback;
 //    }
-    TwitterLoginButton mTwitterloginButton;
+    TwitterLoginButton          mTwitterloginButton;
 
-    private User mNewUser;
+    private User                mNewUser;
     private String              mAccessToken;
     private String              mAccessTokenSecret; // used by Twitter
     private boolean             mAddNewUser = true;
@@ -110,7 +111,7 @@ public class RegisterActivity extends FragmentActivity
     private static final int    RC_SIGN_IN = 9001; // Used by Google+
     private static final int    REQUEST_CODE_RESOLVE_ERR = 9002;
 
-    MaterialDialog mGoogleProgressDialog;
+    MaterialDialog              mGoogleProgressDialog;
 
     @Override
     public void onDialogPositiveClick(DialogFragment dialog, final User user) {
@@ -350,7 +351,9 @@ public class RegisterActivity extends FragmentActivity
                                 .build();
 
         SignInButton googleSignInButton = (SignInButton)findViewById(R.id.google_login);
-        googleSignInButton.setColorScheme(SignInButton.COLOR_DARK);
+        String str = getString(com.google.android.gms.R.string.common_signin_button_text_long);
+        //setText();
+        googleSignInButton.setColorScheme(SignInButton.COLOR_AUTO);
         googleSignInButton.setSize(SignInButton.SIZE_WIDE);
         googleSignInButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -656,72 +659,6 @@ public class RegisterActivity extends FragmentActivity
 
     }
 
-    static final String GOOGLE_SCOPE_TAKE2 = "audience:server:client_id:";
-
-//    private void getGoogleTokenAndLogin(String accountName) {
-//
-//        final String GOOGLE_ID_TOKEN_SCOPE = GOOGLE_SCOPE_TAKE2 + getString(R.string.server_client_id);
-//        // Getting Google token (thru the call to GoogleAuthUtil.getToken)
-//        // requires the substantial network IO, and therefore it it running off the UI thread
-//        new GetTokenAndLoginTask(GOOGLE_ID_TOKEN_SCOPE, accountName).execute((Void)null);
-//
-//    }
-
-//    class GetTokenAndLoginTask extends AsyncTask<Void, Void, Void> {
-//        String mScope;
-//        String mEmail;
-//
-//        public GetTokenAndLoginTask(String scope, String email) {
-//            this.mScope = scope;
-//            this.mEmail = email;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(Void res) {
-//            final ContentResolver contentResolver = getApplicationContext().getContentResolver();
-//
-//            String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
-//            if( mNewUser != null ) {
-//                mNewUser.setDeviceId(android_id);
-//                mNewUser.setPlatform(Globals.PLATFORM);
-//
-//                new VerifyAccountTask().execute();
-//            }
-//        }
-//
-//        @Override
-//        protected Void doInBackground(Void... params) {
-//            try {
-//
-//                mAccessToken = GoogleAuthUtil.getToken(getApplicationContext(), mEmail, mScope);
-//                String userId = GoogleAuthUtil.getAccountId(getApplicationContext(), mEmail);
-//
-//                mNewUser = new User();
-//
-//                mNewUser.setEmail(mEmail);
-//                mNewUser.setRegistrationId(Globals.GOOGLE_PROVIDER_FOR_STORE + userId);
-//
-//                Person person = Plus.PeopleApi.getCurrentPerson(Globals.googleApiClient);
-//                if( person != null ) {
-//                    if( person.hasImage() )
-//                        mNewUser.setPictureURL(person.getImage().getUrl());
-//                    if( person.hasName() ) {
-//                        Person.Name _name =  person.getName();
-//                        mNewUser.setFirstName(_name.getGivenName());
-//                        mNewUser.setLastName(_name.getFamilyName());
-//                    }
-//
-//                }
-//
-//                saveProviderAccessToken(Globals.GOOGLE_PROVIDER, userId);
-//
-//            } catch (Exception e) {
-//                Log.e(LOG_TAG, e.getMessage());
-//            }
-//            return null;
-//        }
-//    }
-
     @Override
     public void onPause() {
         super.onPause();
@@ -771,10 +708,11 @@ public class RegisterActivity extends FragmentActivity
     }
 
     boolean bCarsFragmentDisplayed = false;
+    boolean bConfirmFragmentDisplayed = false;
 
     public void onRegisterNext(View v){
 
-        if( !bCarsFragmentDisplayed ) {
+        if( !bConfirmFragmentDisplayed ) {
 
             EditText txtUser = (EditText) findViewById(R.id.phone);
             if (txtUser.getText().toString().isEmpty()) {
@@ -808,21 +746,26 @@ public class RegisterActivity extends FragmentActivity
                     protected void onPostExecute(Void result){
                         progress.dismiss();
 
-                        //if( mEx == null )
+                        if( mEx == null ) {
 
-                        hideRegistrationForm();
+                            hideRegistrationForm();
 
-                        FragmentManager fragmentManager = getFragmentManager();
-                        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                            FragmentTransaction transaction = getFragmentManager().beginTransaction();
 
-                        RegisterCarsFragment fragment = new RegisterCarsFragment();
-                        fragmentTransaction.add(R.id.register_cars_form, fragment);
-                        fragmentTransaction.commit();
+                            PhoneConfirmFragment confirmFragment = new PhoneConfirmFragment();
+                            transaction.add(R.id.register_wizard_placeholder, confirmFragment);
+                            transaction.commit();
 
-                        bCarsFragmentDisplayed = true;
-                        Button btnNext = (Button)findViewById(R.id.btnRegistrationNext);
-                        btnNext.setVisibility(View.VISIBLE);
-                        btnNext.setText(R.string.registration_finish);
+                            bConfirmFragmentDisplayed = true;
+                        } else
+                            new MaterialDialog.Builder(RegisterActivity.this)
+                                    .title(R.string.registration_account_validation_failure)
+                                    .iconRes(R.drawable.ic_exclamation)
+                                    .content(mEx.getCause().getMessage())
+                                    .positiveText(android.R.string.ok)
+                                    .autoDismiss(true)
+                                    .show();
+
                     }
 
                     @Override
@@ -843,43 +786,32 @@ public class RegisterActivity extends FragmentActivity
                     }
                 }.execute();
 
-//                // 'Users' table is defined with 'Anybody with the Application Key'
-//                // permissions for READ and INSERT operations, so no authentication is
-//                // required for adding new user to it
-//                usersTable.insert(newUser, new TableOperationCallback<User>() {
-//                    @Override
-//                    public void onCompleted(User user, Exception e, ServiceFilterResponse serviceFilterResponse) {
-//                        progress.dismiss();
-//
-//                        if( e != null ) {
-//                            Toast.makeText(RegisterActivity.this,
-//                                    e.getMessage(), Toast.LENGTH_LONG).show();
-//                        } else {
-//
-//                            hideRegistrationForm();
-//
-//                            FragmentManager fragmentManager = getFragmentManager();
-//                            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-//
-//                            RegisterCarsFragment fragment = new RegisterCarsFragment();
-//                            fragmentTransaction.add(R.id.register_cars_form, fragment);
-//                            fragmentTransaction.commit();
-//
-//                            bCarsFragmentDisplayed = true;
-//                            Button btnNext = (Button)findViewById(R.id.btnRegistrationNext);
-//                            btnNext.setVisibility(View.VISIBLE);
-//                            btnNext.setText(R.string.registration_finish);
-//                        }
-//                    }
-//                });
-
             } catch(Exception ex){
                 Toast.makeText(this, ex.getMessage(), Toast.LENGTH_LONG).show();
             }
 
-        } else { // Finish
+        } else if( !bCarsFragmentDisplayed ) {
 
-            final View view = findViewById(R.id.register_cars_form);
+            RegisterCarsFragment fragment = new RegisterCarsFragment();
+
+            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+
+            // Replace whatever is in fragment placeholder view with this fragment,
+            // and add the transaction to the back stack so the user can navigate back.
+            transaction.replace(R.id.register_wizard_placeholder, fragment);
+            transaction.addToBackStack(null);
+
+            transaction.commit();
+
+            bCarsFragmentDisplayed = true;
+            Button btnNext = (Button)findViewById(R.id.btnRegistrationNext);
+            btnNext.setVisibility(View.VISIBLE);
+            btnNext.setText(R.string.registration_finish);
+
+        }
+        else { // Finish
+
+            final View view = findViewById(R.id.register_wizard_placeholder);
 
             new AsyncTask<Void, String, Void>() {
 

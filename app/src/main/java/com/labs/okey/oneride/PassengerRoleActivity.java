@@ -3,37 +3,58 @@ package com.labs.okey.oneride;
 import android.*;
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.media.AudioManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.annotation.CallSuper;
+import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 import android.support.annotation.UiThread;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.InputType;
 import android.util.Log;
+import android.view.Display;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.AlertDialogWrapper;
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.Crashlytics;
+import com.crashlytics.android.answers.Answers;
+import com.crashlytics.android.answers.CustomEvent;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -47,20 +68,44 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.labs.okey.oneride.adapters.WiFiPeersAdapter2;
 import com.labs.okey.oneride.model.GFCircle;
+import com.labs.okey.oneride.model.Join;
 import com.labs.okey.oneride.model.WifiP2pDeviceUser;
 import com.labs.okey.oneride.utils.Globals;
+import com.labs.okey.oneride.utils.IRecyclerClickListener;
+import com.labs.okey.oneride.utils.IRefreshable;
+import com.labs.okey.oneride.utils.ITrace;
 import com.labs.okey.oneride.utils.RoundedDrawable;
 import com.labs.okey.oneride.utils.UiThreadExecutor;
+import com.labs.okey.oneride.utils.wifip2p.P2pConversator;
+import com.labs.okey.oneride.utils.wifip2p.P2pPreparer;
+import com.microsoft.windowsazure.mobileservices.MobileServiceException;
+import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
+import junit.framework.Assert;
+
+import net.steamcrafted.loadtoast.LoadToast;
+
+import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author Oleg Kleiman
  * created 04-Apr-16.
  */
 public class PassengerRoleActivity extends BaseActivityWithGeofences
-        implements android.location.LocationListener,
+        implements ITrace,
+                    IRecyclerClickListener,
+                    Handler.Callback,
+                    IRefreshable,
+                    P2pConversator.IPeersChangedListener,
+                    android.location.LocationListener,
                     OnMapReadyCallback,
                     GoogleApiClient.ConnectionCallbacks{
 
@@ -72,12 +117,30 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     private GoogleMap                   mGoogleMap;
     private Circle                      meCircle;
 
+    private MobileServiceTable<Join>    joinsTable;
+
+    private P2pPreparer mP2pPreparer;
+    private P2pConversator              mP2pConversator;
+
     private Location                    mCurrentLocation;
+
+    private MaterialDialog              mSearchDriverDialog;
+    private CountDownTimer              mSearchDriverCountDownTimer;
+    private Integer                     mCountDiscoveryFailures = 0;
+    private Integer                     mCountDiscoveryTrials = 1;
 
     private WiFiPeersAdapter2           mDriversAdapter;
     public ArrayList<WifiP2pDeviceUser> mDrivers = new ArrayList<>();
 
+    private Handler handler = new Handler(this);
+    public Handler getHandler() {
+        return handler;
+    }
+
     private String                      mRideCode;
+    private String                      mDriverName;
+    private URI                         mPictureURI;
+    private UUID                        mFaceId;
     private long                        mLastLocationUpdateTime = System.currentTimeMillis();
 
     @Override
@@ -91,6 +154,26 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         wamsInit(false); // without auto-update for this activity
 
         geoFencesInit();
+
+        joinsTable = Globals.getMobileServiceClient().getTable("joins", Join.class);
+
+        if( savedInstanceState != null ) {
+
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_RIDE_CODE) ) {
+                mRideCode = savedInstanceState.getString(Globals.PARCELABLE_KEY_RIDE_CODE);
+            }
+
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_DRIVERS) ) {
+                ArrayList<WifiP2pDeviceUser> drivers = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_DRIVERS);
+                if( drivers != null ) {
+
+                    mDrivers.addAll(drivers);
+                    mDriversAdapter.notifyDataSetChanged();
+                }
+            }
+        } else {
+            refresh();
+        }
     }
 
     @Override
@@ -236,7 +319,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 case Globals.CAMERA_PERMISSION_REQUEST: {
                     if (grantResults.length > 0
                             && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                        onCameraCVInternal(null);
+                        onCameraCVInternal();
                     } else {
                         mTextSwitcher.setCurrentText(getString(R.string.permission_camera_denied));
                         Log.d(LOG_TAG, getString(R.string.permission_camera_denied));
@@ -289,7 +372,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             }
 
             @Override
-            public void onFailure(Throwable t) {
+            public void onFailure(@NonNull Throwable t) {
                 if (Crashlytics.getInstance() != null) {
                     Crashlytics.logException(t);
                 }
@@ -393,6 +476,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                             passengerPicture.setImageDrawable(drawable);
                         }
+
+                        mPictureURI = (URI) extras.getSerializable(getString(R.string.detection_face_uri));
+                        mFaceId = (UUID) extras.getSerializable(getString(R.string.detection_face_id));
+
+                        mTextSwitcher.setText(getString(R.string.instruction_make_additional_selfies));
                     }
                 }
                 break;
@@ -403,7 +491,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     public void onCameraCV(View view) {
         try {
             checkCameraAndStoragePermissions();
-            onCameraCVInternal(view);
+            onCameraCVInternal();
         }  catch (SecurityException ex) {
 
             // Returns true if app has requested this permission previously 
@@ -435,11 +523,665 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         }
     }
 
-    private void onCameraCVInternal(View v) {
+    private void onCameraCVInternal() {
         final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean bShowSelfieDescription = sharedPrefs.getBoolean(Globals.SHOW_SELFIE_DESC, true);
 
         Intent intent = new Intent(this, CameraCVActivity.class);
         startActivityForResult(intent, MAKE_PICTURE_REQUEST);
     }
+
+    @Override
+    public boolean handleMessage(Message msg) {
+        String strMessage;
+
+        switch (msg.what) {
+            case Globals.TRACE_MESSAGE:
+                Bundle bundle = msg.getData();
+                strMessage = bundle.getString("message");
+                trace(strMessage);
+                break;
+
+            case Globals.MESSAGE_READ:
+                byte[] buffer = (byte[]) msg.obj;
+                strMessage = new String(buffer);
+                trace(strMessage);
+                break;
+
+            case Globals.MESSAGE_DISCOVERY_FAILED:
+                if (mSearchDriverDialog != null && mSearchDriverDialog.isShowing()) {
+                    mSearchDriverDialog.dismiss();
+                    mSearchDriverCountDownTimer.cancel();
+
+                    if (mCountDiscoveryFailures++ < Globals.MAX_ALLOWED_DISCOVERY_FAILURES) {
+                        mSearchDriverDialog = null;
+                        refresh();
+                    } else {
+                        mCountDiscoveryFailures = 0;
+                        showRideCodePane(R.string.discovery_failure,
+                                Color.RED);
+                    }
+                }
+                break;
+        }
+
+        return true;
+
+    }
+
+    //
+    // Implementation of IRefreshable
+    //
+    @Override
+    @UiThread
+    public void refresh() {
+        mDrivers.clear();
+        mDriversAdapter.notifyDataSetChanged();
+
+        final ImageButton btnRefresh = (ImageButton) findViewById(R.id.btnRefresh);
+        if (btnRefresh != null) // This may happens because
+                                // the button is actually created by adapter
+            btnRefresh.setVisibility(View.GONE);
+
+        final ProgressBar progress_refresh = (ProgressBar) findViewById(R.id.progress_refresh);
+        if (progress_refresh != null)
+            progress_refresh.setVisibility(View.VISIBLE);
+
+        try {
+            stopDiscovery(new Runnable() {
+                @Override
+                public void run() {
+
+                    startDiscovery(PassengerRoleActivity.this,
+                            getUser().getRegistrationId(),
+                            ""); // empty ride code!
+
+                    getHandler().postDelayed(
+                            new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (btnRefresh != null)
+                                        btnRefresh.setVisibility(View.VISIBLE);
+                                    if (progress_refresh != null)
+                                        progress_refresh.setVisibility(View.GONE);
+                                }
+                            },
+                            Globals.PASSENGER_DISCOVERY_PERIOD * 1000);
+
+                    showCountDownDialog();
+
+                }
+            });
+
+        } catch (Exception ex) {
+            if (Crashlytics.getInstance() != null)
+                Crashlytics.log(ex.getLocalizedMessage());
+
+            Log.e(LOG_TAG, ex.getLocalizedMessage());
+        }
+    }
+
+    @UiThread
+    private void showCountDownDialog() {
+        try {
+
+//            final BallView waitView = (BallView)findViewById(R.id.wait_search_driver);
+//            waitView.setVisibility(View.VISIBLE);
+
+            mSearchDriverDialog = new MaterialDialog.Builder(this)
+                    .title(R.string.passenger_progress_dialog)
+                    .content(R.string.please_wait)
+                    .iconRes(R.drawable.ic_wait)
+                    .cancelable(false)
+                    .autoDismiss(false)
+                    //.progress(false, Globals.PASSENGER_DISCOVERY_PERIOD, true)
+                    .progress(true, 0)
+                    .negativeText(android.R.string.cancel)
+                    .onNegative(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            dialog.dismiss();
+                            showRideCodePane(R.string.ride_code_dialog_content,
+                                    Color.BLACK);
+                        }
+                    })
+                    .show();
+
+            if (mSearchDriverCountDownTimer == null) {
+
+                mSearchDriverCountDownTimer = new CountDownTimer(Globals.PASSENGER_DISCOVERY_PERIOD * 1000, 1000) {
+
+                    public void onTick(long millisUntilFinished) {
+
+                        Log.d(LOG_TAG,
+                                String.format("CountDown tick. Remains %d sec. Drivers size: %d",
+                                        millisUntilFinished, mDrivers.size()));
+
+                        if (mDrivers.size() != 0) {
+                            this.cancel();
+                            //waitView.setVisibility(View.GONE);
+                            mSearchDriverDialog.dismiss();
+
+                            Log.d(LOG_TAG, "Cancelling timer");
+                        } else {
+                            if (!mSearchDriverDialog.isIndeterminateProgress())
+                                mSearchDriverDialog.incrementProgress(1);
+                        }
+                    }
+
+                    public void onFinish() {
+
+                        try {
+                            mSearchDriverDialog.dismiss();
+                            //waitView.setVisibility(View.GONE);
+                        } catch (IllegalArgumentException ex) {
+                            // Safely dismiss when called due to
+                            // 'Not attached to window manager'.
+                            // In this case the activity just was passed by
+                            // to some other activity
+                        }
+
+                        if (mDrivers.size() == 0) {
+
+                            if (mCountDiscoveryTrials++ > Globals.MAX_DISCOVERY_TRIALS) {
+                                showRideCodePane(R.string.ride_code_dialog_content,
+                                        Color.BLACK);
+                                mCountDiscoveryTrials = 1;
+                            } else {
+                                refresh();
+                            }
+                        }
+
+                    }
+                };
+            }
+
+            mSearchDriverCountDownTimer.start();
+
+        } catch (Exception ex) {
+            if (Crashlytics.getInstance() != null)
+                Crashlytics.logException(ex);
+
+            Log.e(LOG_TAG, ex.getMessage());
+        }
+
+    }
+
+    @UiThread
+    private void showRideCodePane(@StringRes int contentStringResId,
+                                  @ColorInt int contentColor) {
+
+        try {
+            String dialogContent = getString(contentStringResId);
+
+            new MaterialDialog.Builder(this)
+                    .onNegative((new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            refresh();
+                        }
+                    }))
+                    .onNeutral((new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+
+                        }
+                    }))
+                    .title(R.string.ride_code_title)
+                    .content(dialogContent)
+                    .positiveText(android.R.string.ok)
+                    .neutralText(R.string.code_try_later)
+                    .negativeText(R.string.code_retry_action)
+                    .contentColor(contentColor)
+                    .inputType(InputType.TYPE_NUMBER_VARIATION_NORMAL | InputType.TYPE_CLASS_NUMBER)
+                    .inputRange(Globals.RIDE_CODE_INPUT_LENGTH, Globals.RIDE_CODE_INPUT_LENGTH)
+                    .input(R.string.ride_code_hint,
+                            R.string.ride_code_refill,
+                            new MaterialDialog.InputCallback() {
+                                @Override
+                                public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
+                                    mRideCode = input.toString();
+                                    onSubmitCode();
+                                }
+                            }
+
+                    ).show();
+        } catch (Exception ex) {
+
+            Log.e(LOG_TAG, ex.getMessage());
+        }
+    }
+
+    private void startDiscovery(final P2pConversator.IPeersChangedListener peersListener,
+                                final String userID,
+                                final String rideCode) {
+
+        mP2pPreparer = new P2pPreparer(this);
+        mP2pPreparer.prepare(new P2pPreparer.P2pPreparerListener() {
+            @Override
+            public void prepared() {
+                Map<String, String> record = new HashMap<>();
+                record.put(Globals.TXTRECORD_PROP_PORT, Globals.SERVER_PORT);
+                if (!rideCode.isEmpty())
+                    record.put(Globals.TXTRECORD_PROP_RIDECODE, rideCode);
+                record.put(Globals.TXTRECORD_PROP_USERID, userID);
+
+                mP2pConversator = new P2pConversator(PassengerRoleActivity.this,
+                                                    mP2pPreparer,
+                                                    getHandler());
+                mP2pConversator.startConversation(record, peersListener);
+
+            }
+
+            @Override
+            public void interrupted() {
+
+            }
+        });
+    }
+
+    private void stopDiscovery(final Runnable r) throws Exception {
+        if (mP2pPreparer == null && r != null) {
+            r.run();
+            return;
+        }
+
+        mP2pPreparer.undo(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (mP2pConversator != null) {
+                        mP2pConversator.stopConversation();
+                    }
+
+                    if (r != null)
+                        r.run();
+
+                } catch (Exception ex) {
+                    Log.e(LOG_TAG, ex.getLocalizedMessage());
+                }
+            }
+        });
+    }
+
+    public void onSubmitCode() {
+
+        // Only allow participation request from monitored areas
+        if (!Globals.isInGeofenceArea()) {
+            new MaterialDialog.Builder(this)
+                    .title(R.string.geofence_outside_title)
+                    .content(R.string.geofence_outside)
+                    .positiveText(R.string.geofence_positive_answer)
+                    .negativeText(R.string.geofence_negative_answer)
+                    .onPositive(new MaterialDialog.SingleButtonCallback(){
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            Globals.setRemindGeofenceEntrance();
+                        }
+                    })
+
+                    .show();
+
+            return;
+        }
+
+        final String android_id = Settings.Secure.getString(this.getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+
+        new AsyncTask<Void, Void, Void>() {
+
+            Exception mEx;
+            LoadToast lt;
+
+            @Override
+            protected void onPreExecute() {
+
+                lt = new LoadToast(PassengerRoleActivity.this);
+                lt.setText(getString(R.string.processing));
+                Display display = getWindow().getWindowManager().getDefaultDisplay();
+                Point size = new Point();
+                display.getSize(size);
+                lt.setTranslationY(size.y / 2);
+                lt.show();
+
+            }
+
+            @Override
+            protected void onPostExecute(Void result) {
+
+                cancelNotification();
+
+                // Prepare to play sound loud :)
+                AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+                int sb2value = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, sb2value / 2, 0);
+
+                CustomEvent confirmEvent = new CustomEvent(getString(R.string.passenger_confirmation_answer_name));
+                confirmEvent.putCustomAttribute("User", getUser().getFullName());
+
+                if (mEx != null) {
+
+                    confirmEvent.putCustomAttribute("Error", 0);
+
+                    try {
+                        MobileServiceException mse = (MobileServiceException) mEx.getCause();
+                        int responseCode;
+                        if (mse.getCause() instanceof UnknownHostException) {
+                            responseCode = 503; // Some artificially: usually 503 means
+                            // 'Service Unavailable'.
+                            // To this extent, we mean 'Connection lost'
+                        } else {
+
+                            responseCode = mse.getResponse().getStatus().code;
+                        }
+
+                        switch (responseCode) {
+
+                            case 403: { // HTTP 'Forbidden' means than IDs of the
+                                // driver and passenger are same
+                                showRideCodePane(R.string.ride_same_ids,
+                                        Color.RED);
+
+                                lt.error();
+                                beepError.start();
+                            }
+                            break;
+
+                            case 404: { // HTTP 'Not found' means 'no such ride code'
+                                // i.e.
+                                // try again with appropriate message
+                                showRideCodePane(R.string.ride_code_wrong,
+                                        Color.RED);
+
+                                lt.error();
+                                beepError.start();
+                            }
+                            break;
+
+                            case 409: {// HTTP 'Conflict'
+                                // picture required
+                                // Ride code was successfully validated,
+                                // but selfie is required
+
+                                lt.success();
+
+                                onCameraCV(null);
+                            }
+                            break;
+
+                            case 503: { // HTTP 'Service Unavailable' interpreted as 'Connection Lost'
+                                // Try again
+                                showRideCodePane(R.string.connection_lost,
+                                        Color.RED);
+                                lt.error();
+                                beepError.start();
+                            }
+                            break;
+
+                            default:
+                                lt.error();
+                                Toast.makeText(PassengerRoleActivity.this,
+                                        mEx.getMessage(),
+                                        Toast.LENGTH_LONG).show();
+                                break;
+                        }
+                    } catch (Exception ex) {
+                        if (Crashlytics.getInstance() != null)
+                            Crashlytics.logException(ex);
+
+                        if (!ex.getMessage().isEmpty())
+                            Log.e(LOG_TAG, ex.getMessage());
+                    }
+
+                } else {
+
+                    confirmEvent.putCustomAttribute("Success", 1);
+
+                    lt.success();
+                    beepSuccess.start();
+
+                    getHandler().postDelayed(thanksRunnable, 1500);
+
+                }
+
+                Answers.getInstance().logCustom(confirmEvent);
+
+            }
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+
+                try {
+                    Join _join = new Join();
+                    _join.setWhenJoined(new Date());
+                    if (mPictureURI != null && !mPictureURI.toString().isEmpty())
+                        _join.setPictureURL(mPictureURI.toString());
+                    if (mFaceId != null && !mFaceId.toString().isEmpty())
+                        _join.setFaceId(mFaceId.toString());
+                    _join.setRideCode(mRideCode);
+                    String currentGeoFenceName = Globals.get_currentGeoFenceName();
+                    _join.setGFenceName(currentGeoFenceName);
+                    _join.setDeviceId(android_id);
+
+                    try {
+                        Location loc = getCurrentLocation(PassengerRoleActivity.this);
+                        if (loc != null) {
+                            _join.setLat((float) loc.getLatitude());
+                            _join.setLon((float) loc.getLongitude());
+                        }
+                    } catch (Exception e) {
+                        Log.e(LOG_TAG, e.getMessage());
+                    }
+                    // The rest of params are set within WAMS insert script
+                    String userId = Globals.getMobileServiceClient().getCurrentUser().getUserId();
+                    Log.d(LOG_TAG, userId);
+                    joinsTable.insert(_join).get();
+
+                } catch (ExecutionException | InterruptedException ex) {
+
+                    mEx = ex;
+                    if (Crashlytics.getInstance() != null)
+                        Crashlytics.logException(ex);
+
+                    Log.e(LOG_TAG, ex.getMessage());
+                }
+
+                return null;
+            }
+        }.execute();
+    }
+
+    //
+    // Implementations of P2pConversator.IPeersChangedListener
+    //
+    @Override
+    public void addDeviceUser(final WifiP2pDeviceUser device) {
+
+        if (device.getRideCode() == null)
+            return;
+
+        String remoteUserID = device.getUserId();
+        if (remoteUserID == null || remoteUserID.isEmpty()) {
+            // remote user id was not transmitted
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mDriversAdapter.add(device);
+                    mDriversAdapter.notifyDataSetChanged();
+                }
+            });
+        } else {
+
+            String[] tokens = remoteUserID.split(":");
+            Assert.assertTrue(tokens.length == 2);
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mDriversAdapter.add(device);
+                    mDriversAdapter.notifyDataSetChanged();
+
+                    mDriversShown = true;
+                }
+            });
+
+            // Uncomment the following code
+            // if decided to NOT transmit user name thru Wi-Fi Direct
+
+//            if ( tokens[0].equalsIgnoreCase(Globals.FB_PROVIDER) ) {
+//                AccessToken fbAccessToken = AccessToken.getCurrentAccessToken();
+//                GraphRequest request = GraphRequest.newGraphPathRequest(
+//                        fbAccessToken,
+//                        tokens[1],
+//                        new GraphRequest.Callback() {
+//                            @Override
+//                            public void onCompleted(GraphResponse response) {
+//
+//                                try {
+//
+//                                    JSONObject object = response.getJSONObject();
+//                                    if (response.getError() == null) {
+//                                        String userName = (String) object.get("name");
+//                                        device.setUserName(userName);
+//
+//                                        mDriversAdapter.replaceItem(device);
+//                                        mDriversAdapter.notifyDataSetChanged();
+//                                    } else {
+//                                        if (Crashlytics.getInstance() != null)
+//                                            Crashlytics.log(response.getError().getErrorMessage());
+//
+//                                        Log.e(LOG_TAG, response.getError().getErrorMessage());
+//                                    }
+//
+//                                } catch (JSONException e) {
+//                                    Log.e(LOG_TAG, e.getLocalizedMessage());
+//                                }
+//                            }
+//                        });
+//
+//                Bundle parameters = new Bundle();
+//                parameters.putString("fields", "id,name");
+//                request.setParameters(parameters);
+//                request.executeAsync();
+//            } else if( tokens[0].equalsIgnoreCase(Globals.MICROSOFT_PROVIDER) ) {
+//
+//            }
+        }
+    }
+
+    //
+    // Implementation of ITrace
+    //
+    @Override
+    public void trace(final String status) {
+
+    }
+
+    @Override
+    public void alert(String message, final String actionIntent) {
+        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialogInterface, int which) {
+                if (which == DialogInterface.BUTTON_POSITIVE) {
+                    startActivity(new Intent(actionIntent));
+                }
+            }
+        };
+
+        new AlertDialogWrapper.Builder(this)
+                .setTitle(message)
+                .setNegativeButton(android.R.string.no, dialogClickListener)
+                .setPositiveButton(android.R.string.yes, dialogClickListener)
+                .show();
+    }
+
+    //
+    // Implementation of IRecyclerClickListener
+    //
+    @Override
+    public void clicked(View view, int position) {
+
+        if (!Globals.isInGeofenceArea()) {
+            new MaterialDialog.Builder(this)
+                    .title(R.string.geofence_outside_title)
+                    .content(R.string.geofence_outside)
+                    .positiveText(R.string.geofence_positive_answer)
+                    .negativeText(R.string.geofence_negative_answer)
+                    .callback(new MaterialDialog.ButtonCallback() {
+                        @Override
+                        public void onPositive(MaterialDialog dialog) {
+                            Globals.setRemindGeofenceEntrance();
+                        }
+                    })
+                    .show();
+        } else {
+
+            if (position >= 0
+                    && mRideCode == null) {
+                // Ride code was stored if the activity is invoked from notification
+                // In this case the position is -1 because this
+                // function is called manually (from within onNewIntent())
+                Assert.assertNotNull(mDrivers);
+
+                WifiP2pDeviceUser driverDevice = mDrivers.get(position);
+                Assert.assertNotNull(driverDevice);
+
+                mRideCode = driverDevice.getRideCode();
+                mDriverName = driverDevice.getUserName();
+            }
+
+            DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialogInterface, int which) {
+                    if (which == DialogInterface.BUTTON_POSITIVE) {
+
+                        //findViewById(R.id.join_ride_button).setVisibility(View.INVISIBLE);
+
+                        FloatingActionButton passengerPicture = (FloatingActionButton) findViewById(R.id.join_ride_button);
+                        passengerPicture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.ColorAccent)));
+                        Drawable drawable = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_action_camera, null);
+                        passengerPicture.setImageDrawable(drawable);
+
+                        onSubmitCode();
+                    }
+                }
+            };
+
+            StringBuilder sb = new StringBuilder(getString(R.string.passenger_confirm));
+            if (mDriverName != null) {
+                sb.append(" ");
+                getString(R.string.with);
+                sb.append(" ");
+                sb.append(mDriverName);
+            }
+            sb.append("?");
+
+            new AlertDialogWrapper.Builder(this)
+                    .setTitle(sb.toString())
+                    .setNegativeButton(android.R.string.no, dialogClickListener)
+                    .setPositiveButton(android.R.string.yes, dialogClickListener)
+                    .show();
+        }
+
+    }
+
+    private Runnable thanksRunnable = new Runnable() {
+        @Override
+        public void run() {
+            new MaterialDialog.Builder(PassengerRoleActivity.this)
+                    .title(R.string.thanks)
+                    .content(R.string.confirmation_accepted)
+                    .cancelable(false)
+                    .positiveText(android.R.string.ok)
+                    .callback(new MaterialDialog.ButtonCallback() {
+                        @Override
+                        public void onPositive(MaterialDialog dialog) {
+                            //finish();
+                        }
+                    })
+                    .show();
+        }
+    };
 }

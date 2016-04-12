@@ -135,6 +135,7 @@ public class CameraCVActivity extends Activity
                 {
                     Log.i(LOG_TAG, "OpenCV loaded successfully");
 
+                    System.loadLibrary("opencv_java3");
                     System.loadLibrary("fastcvUtils");
 
                     String faceCascadeFilePath = createCascadeFile(R.raw.haarcascade_frontalface_default,
