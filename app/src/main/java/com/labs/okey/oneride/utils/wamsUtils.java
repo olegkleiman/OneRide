@@ -3,10 +3,15 @@ package com.labs.okey.oneride.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.util.Base64;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
@@ -176,22 +181,20 @@ public class wamsUtils {
         if( tokenProvider == MobileServiceAuthenticationProvider.Facebook ) {
             com.facebook.login.LoginManager.getInstance().logOut();
         } else if( tokenProvider == MobileServiceAuthenticationProvider.Google) {
+            try {
+                if( Globals.googleApiClient != null )
+                    Auth.GoogleSignInApi.signOut(Globals.googleApiClient).setResultCallback(
+                            new ResultCallback<Status>() {
+                                @Override
+                                public void onResult(@NonNull Status status) {
 
-//            if( !Globals.googleApiClient.isConnected())
-//                Globals.googleApiClient.connect();
-//
-//            try {
-//                Auth.GoogleSignInApi.signOut(Globals.googleApiClient).setResultCallback(
-//                        new ResultCallback<Status>() {
-//                            @Override
-//                            public void onResult(Status status) {
-//
-//                            }
-//                        }
-//                );
-//            } catch(Exception ex) {
-//                Log.e(LOG_TAG, ex.getMessage());
-//            }
+                                }
+                            }
+                    );
+            } catch(Exception ex) {
+                Log.e(LOG_TAG, ex.getMessage());
+                Toast.makeText(context, ex.getMessage(), Toast.LENGTH_LONG).show();
+            }
         } else if( tokenProvider == MobileServiceAuthenticationProvider.MicrosoftAccount ) {
 //            if( Globals.liveAuthClient == null )
 //                Globals.liveAuthClient = new LiveAuthClient(context,
