@@ -12,6 +12,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -19,6 +20,7 @@ import android.location.Location;
 import android.location.LocationProvider;
 import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pDeviceList;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -37,6 +39,7 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Display;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
@@ -68,20 +71,25 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.labs.okey.oneride.adapters.PassengersAdapter;
 import com.labs.okey.oneride.model.GFCircle;
+import com.labs.okey.oneride.model.Join;
 import com.labs.okey.oneride.model.PassengerFace;
 import com.labs.okey.oneride.model.Ride;
 import com.labs.okey.oneride.model.User;
 import com.labs.okey.oneride.model.WifiP2pDeviceUser;
 import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.ITrace;
+import com.labs.okey.oneride.utils.IUploader;
 import com.labs.okey.oneride.utils.RoundedDrawable;
 import com.labs.okey.oneride.utils.UiThreadExecutor;
+import com.labs.okey.oneride.utils.faceapiUtils;
 import com.labs.okey.oneride.utils.wamsAddAppeal;
 import com.labs.okey.oneride.utils.wifip2p.P2pConversator;
 import com.labs.okey.oneride.utils.wifip2p.P2pPreparer;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import junit.framework.Assert;
+
+import net.steamcrafted.loadtoast.LoadToast;
 
 import java.io.File;
 import java.io.IOException;
@@ -116,6 +124,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 ITrace,
                 Handler.Callback,
                 android.location.LocationListener,
+                IUploader,
                 // Added for Google Map support within sliding panel
                 OnMapReadyCallback,
                 GoogleApiClient.ConnectionCallbacks{
@@ -1345,6 +1354,203 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     private void onSubmitRideInternal() {
 
+        if( mPassengers.size() < Globals.REQUIRED_PASSENGERS_NUMBER )
+        {
+            showCabinView();
+            return;
+        }
+
+        boolean bRequestApprovalBySefies = false;
+
+        for(User passenger: Globals.getMyPassengers() ){
+            if( passenger.wasSelfPictured() ) {
+                bRequestApprovalBySefies = true;
+                break;
+            }
+
+        }
+
+        if( bRequestApprovalBySefies )
+            onSubmitRidePics(null);
+        else {
+
+            // Only allow no-fee request from monitored area
+            if( !Globals.isInGeofenceArea() ) {
+
+                new MaterialDialog.Builder(this)
+                        .title(R.string.geofence_outside_title)
+                        .content(R.string.geofence_outside)
+                        .positiveText(R.string.geofence_positive_answer)
+                        .negativeText(R.string.geofence_negative_answer)
+                        .callback(new MaterialDialog.ButtonCallback() {
+                            @Override
+                            public void onPositive(MaterialDialog dialog){
+                                Globals.setRemindGeofenceEntrance();
+                            }
+                        })
+                        .show();
+
+                return;
+            }
+
+            mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());
+            new UpdateCurrentRide().execute();
+        }
+    }
+
+    public void onSubmitRidePics(View v){
+        cancelNotification();
+
+        // Only allow no-fee request from monitored area
+        if( !Globals.isInGeofenceArea() ) {
+
+            new MaterialDialog.Builder(this)
+                    .title(R.string.geofence_outside_title)
+                    .content(R.string.geofence_outside)
+                    .positiveText(R.string.geofence_positive_answer)
+                    .negativeText(R.string.geofence_negative_answer)
+                    .callback(new MaterialDialog.ButtonCallback() {
+                        @Override
+                        public void onPositive(MaterialDialog dialog){
+                            Globals.setRemindGeofenceEntrance();
+                        }
+                    })
+                    .show();
+
+            return;
+        }
+
+        // Process the Faces with Oxford FaceAPI
+        // Will be continued on finish() from IPictureURLUpdater
+        new faceapiUtils(this).execute();
+    }
+
+    //
+    // Implementation of IUploader
+    //
+    @Override
+    public void update(String url) {
+    }
+
+    @Override
+    public void finished(int task_tag, boolean success) {
+
+        switch( task_tag ) {
+            case Globals.FACE_VERIFY_TASK_TAG: {
+
+                Globals.verificationMat.loadIdentity(); // restore Matrix
+
+                // Upload pictures as joins
+                new AsyncTask<Void, Void, Void>() {
+
+                    Exception mEx;
+
+                    @Override
+                    protected void onPreExecute() {
+
+                    }
+
+                    @Override
+                    protected Void doInBackground(Void... voids) {
+
+                        MobileServiceTable<Join> joinsTable = Globals.getMobileServiceClient()
+                                                                    .getTable("joins", Join.class);
+
+                        try {
+                            for(Map.Entry<Integer, PassengerFace> entry : Globals.get_PassengerFaces().entrySet()) {
+
+                                PassengerFace pf = entry.getValue();
+
+                                Join _join = new Join();
+                                _join.setWhenJoined(new Date());
+                                String pictureURI = pf.getPictureUrl();
+                                if (pictureURI != null && !pictureURI.isEmpty())
+                                    _join.setPictureURL(pictureURI);
+
+                                String faceId = pf.getFaceId().toString();
+                                if (!faceId.isEmpty())
+                                    _join.setFaceId(faceId);
+                                _join.setRideCode(mCurrentRide.getRideCode());
+
+                                // AndroidId is meaningless in this situation: it's only a picture of passenger
+                                //_join.setDeviceId(android_id);
+
+                                try {
+                                    Location loc = getCurrentLocation(DriverRoleActivity.this);
+                                    if (loc != null) {
+                                        _join.setLat((float) loc.getLatitude());
+                                        _join.setLon((float) loc.getLongitude());
+                                    }
+                                } catch (Exception e) {
+                                    Log.e(LOG_TAG, e.getMessage());
+                                }
+
+                                String msg = String.format("Inserting join for user with FaceID %s", faceId);
+                                Log.d(LOG_TAG, msg);
+
+                                joinsTable.insert(_join).get();
+                            }
+
+                        } catch (Exception ex) { // ExecutionException | InterruptedException ex ) {
+                            mEx = ex;
+                            if (Crashlytics.getInstance() != null)
+                                Crashlytics.logException(ex);
+
+                            Log.e(LOG_TAG, ex.getMessage());
+                        }
+
+                        return null;
+                    }
+                }.execute();
+
+                if (success) {
+                    mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED_BY_SELFY.ordinal());
+                    new UpdateCurrentRide().execute();
+                } else {
+
+                    mCurrentRide.setApproved(Globals.RIDE_STATUS.DENIED.ordinal());
+
+                    new AsyncTask<Void, Void, Void>() {
+
+                        Exception mEx;
+
+                        @Override
+                        protected Void doInBackground(Void... args) {
+
+                            try {
+                                String currentGeoFenceName = Globals.get_currentGeoFenceName();
+                                mCurrentRide.setGFenceName(currentGeoFenceName);
+                                mRidesTable.update(mCurrentRide).get();
+                            } catch (InterruptedException | ExecutionException e) {
+                                mEx = e;
+                                Log.e(LOG_TAG, e.getMessage());
+                            }
+
+                            return null;
+
+                        }
+
+                        @Override
+                        protected void onPostExecute(Void result) {
+
+                            CustomEvent requestEvent = new CustomEvent(getString(R.string.no_fee_answer_name));
+                            requestEvent.putCustomAttribute("User", getUser().getFullName());
+
+                            requestEvent.putCustomAttribute(getString(R.string.answer_approved_attribute), 0);
+                            Answers.getInstance().logCustom(requestEvent);
+                        }
+                    }.execute();
+
+                    onAppealCamera();
+                }
+            }
+            break;
+
+            case Globals.APPEAL_UPLOAD_TASK_TAG: {
+                finish();
+            }
+            break;
+        }
     }
 
     private Bitmap convertToBitmap(Drawable drawable, int widthPixels, int heighPixels) {
@@ -1548,5 +1754,78 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         findViewById(R.id.drive_internal_layout).setVisibility(View.VISIBLE);
 
         mCabinShown = false;
+    }
+
+    private Runnable thanksRunnable = new Runnable() {
+        @Override
+        public void run() {
+            new MaterialDialog.Builder(DriverRoleActivity.this)
+                    .title(R.string.thanks)
+                    .content(R.string.nofee_request_accepted)
+                    .iconRes(R.drawable.ic_info)
+                    .cancelable(false)
+                    .positiveText(android.R.string.ok)
+                    .callback(new MaterialDialog.ButtonCallback() {
+                        @Override
+                        public void onPositive(MaterialDialog dialog) {
+                            finish();
+                        }
+                    })
+                    .show();
+        }
+    };
+
+    class UpdateCurrentRide extends AsyncTask<Void, Void, Void> {
+
+        Exception mEx;
+        LoadToast lt;
+
+        @Override
+        protected void onPreExecute() {
+            lt = new LoadToast(DriverRoleActivity.this);
+            lt.setText(getString(R.string.processing));
+            Display display = getWindow().getWindowManager().getDefaultDisplay();
+            Point size = new Point();
+            display.getSize(size);
+            lt.setTranslationY(size.y / 2);
+            lt.show();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+                String currentGeoFenceName = Globals.get_currentGeoFenceName();
+                mCurrentRide.setGFenceName(currentGeoFenceName);
+                mRidesTable.update(mCurrentRide).get();
+            } catch (InterruptedException | ExecutionException e) {
+                mEx = e;
+                Log.e(LOG_TAG, e.getMessage());
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result){
+
+            CustomEvent requestEvent = new CustomEvent(getString(R.string.no_fee_answer_name));
+            requestEvent.putCustomAttribute("User", getUser().getFullName());
+
+            if( mEx != null ) {
+
+                lt.error();
+                beepError.start();
+            }
+            else {
+
+                lt.success();
+                beepSuccess.start();
+
+                getHandler().postDelayed(thanksRunnable, 1500);
+
+            }
+
+            requestEvent.putCustomAttribute(getString(R.string.answer_approved_attribute), 1);
+            Answers.getInstance().logCustom(requestEvent);
+        }
     }
 }

@@ -40,102 +40,38 @@ buildscript {
 //}
 
 //apply plugin: 'com.google.gms.google-services'
-apply plugin: 'com.android.model.application'
+apply plugin: 'com.android.application'
 
-model {
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.3"
+    packagingOptions.excludes = ['LICENSE.txt']
 
-    // We use JDK 1.8, so set the Java target to 1.7
-    compileOptions.with {
-        sourceCompatibility = JavaVersion.VERSION_1_7
-        targetCompatibility = JavaVersion.VERSION_1_7
+    defaultConfig {
+        applicationId "com.labs.okey.oneride"
+        minSdkVersion 16
+        targetSdkVersion 23
+        versionCode 4
+        versionName "4.71"
+        multiDexEnabled = true
     }
 
-    android {
-        compileSdkVersion = 23
-        buildToolsVersion = "23.0.2"
-        packagingOptions.excludes = ['LICENSE.txt']
-
-        defaultConfig.with {
-            applicationId = "com.labs.okey.oneride"
-            minSdkVersion.apiLevel = 16
-            targetSdkVersion.apiLevel = 23
-            versionCode = 4
-            versionName = "4.71"
-            multiDexEnabled = true
-        }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
     }
 
-    android.ndk {
-        moduleName = "fastcvUtils"
-
-        abiFilters.addAll("armeabi", "armeabi-v7a")
-
-        // Link with static OpenCV libraries: the order is important!
-        // The following order taken from OpenCV.mk
-        def opencv_modules = ["shape", "stitching", "objdetect", "superres", "videostab", "calib3d", "features2d", "highgui", "videoio", "imgcodecs", "video", "photo", "ml", "imgproc", "flann", "core", "hal", "tbb"]
-
-        ldLibs.addAll(["log", "stdc++", "dl", "z", "jnigraphics"])
-
-        abiFilters.each { targetAbi ->
-            println targetAbi
-
-            opencv_modules.each { module ->
-
-                if (module.equals("tbb")) {
-                    ldLibs.add(file(projectDir).absolutePath + "/src/main/jniLibs/" + targetAbi + "/lib" + module + ".a")
-                } else {
-                    ldLibs.add(file(projectDir).absolutePath + "/src/main/jniLibs/" + targetAbi + "/libopencv_" + module + ".a")
-                }
-            }
-        }
-
-        cppFlags.addAll(["-std=c++11", "-Werror", "--debug", "-frtti", "-fexceptions", "-D_DEBUG"]);
-
-        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            def opencvhome = System.getenv("OPENCV_HOME")
-            cppFlags.add("-I" + opencvhome + "\\native\\jni\\include")
-        } else {
-            cppFlags.add("-I/Users/Oleg/Downloads/OpenCV-android-sdk/sdk/native/jni/include")
-        }
-
-
-        stl = "gnustl_static" //  GNU Standard C++ Library runtime
-        debuggable = true
+    dataBinding {
+        enabled = true
     }
 
-//        sources {
-//            main {
-//                java {
-//                    source {
-//                        srcDir "src"
-//                    }
-//                }
-//                jni {
-//                    exportedHeaders {
-//                        srcDir "src/main/headers"
-//                    }
-//                }
-//            }
-//        }
 
-    android.buildTypes {
+    buildTypes {
         release {
-            minifyEnabled = true
+            minifyEnabled true
             proguardFiles += file('proguard-rules.pro')
-            debuggable = false
-            ndk.with {
-                debuggable = false
-            }
-        }
-
-        debug {
-            debuggable = true
-            ndk.with {
-                debuggable = true
-            }
         }
     }
-
 }
 
 repositories {
@@ -151,9 +87,6 @@ repositories {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-
-    compile project(':openCVLibrary310')
-    //compile project(':livesdk')
 
     // See here: https://developers.google.com/android/guides/setup
     // for detailed discussion about setting up GMS
@@ -171,34 +104,28 @@ dependencies {
         transitive = true;
     }
 
+    compile(group: 'com.microsoft.azure', name: 'azure-notifications-handler', version: '1.0.1', ext: 'jar')
+
     compile 'com.google.android.gms:play-services-location:8.4.0'
     compile 'com.google.android.gms:play-services-gcm:8.4.0'
     compile 'com.google.android.gms:play-services-auth:8.4.0'
     compile 'com.google.android.gms:play-services-maps:8.4.0'
-
-    compile 'com.android.support:support-annotations:23.2.1'
-    compile 'com.android.support:support-v4:23.2.1'
-    compile 'com.android.support:appcompat-v7:23.2.1'
-    compile 'com.android.support:design:23.2.1'
-    compile 'com.android.support:cardview-v7:23.2.1'
-    compile 'com.android.support:recyclerview-v7:23.2.1'
+    compile 'com.android.support:support-annotations:23.3.0'
+    compile 'com.android.support:support-v4:23.3.0'
+    compile 'com.android.support:appcompat-v7:23.3.0'
+    compile 'com.android.support:design:23.3.0'
+    compile 'com.android.support:cardview-v7:23.3.0'
+    compile 'com.android.support:recyclerview-v7:23.3.0'
     compile 'com.android.support:multidex:1.0.1'
-
     compile 'com.android.volley:volley:1.0.0'
     compile 'io.fabric.sdk.android:fabric:1.3.10'
-
     compile 'com.facebook.android:facebook-android-sdk:4.10.1'
     compile 'com.google.code.gson:gson:2.6.2'
     compile 'com.google.guava:guava:19.0'
-
-    compile(group: 'com.microsoft.azure', name: 'azure-notifications-handler', version: '1.0.1', ext: 'jar')
     compile 'com.microsoft.azure:azure-mobile-android:3.1.0'
     compile 'com.microsoft.azure.android:azure-storage-android:0.7.0@aar'
-
     compile 'com.microsoft.projectoxford:face:1.0.0'
-
     compile 'org.jbundle.util.osgi.wrapped:org.jbundle.util.osgi.wrapped.org.apache.http.client:4.1.2'
-
     compile 'net.steamcrafted:load-toast:1.0.10'
     compile 'com.github.brnunes:swipeablerecyclerview:1.0.1'
     compile 'pl.droidsonroids.gif:android-gif-drawable:1.1.+'

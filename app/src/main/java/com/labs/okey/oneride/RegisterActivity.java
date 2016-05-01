@@ -1,24 +1,28 @@
 package com.labs.okey.oneride;
 
-import android.accounts.AccountManager;
 import android.app.DialogFragment;
-import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Debug;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
+import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -27,6 +31,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
@@ -42,7 +47,6 @@ import com.facebook.ProfileTracker;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
-import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -52,14 +56,21 @@ import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 import com.google.android.gms.common.api.Status;
+import com.google.common.base.Function;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.gson.JsonElement;
 import com.labs.okey.oneride.fragments.ConfirmRegistrationFragment;
 import com.labs.okey.oneride.fragments.PhoneConfirmFragment;
 import com.labs.okey.oneride.fragments.RegisterCarsFragment;
 import com.labs.okey.oneride.model.GeoFence;
 import com.labs.okey.oneride.model.User;
 import com.labs.okey.oneride.utils.Globals;
+import com.labs.okey.oneride.utils.sms.SMSReceiver;
 import com.labs.okey.oneride.utils.wamsUtils;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
+import com.microsoft.windowsazure.mobileservices.http.HttpConstants;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
@@ -83,6 +94,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class RegisterActivity extends FragmentActivity
@@ -91,6 +104,8 @@ public class RegisterActivity extends FragmentActivity
 
     private final String        LOG_TAG = getClass().getSimpleName();
     private final String        PENDING_ACTION_BUNDLE_KEY = "com.labs.okey.freeride:PendingAction";
+
+    private String              mAndroidId;
 
     private CallbackManager     mFBCallbackManager;
     private LoginButton         mFBLoginButton;
@@ -164,27 +179,73 @@ public class RegisterActivity extends FragmentActivity
     class VerifyAccountTask extends AsyncTask<Void, Void, Void> {
 
         Exception mEx;
-        ProgressDialog progress;
+//        ProgressDialog progress;
+        MaterialDialog materialProgress = new MaterialDialog.Builder(RegisterActivity.this)
+                                            .title(R.string.registration_account_validate)
+                                            .content(R.string.registration_add_status_wait)
+                                            .progress(true, 0)
+                                            .build();
+
+        private void continueRegistration() {
+            LinearLayout loginLayout = (LinearLayout) findViewById(R.id.login_form);
+            if (loginLayout != null)
+                loginLayout.setVisibility(View.GONE);
+
+            showRegistrationForm();
+        }
 
         @Override
         protected void onPreExecute() {
 
-            progress = ProgressDialog.show(RegisterActivity.this,
-                    getString(R.string.registration_add_status),
-                    getString(R.string.registration_add_status_wait));
+//            progress = ProgressDialog.show(RegisterActivity.this,
+//                    getString(R.string.registration_account_validate),
+//                    getString(R.string.registration_add_status_wait));
+
+            materialProgress.show();
         }
 
         @Override
         protected void onPostExecute(Void result) {
-            progress.dismiss();
+//            if( progress != null )
+//                progress.dismiss();
+
+            if( materialProgress != null && materialProgress.isShowing() )
+                materialProgress.dismiss();
 
             if (mEx == null) {
 
-                LinearLayout loginLayout = (LinearLayout) findViewById(R.id.login_form);
-                if (loginLayout != null)
-                    loginLayout.setVisibility(View.GONE);
+                if( !mAddNewUser ) {
+                    new MaterialDialog.Builder(RegisterActivity.this)
+                            .title(R.string.registration_account_validation_failure)
+                            .iconRes(R.drawable.ic_exclamation)
+                            .content(R.string.registration_exists)
+                            .positiveText(android.R.string.yes)
+                            .negativeText(android.R.string.no)
+                            .onPositive(new MaterialDialog.SingleButtonCallback() {
+                                @Override
+                                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                    continueRegistration();
+                                }
+                            })
+                            .onNegative(new MaterialDialog.SingleButtonCallback() {
+                                @Override
+                                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
 
-                showRegistrationForm();
+                                }
+                            })
+                            .autoDismiss(true)
+                            .show();
+                } else {
+
+                    continueRegistration();
+
+//                    LinearLayout loginLayout = (LinearLayout) findViewById(R.id.login_form);
+//                    if (loginLayout != null)
+//                        loginLayout.setVisibility(View.GONE);
+//
+//                    showRegistrationForm();
+                }
+
             }
             else {
                 new MaterialDialog.Builder(RegisterActivity.this)
@@ -206,7 +267,7 @@ public class RegisterActivity extends FragmentActivity
                         usersTable.where().field("registration_id").eq(regID)
                                 .execute().get();
 
-                if (_users.size() >= 1) {
+                if (_users.size() > 0) {
                     User _user = _users.get(0);
 
                     if (_user.compare(mNewUser))
@@ -252,6 +313,15 @@ public class RegisterActivity extends FragmentActivity
         toolbar.setTitleTextColor(getResources().getColor(R.color.white));
         toolbar.setTitle(getString(R.string.title_activity_register));
 
+        if( !isSimPresent() ) {
+            findViewById(R.id.fb_login).setEnabled(false);
+            findViewById(R.id.google_login).setEnabled(false);
+
+            findViewById(R.id.txtNoSIM).setVisibility(View.VISIBLE);
+
+            return;
+        }
+
 //        mDigitsAuthCallback = new AuthCallback() {
 //            @Override
 //            public void success(DigitsSession session, String phoneNumber)
@@ -275,6 +345,7 @@ public class RegisterActivity extends FragmentActivity
 //
 
         final ContentResolver contentResolver = this.getContentResolver();
+        mAndroidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
 
         // Twitter stuff
         mTwitterloginButton = (TwitterLoginButton) findViewById(R.id.twitter_login);
@@ -301,8 +372,7 @@ public class RegisterActivity extends FragmentActivity
                         mNewUser.setFirstName(unTokens[0]);
                         mNewUser.setLastName(unTokens[1]);
 
-                        String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
-                        mNewUser.setDeviceId(android_id);
+                        mNewUser.setDeviceId(mAndroidId);
 
                         mNewUser.setPictureURL(userResult.data.profileImageUrl.replace("_normal", "_bigger"));
 
@@ -486,8 +556,7 @@ public class RegisterActivity extends FragmentActivity
                             String pictureURI = profile.getProfilePictureUri(100, 100).toString();
                             mNewUser.setPictureURL(pictureURI);
 
-                            String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
-                            mNewUser.setDeviceId(android_id);
+                            mNewUser.setDeviceId(mAndroidId);
                             mNewUser.setPlatform(Globals.PLATFORM);
 
                             completeFBRegistration(loginResult.getAccessToken(), profile.getId());
@@ -504,8 +573,7 @@ public class RegisterActivity extends FragmentActivity
                     String pictureURI = profile.getProfilePictureUri(100, 100).toString();
                     mNewUser.setPictureURL(pictureURI);
 
-                    String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
-                    mNewUser.setDeviceId(android_id);
+                    mNewUser.setDeviceId(mAndroidId);
                     mNewUser.setPlatform(Globals.PLATFORM);
 
                     completeFBRegistration(loginResult.getAccessToken(), profile.getId());
@@ -533,6 +601,11 @@ public class RegisterActivity extends FragmentActivity
         usersTable = Globals.getMobileServiceClient()
                     .getTable("users", User.class);
 
+    }
+
+    private boolean isSimPresent() {
+        TelephonyManager telMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        return !(TelephonyManager.SIM_STATE_ABSENT == telMgr.getSimState()) ;
     }
 
     private Boolean googleHandleSignInResult(GoogleSignInResult result) {
@@ -567,9 +640,7 @@ public class RegisterActivity extends FragmentActivity
         if (acct.getPhotoUrl() != null)
             mNewUser.setPictureURL(acct.getPhotoUrl().toString());
 
-        final ContentResolver contentResolver = this.getContentResolver();
-        String android_id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID);
-        mNewUser.setDeviceId(android_id);
+        mNewUser.setDeviceId(mAndroidId);
         mNewUser.setPlatform(Globals.PLATFORM);
 
         new VerifyAccountTask().execute();
@@ -621,7 +692,7 @@ public class RegisterActivity extends FragmentActivity
     protected void onStop() {
         super.onStop();
 
-        if( Globals.googleApiClient.isConnected() )
+        if( Globals.googleApiClient != null && Globals.googleApiClient.isConnected() )
             Globals.googleApiClient.disconnect();
     }
 
@@ -700,6 +771,19 @@ public class RegisterActivity extends FragmentActivity
         form.setVisibility(View.VISIBLE);
         View buttonNext = findViewById(R.id.btnRegistrationNext);
         buttonNext.setVisibility(View.VISIBLE);
+
+//        try {
+//            TelephonyManager mngr = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
+//            String phoneNumber = mngr.getLine1Number();
+//            if (!phoneNumber.isEmpty()) {
+//
+//                EditText txtPhoneNumber = (EditText) findViewById(R.id.phone);
+//                txtPhoneNumber.setText(phoneNumber);
+//            }
+//        } catch(Exception ex) {
+//            Log.e(LOG_TAG, ex.getMessage());
+//        }
+
     }
 
     private void hideRegistrationForm() {
@@ -707,90 +791,160 @@ public class RegisterActivity extends FragmentActivity
         form.setVisibility(View.GONE);
     }
 
+    private void showError(String errorMessage) {
+
+        new MaterialDialog.Builder(this)
+                .title(R.string.registration_account_validation_failure)
+                .iconRes(R.drawable.ic_exclamation)
+                .content(errorMessage)
+                .positiveText(android.R.string.ok)
+                .autoDismiss(true)
+                .show();
+    }
+
     boolean bCarsFragmentDisplayed = false;
     boolean bConfirmFragmentDisplayed = false;
+    SMSReceiver smsReceiver = new SMSReceiver();
 
-    public void onRegisterNext(View v){
+    public void onRegisterNext(final View v){
 
         if( !bConfirmFragmentDisplayed ) {
 
-            EditText txtUser = (EditText) findViewById(R.id.phone);
-            if (txtUser.getText().toString().isEmpty()) {
+            // Validate entered phone number
+            final EditText txtPhoneNumber = (EditText) findViewById(R.id.phone);
+            if (txtPhoneNumber.getText().toString().isEmpty()) {
 
                 String noPhoneNumber = getResources().getString(R.string.no_phone_number);
-                txtUser.setError(noPhoneNumber);
+                txtPhoneNumber.setError(noPhoneNumber);
                 return;
             }
 
-            try {
+            mNewUser.setPhone(txtPhoneNumber.getText().toString());
+            CheckBox cbUsePhone = (CheckBox)findViewById(R.id.cbUsePhone);
+            mNewUser.setUsePhone(cbUsePhone.isChecked());
 
-                mNewUser.setPhone(txtUser.getText().toString());
-                CheckBox cbUsePhone = (CheckBox)findViewById(R.id.cbUsePhone);
-                mNewUser.setUsePhone(cbUsePhone.isChecked());
+            mNewUser.save(RegisterActivity.this);
 
-                mNewUser.save(this);
+            if( mAddNewUser ) {
 
-                new AsyncTask<Void, Void, Void>() {
-
-                    Exception mEx;
-                    ProgressDialog progress;
-
+                ListenableFuture<User> newUserFuture = usersTable.insert(mNewUser);
+                ListenableFuture<String> sendSMSFuture = Futures.transform(newUserFuture, new Function<User, String>() {
                     @Override
-                    protected void onPreExecute() {
-                        progress = ProgressDialog.show(RegisterActivity.this,
-                                getString(R.string.registration_add_title),
-                                getString(R.string.registration_add_status));
+                    public String apply(User _user){
+
+                        return _user.getPhone();
+                    }
+                });
+
+                Futures.addCallback(sendSMSFuture, new FutureCallback<String>() {
+                    @Override
+                    public void onSuccess(String userPhoneNumber) {
+
+                        List<Pair<String, String>> params = new ArrayList<Pair<String, String>>();
+                        params.add(new Pair<>("phoneNumber", userPhoneNumber));
+
+                        ListenableFuture<JsonElement> apiFuture = Globals.getMobileServiceClient()
+                                .invokeApi("sendSMS", HttpConstants.PostMethod, params);
+
+                        Futures.addCallback(apiFuture, new FutureCallback<JsonElement>() {
+                            @Override
+                            public void onSuccess(JsonElement result) {
+
+                                String RECEIVED = "android.provider.Telephony.SMS_RECEIVED";
+                                IntentFilter _if = new IntentFilter(RECEIVED);
+                                registerReceiver(smsReceiver, _if);
+
+                                hideRegistrationForm();
+
+                                FragmentTransaction transaction = getFragmentManager().beginTransaction();
+
+                                PhoneConfirmFragment confirmFragment = new PhoneConfirmFragment();
+                                transaction.add(R.id.register_wizard_placeholder, confirmFragment);
+                                transaction.commit();
+
+                                bConfirmFragmentDisplayed = true;
+                            }
+
+                            @Override
+                            public void onFailure(Throwable t) {
+
+                                showError(t.getMessage());
+                              }
+                        });
                     }
 
                     @Override
-                    protected void onPostExecute(Void result){
-                        progress.dismiss();
+                    public void onFailure(Throwable t) {
 
-                        if( mEx == null ) {
-
-                            hideRegistrationForm();
-
-                            FragmentTransaction transaction = getFragmentManager().beginTransaction();
-
-                            PhoneConfirmFragment confirmFragment = new PhoneConfirmFragment();
-                            transaction.add(R.id.register_wizard_placeholder, confirmFragment);
-                            transaction.commit();
-
-                            bConfirmFragmentDisplayed = true;
-                        } else
-                            new MaterialDialog.Builder(RegisterActivity.this)
-                                    .title(R.string.registration_account_validation_failure)
-                                    .iconRes(R.drawable.ic_exclamation)
-                                    .content(mEx.getCause().getMessage())
-                                    .positiveText(android.R.string.ok)
-                                    .autoDismiss(true)
-                                    .show();
-
+                        showError(t.getMessage());
                     }
+                });
+            } else {
 
-                    @Override
-                    protected Void doInBackground(Void... voids) {
-                        try {
+                ListenableFuture<MobileServiceList<User>> getUserFuture =
+                        usersTable
+                            .where()
+                            .field("registration_id")
+                            .eq(mNewUser.getRegistrationId())
+                            .execute();
 
-                            // 'Users' table is defined with 'Anybody with the Application Key'
-                            // permissions for READ and INSERT operations, so no authentication is
-                            // required for adding new user to it
-                            if( mAddNewUser )
-                                usersTable.insert(mNewUser).get();
+                ListenableFuture<User> existingUserFuture =
+                        Futures.transform(getUserFuture, new Function<MobileServiceList<User>, User>() {
+                        @Override
+                        public User apply(MobileServiceList<User> users){
+                            User user = users.get(0);
 
-                        } catch (InterruptedException | ExecutionException e) {
-                            mEx = e;
+                            if( user != null ) {
+                                user.setDeviceId(mAndroidId);
+
+                                user.setPhone(txtPhoneNumber.getText().toString());
+                                CheckBox cbUsePhone = (CheckBox) findViewById(R.id.cbUsePhone);
+                                user.setUsePhone(cbUsePhone.isChecked());
+
+                            }
+
+                            return user;
                         }
+                });
 
-                        return null;
+                Futures.addCallback(existingUserFuture, new FutureCallback<User>() {
+                    @Override
+                    public void onSuccess(User user) {
+
+                        ListenableFuture<User> updateUserFuture = usersTable.update(user);
+                        Futures.addCallback(updateUserFuture, new FutureCallback<User>() {
+                            @Override
+                            public void onSuccess(User result) {
+
+                                hideRegistrationForm();
+
+                                // Skip SMS confirmation for existing users
+                                bConfirmFragmentDisplayed = true;
+
+                                onRegisterNext(v);
+                            }
+
+                            @Override
+                            public void onFailure(Throwable t) {
+                                showError(t.getMessage());
+                            }
+                        });
                     }
-                }.execute();
 
-            } catch(Exception ex){
-                Toast.makeText(this, ex.getMessage(), Toast.LENGTH_LONG).show();
+                    @Override
+                    public void onFailure(Throwable t) {
+                        showError(t.getMessage());
+                    }
+                });
             }
-
         } else if( !bCarsFragmentDisplayed ) {
+
+            try {
+                unregisterReceiver(smsReceiver);
+            } catch(Exception ex) {
+                // The receiver may not be registered if processing the existing user
+                Log.e(LOG_TAG, ex.getMessage());
+            }
 
             RegisterCarsFragment fragment = new RegisterCarsFragment();
 

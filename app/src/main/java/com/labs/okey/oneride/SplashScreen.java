@@ -1,6 +1,7 @@
 package com.labs.okey.oneride;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -9,6 +10,7 @@ import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 
@@ -130,7 +132,7 @@ public class SplashScreen extends AppCompatActivity {
         Callable<Boolean> validationTask = new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
-                return isRegistrationValid();
+                return isSimPresent() && isRegistrationValid();
             }
         };
 
@@ -165,6 +167,11 @@ public class SplashScreen extends AppCompatActivity {
                 Log.d(LOG_TAG, "Validation exception thrown");
             }
         });
+    }
+
+    private boolean isSimPresent() {
+        TelephonyManager telMgr = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        return !(TelephonyManager.SIM_STATE_ABSENT == telMgr.getSimState()) ;
     }
 
     private Boolean isRegistrationValid(){

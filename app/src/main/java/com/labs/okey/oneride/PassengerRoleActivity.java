@@ -527,8 +527,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean bShowSelfieDescription = sharedPrefs.getBoolean(Globals.SHOW_SELFIE_DESC, true);
 
-        Intent intent = new Intent(this, CameraCVActivity.class);
-        startActivityForResult(intent, MAKE_PICTURE_REQUEST);
     }
 
     @Override

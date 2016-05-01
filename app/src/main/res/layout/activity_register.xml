@@ -41,6 +41,16 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"/>
 
+        <TextView
+            android:id="@+id/txtNoSIM"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:visibility="gone"
+            android:text="@string/no_sim"
+            android:textColor="@color/ColorAccent" />
+
         <ImageButton
             android:id="@+id/msa_login"
             android:layout_width="match_parent"

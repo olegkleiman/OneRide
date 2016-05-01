@@ -2,6 +2,7 @@ package com.labs.okey.oneride;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
@@ -35,6 +36,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.labs.okey.oneride.adapters.CarsAdapter;
+import com.labs.okey.oneride.databinding.ActivitySettingsBinding;
 import com.labs.okey.oneride.model.GeoFence;
 import com.labs.okey.oneride.model.RegisteredCar;
 import com.labs.okey.oneride.model.User;
@@ -77,9 +79,11 @@ public class SettingsActivity extends BaseActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_settings);
+        //setContentView(R.layout.activity_settings);
 
-        setupUI(getString(R.string.title_activity_settings), "");
+        ActivitySettingsBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_settings);
+
+        setupUI(binding, getString(R.string.title_activity_settings), "");
     }
 
     @Override
@@ -171,20 +175,6 @@ public class SettingsActivity extends BaseActivity
     }
 
     private void displayUser() {
-        mUser = getUser();
-
-        TextView txtView = (TextView)findViewById(R.id.textUserName);
-        if( txtView != null )
-            txtView.setText(String.format("%s %s", mUser.getFirstName(), mUser.getLastName()));
-
-        txtView = (TextView)findViewById(R.id.textUserEmail);
-        if( txtView != null )
-            txtView.setText(mUser.getEmail());
-
-        txtView = (TextView)findViewById(R.id.textUserPhone);
-        if( txtView != null )
-            txtView.setText(mUser.getPhone());
-
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String provider = sharedPrefs.getString(Globals.REG_PROVIDER_PREF, "");
@@ -276,9 +266,11 @@ public class SettingsActivity extends BaseActivity
 //            userPicture.setImageDrawable(drawable);
 //    }
 
-    @Override
-    protected void setupUI(String title, String subTitle) {
+    protected void setupUI(ActivitySettingsBinding binding, String title, String subTitle) {
         super.setupUI(title, subTitle);
+
+        mUser = getUser();
+        binding.setUser(mUser);
 
         View headerLayout = findViewById(R.id.settings_header_layout);
         Drawable d = BaseActivity.scaleImage(this,

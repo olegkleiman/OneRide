@@ -23,6 +23,8 @@
     <uses-permission
         android:name="android.permission.CHANGE_WIFI_STATE"
         android:required="true" />
+    <!-- Receive SMS during registration -->
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <!-- Location -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Required for Geofences -->
@@ -133,6 +135,13 @@
             android:label="@string/title_activity_camera_cv"
             android:screenOrientation="landscape"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
+
+        <!--<receiver android:name=".utils.sms.SMSReceiver"-->
+                <!--android:permission="android.permission.BROADCAST_SMS">-->
+            <!--<intent-filter android:priority="999">-->
+                <!--<action android:name="android.provider.Telephony.SMS_RECEIVED" />-->
+            <!--</intent-filter>-->
+        <!--</receiver>-->
 
         <receiver
             android:name="com.microsoft.windowsazure.notifications.NotificationsBroadcastReceiver"
