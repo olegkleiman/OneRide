@@ -27,7 +27,7 @@ public class faceapiUtils extends AsyncTask<Void, Void, Void> {
     private static final String LOG_TAG = "FR.FaceAPI";
 
     Context             mContext;
-    IUploader mUrlUpdater;
+    IUploader           mUrlUpdater;
     int                 mDepth;
     LoadToast lt;
     Boolean             mComparisonResult = true;

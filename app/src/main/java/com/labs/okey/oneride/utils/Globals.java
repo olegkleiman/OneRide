@@ -397,7 +397,7 @@ public class Globals {
         }
     }
 
-    public static  String CASCADE_URL = "http://fastride.azurewebsites.net/data/haarcascades/haarcascade_frontalface_default.xml";
+    public static  String CASCADE_URL = "http://oneride.azurewebsites.net/data/haarcascades/haarcascade_frontalface_default.xml";
     private static String CASCADE_PATH;
     public static void initCascadePath(Context ctx) {
         String DEFAULT_CASCADE_NAME = "haarcascade_frontalface_default.xml";
