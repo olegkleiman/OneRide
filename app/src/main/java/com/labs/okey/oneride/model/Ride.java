@@ -91,6 +91,19 @@ public class Ride implements Serializable, Parcelable {
         gfencename = value;
     }
 
+    @Expose
+    @com.google.gson.annotations.SerializedName("stage1rules")
+    private String stage1rules;
+    public String getStage1AppliedRules(){ return stage1rules; }
+    public void setStage1AppliedRules(String value) { stage1rules = value; }
+
+    @Expose
+    @com.google.gson.annotations.SerializedName("stage2rules")
+    private String stage2rules;
+    public String getStage2AppliedRules(){ return stage2rules; }
+    public void setStage2AppliedRules(String value) { stage2rules = value; }
+
+
     //
     // Implementation of Parcelable
     //
