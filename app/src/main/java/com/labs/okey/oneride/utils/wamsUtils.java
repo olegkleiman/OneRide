@@ -66,6 +66,8 @@ public class wamsUtils {
                            tableDefinition.put("ispicturerequired", ColumnDataType.Boolean);
                            tableDefinition.put("ispicturerequired_bydriver", ColumnDataType.Boolean);
                            tableDefinition.put("gfencename", ColumnDataType.String);
+                           tableDefinition.put("stage1rules", ColumnDataType.String);
+                           tableDefinition.put("stage2rules", ColumnDataType.String);
                            tableDefinition.put("__deleted", ColumnDataType.Boolean);
                            tableDefinition.put("__version", ColumnDataType.String);
                        }
