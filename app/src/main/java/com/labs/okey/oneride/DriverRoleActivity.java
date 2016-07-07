@@ -570,7 +570,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     new SwipeableRecyclerViewTouchListener(mPeersRecyclerView,
                             new SwipeableRecyclerViewTouchListener.SwipeListener() {
                                 @Override
-                                public boolean canSwipe(int position) {
+                                public boolean canSwipeRight(int position) {
+                                    return true;
+                                }
+
+                                @Override
+                                public boolean canSwipeLeft(int position) {
                                     return true;
                                 }
 
