@@ -21,6 +21,11 @@
 
     </group>
 
+    <item android:id="@+id/action_advanced"
+        android:title="Advanced"
+        android:orderInCategory="400"
+        app:showAsAction="never" />
+
     <item android:id="@+id/action_logoff"
         android:title="Log Off"
         app:showAsAction="never" />

@@ -130,7 +130,11 @@ public class SettingsActivity extends BaseActivity
 
             editor.putBoolean(Globals.PREF_DEBUG_WITHOUT_GEOFENCES, Globals.DEBUG_WITHOUT_GEOFENCES);
             editor.apply();
-        } else if( id == R.id.action_logoff) {
+        } else if( id == R.id.action_advanced ) {
+            Intent intent = new Intent(this, AdvSettingsActivity.class);
+            startActivity(intent);
+        }
+        else if( id == R.id.action_logoff) {
             wamsUtils.logOff(this);
             Intent intent = new Intent(this, RegisterActivity.class);
             startActivity(intent);

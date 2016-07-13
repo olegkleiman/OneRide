@@ -271,6 +271,8 @@ public class Globals {
     public static final String SERVICE_INSTANCE = "_wififastride";
     public static final String SERVICE_REG_TYPE = "_presence._tcp";
 
+    public static final String BT_DELIMITER = ":";
+
     public static final String WAMS_URL = "https://oneride.azurewebsites.net";
     //public static final String WAMS_API_KEY = "omCudOMCUJgIGbOklMKYckSiGKajJU91";
 
@@ -287,8 +289,8 @@ public class Globals {
     public static final String PHONE_PREF = "phone";
     public static final String USE_PHONE_PFER = "usephone";
 
-    public static final String FB_PROVIDER = "Facebook";
-    public static final String GOOGLE_PROVIDER = "Google";
+    public static final String FB_PROVIDER = "fb"; //"Facebook";
+    public static final String GOOGLE_PROVIDER = "g"; //"Google";
     public static final String TWITTER_PROVIDER = "Twitter";
     public static final String DIGITS_PROVIDER = "Digits";
     public static final String MICROSOFT_PROVIDER = "MicrosoftAccount";

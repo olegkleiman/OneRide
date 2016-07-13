@@ -2,8 +2,12 @@ package com.labs.okey.oneride;
 
 import android.*;
 import android.annotation.TargetApi;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
@@ -93,6 +97,7 @@ import net.steamcrafted.loadtoast.LoadToast;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -165,8 +170,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private AtomicBoolean                       mRideCodeUploaded = new AtomicBoolean(false);
 
     // codes handled in onActivityResult()
-    final int WIFI_CONNECT_REQUEST  = 100;// request code for starting WiFi connection
-    final int REQUEST_IMAGE_CAPTURE = 1000;
+    final int                                   WIFI_CONNECT_REQUEST  = 100;// request code for starting WiFi connection
+    final int                                   BT_REQUEST_DISCOVERABLE_CODE = 101;
+    final int                                   REQUEST_IMAGE_CAPTURE = 1000;
 
     private Handler handler = new Handler(this);
 
@@ -181,6 +187,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private boolean                             mCabinShown = false;
     private boolean                             mSubmitButtonShown = false;
     private boolean                             mEmptyTextShown = true;
+
+    private BluetoothAdapter                    mBluetoothAdapter;
 
     private Runnable                            mEnableCabinPictureButtonRunnable = new Runnable() {
 
@@ -266,6 +274,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         if (savedInstanceState != null) {
             wamsInit();
+            btInit();
             geoFencesInit();
 
             restoreState(savedInstanceState);
@@ -275,7 +284,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 wamsInit();
                 geoFencesInit();
 
-                setupNetwork();
+                btInit();
+                btStartAdvertise();
+                //setupNetwork();
             }
         }
     }
@@ -710,6 +721,65 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     }
 
+    private void btInit() {
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String bluetoothOriginalName = mBluetoothAdapter.getName();
+        prefs.edit().putString(bluetoothOriginalName, "btOriginalName").apply();
+
+        User currentUser = User.load(this);
+        String btDeviceName = currentUser.getRegistrationId() + Globals.BT_DELIMITER + mRideCode;
+        if( mBluetoothAdapter.setName(btDeviceName) ) {
+            Log.d(LOG_TAG, "Device name has been changed to " + btDeviceName);
+        } else {
+            Log.d(LOG_TAG, "Device name has not been changed");
+        }
+
+        if (!mBluetoothAdapter.isEnabled()) {
+            mBluetoothAdapter.enable();
+        }
+    }
+
+    private void btRestore() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String bluetoothOriginalName = prefs.getString("btOriginalName", "");
+
+        mBluetoothAdapter.setName(bluetoothOriginalName);
+    }
+
+    private void btStartAdvertise() {
+
+        int discoverableDuration = 300;
+
+        if( Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2 ) {
+            try {
+                Method method = mBluetoothAdapter.getClass().getMethod("setScanMode", int.class, int.class);
+                method.invoke(mBluetoothAdapter, BluetoothAdapter.SCAN_MODE_CONNECTABLE,
+                        discoverableDuration);
+                Log.i("invoke","setScanMode() invoke successfully");
+            }
+            catch (Exception e){
+                Throwable t = e.getCause();
+                if( t != null )
+                    Log.e(LOG_TAG, t.getMessage());
+
+                enableBluetoothDiscoverability(discoverableDuration);
+            }
+        } else {
+            enableBluetoothDiscoverability(discoverableDuration);
+        }
+    }
+
+    private void enableBluetoothDiscoverability(int duration){
+
+        Intent discoverableIntent = new
+                Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+
+        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, duration);
+        startActivityForResult(discoverableIntent, BT_REQUEST_DISCOVERABLE_CODE);
+    }
+
     private void setupNetwork() {
 
         startAdvertise(this,
@@ -1054,6 +1124,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     @Override
     @CallSuper
     protected void onDestroy() {
+
+        btRestore();
+
         super.onDestroy();
     }
 
@@ -1271,6 +1344,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                 final String userID,
                                 final String rideCode,
                                 final String userName) {
+
+
+
         mP2pPreparer = new P2pPreparer(this);
         mP2pPreparer.prepare(new P2pPreparer.P2pPreparerListener() {
             @Override

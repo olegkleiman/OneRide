@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="com.maximum.fastride.PassengerRoleActivity" >
+    tools:context="com.labs.okey.oneride.PassengerRoleActivity" >
 
     <com.sothree.slidinguppanel.SlidingUpPanelLayout
         xmlns:sothree="http://schemas.android.com/apk/res-auto"
@@ -57,30 +57,30 @@
                         android:layout_width="match_parent"
                         android:scrollbars="vertical"/>
 
-                    <FrameLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentBottom="true"
-                        android:layout_alignParentRight="true"
-                        android:layout_alignParentEnd="true">
+                    <!--<FrameLayout-->
+                        <!--android:layout_width="wrap_content"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:layout_alignParentBottom="true"-->
+                        <!--android:layout_alignParentRight="true"-->
+                        <!--android:layout_alignParentEnd="true">-->
 
-                        <android.support.design.widget.FloatingActionButton
-                            android:id="@+id/join_ride_button"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:src="@drawable/ic_action_camera"
+                        <!--<android.support.design.widget.FloatingActionButton-->
+                            <!--android:id="@+id/join_ride_button"-->
+                            <!--android:layout_width="wrap_content"-->
+                            <!--android:layout_height="wrap_content"-->
+                            <!--android:src="@drawable/ic_action_camera"-->
 
-                            app:fabSize="normal"
-                            app:elevation="4dp"
-                            app:backgroundTint="@color/ColorAccent"
-                            app:borderWidth="0dp"
+                            <!--app:fabSize="normal"-->
+                            <!--app:elevation="4dp"-->
+                            <!--app:backgroundTint="@color/ColorAccent"-->
+                            <!--app:borderWidth="0dp"-->
 
-                            android:onClick="onCameraCV"
-                            android:visibility="visible"
-                            android:layout_marginBottom="0dp"
-                            android:layout_marginRight="0dp"
-                            android:layout_marginEnd="0dp"/>
-                    </FrameLayout>
+                            <!--android:onClick="onCameraCV"-->
+                            <!--android:visibility="visible"-->
+                            <!--android:layout_marginBottom="0dp"-->
+                            <!--android:layout_marginRight="0dp"-->
+                            <!--android:layout_marginEnd="0dp"/>-->
+                    <!--</FrameLayout>-->
 
                 </RelativeLayout>
 

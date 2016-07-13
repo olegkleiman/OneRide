@@ -15,6 +15,9 @@
         android:required="true" />
     <!-- Needed if camera pictures are stored locally -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- Needed for bluetooth -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
     <!-- Required for Wi-Fi Direct, especially for restarting WiFi -->
     <uses-permission
@@ -53,13 +56,12 @@
 
     <application
         android:name="android.support.multidex.MultiDexApplication"
-        android:largeHeap="true"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher2"
         android:label="@string/app_name"
+        android:largeHeap="true"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id" />
@@ -72,9 +74,8 @@
 
         <activity
             android:name=".MainActivity"
-            android:priority="900"
-            android:label="@string/app_name"/>
-
+            android:label="@string/app_name"
+            android:priority="900" />
         <activity
             android:name=".SplashScreen"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -85,27 +86,23 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".PassengerRoleActivity"
             android:label="@string/title_activity_passenger_role"
             android:launchMode="singleTop"
             android:parentActivityName=".MainActivity"
             android:theme="@style/AppTheme" />
-
         <activity
             android:name=".DriverRoleActivity"
             android:label="@string/title_activity_driver_role"
             android:launchMode="singleTop"
             android:parentActivityName=".MainActivity"
             android:theme="@style/AppTheme" />
-
         <activity
             android:name=".RegisterActivity"
             android:label="@string/title_activity_register"
             android:noHistory="false"
             android:theme="@style/AppTheme" />
-
         <activity
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
@@ -136,12 +133,12 @@
             android:screenOrientation="landscape"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
 
-        <!--<receiver android:name=".utils.sms.SMSReceiver"-->
-                <!--android:permission="android.permission.BROADCAST_SMS">-->
-            <!--<intent-filter android:priority="999">-->
-                <!--<action android:name="android.provider.Telephony.SMS_RECEIVED" />-->
-            <!--</intent-filter>-->
-        <!--</receiver>-->
+        <!-- <receiver android:name=".utils.sms.SMSReceiver" -->
+        <!-- android:permission="android.permission.BROADCAST_SMS"> -->
+        <!-- <intent-filter android:priority="999"> -->
+        <!-- <action android:name="android.provider.Telephony.SMS_RECEIVED" /> -->
+        <!-- </intent-filter> -->
+        <!-- </receiver> -->
 
         <receiver
             android:name="com.microsoft.windowsazure.notifications.NotificationsBroadcastReceiver"
@@ -153,6 +150,15 @@
             </intent-filter>
         </receiver>
 
+        <activity
+            android:name=".AdvSettingsActivity"
+            android:label="@string/title_activity_adv_settings"
+            android:parentActivityName=".SettingsActivity"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.labs.okey.oneride.SettingsActivity" />
+        </activity>
     </application>
 
 </manifest>

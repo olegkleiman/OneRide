@@ -82,6 +82,7 @@
 
     <string name="generating_ride_code">Generating ride code&#8230;</string>
     <string name="ride_code_label">Ride Code:</string>
+    <string name="rssi_label">Rssi:</string>
     <string name="ride_code_title">Type in Ride Code</string>
     <string name="ride_code_dialog_content">You can see this code on the driver\'s display</string>
     <string name="ride_code_wrong">You typed wrong ride code. Please try again.</string>
@@ -335,4 +336,6 @@ limitations under the License.</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_adv_settings">AdvSettingsActivity</string>
+    <string name="section_format">Hello World from section: %1$d</string>
 </resources>

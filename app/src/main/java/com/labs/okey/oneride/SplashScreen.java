@@ -18,6 +18,7 @@ import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
+import com.facebook.LoggingBehavior;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -190,6 +191,8 @@ public class SplashScreen extends AppCompatActivity {
 
         if( provider.equalsIgnoreCase(Globals.FB_PROVIDER)) {
 
+            FacebookSdk.addLoggingBehavior(LoggingBehavior.REQUESTS);
+
             FacebookSdk.sdkInitialize(getApplicationContext(), new FacebookSdk.InitializeCallback() {
                 @Override
                 public void onInitialized() {
@@ -266,6 +269,9 @@ public class SplashScreen extends AppCompatActivity {
                 Log.e(LOG_TAG, ex.getMessage());
             }
 
+            latch.countDown();
+        } else {
+            bRes[0] = false;
             latch.countDown();
         }
 

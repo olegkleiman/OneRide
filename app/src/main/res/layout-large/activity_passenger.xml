@@ -1,5 +1,5 @@
 <!--
-  Copyright 2015 Maximum LLC. All rights reserved.
+  Copyright 2015 FastRide Transportation Solutions Ltd. All rights reserved.
   A DrawerLayout is intended to be used as the top-level content view using match_parent for both width and height to consume the full space available.
  -->
 <android.support.v4.widget.DrawerLayout
@@ -10,7 +10,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="com.maximum.fastride.PassengerRoleActivity" >
+    tools:context="com.labs.okey.oneride.PassengerRoleActivity" >
 
     <com.sothree.slidinguppanel.SlidingUpPanelLayout
         xmlns:sothree="http://schemas.android.com/apk/res-auto"
@@ -63,29 +63,29 @@
 
         </FrameLayout>
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/join_ride_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_action_camera"
-            app:elevation="4dp"
+        <!--<android.support.design.widget.FloatingActionButton-->
+            <!--android:id="@+id/join_ride_button"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:src="@drawable/ic_action_camera"-->
+            <!--app:elevation="4dp"-->
 
-            app:layout_anchorGravity="bottom|right|end"
+            <!--app:layout_anchorGravity="bottom|right|end"-->
 
-            android:layout_gravity="end|bottom"
-            app:fabSize="normal"
+            <!--android:layout_gravity="end|bottom"-->
+            <!--app:fabSize="normal"-->
 
-            app:backgroundTint="@color/ColorAccent"
-            app:borderWidth="0dp"
+            <!--app:backgroundTint="@color/ColorAccent"-->
+            <!--app:borderWidth="0dp"-->
 
-            android:onClick="onCameraCV"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
-            android:layout_marginBottom="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginRight="16dp"
-            android:visibility="visible" />
+            <!--android:onClick="onCameraCV"-->
+            <!--android:layout_alignParentBottom="true"-->
+            <!--android:layout_alignParentRight="true"-->
+            <!--android:layout_alignParentEnd="true"-->
+            <!--android:layout_marginBottom="16dp"-->
+            <!--android:layout_marginEnd="16dp"-->
+            <!--android:layout_marginRight="16dp"-->
+            <!--android:visibility="visible" />-->
 
     </RelativeLayout>
 

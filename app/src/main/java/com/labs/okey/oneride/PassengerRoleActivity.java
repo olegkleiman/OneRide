@@ -3,9 +3,14 @@ package com.labs.okey.oneride;
 import android.*;
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothClass;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
@@ -66,7 +71,9 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.labs.okey.oneride.adapters.BtPeersAdapter;
 import com.labs.okey.oneride.adapters.WiFiPeersAdapter2;
+import com.labs.okey.oneride.model.BtDeviceUser;
 import com.labs.okey.oneride.model.GFCircle;
 import com.labs.okey.oneride.model.Join;
 import com.labs.okey.oneride.model.WifiP2pDeviceUser;
@@ -119,7 +126,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     private MobileServiceTable<Join>    joinsTable;
 
-    private P2pPreparer mP2pPreparer;
+    private P2pPreparer                 mP2pPreparer;
     private P2pConversator              mP2pConversator;
 
     private Location                    mCurrentLocation;
@@ -129,11 +136,13 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     private Integer                     mCountDiscoveryFailures = 0;
     private Integer                     mCountDiscoveryTrials = 1;
 
-    private WiFiPeersAdapter2           mDriversAdapter;
-    public ArrayList<WifiP2pDeviceUser> mDrivers = new ArrayList<>();
+    //private WiFiPeersAdapter2           mDriversAdapter;
+    private BtPeersAdapter              _mDriversAdapter;
+    //public ArrayList<WifiP2pDeviceUser> mDrivers = new ArrayList<>();
+    public ArrayList<BtDeviceUser>      _mDrivers = new ArrayList<>();
 
-    private Handler handler = new Handler(this);
-    public Handler getHandler() {
+    private Handler                     handler = new Handler(this);
+    public Handler                      getHandler() {
         return handler;
     }
 
@@ -142,6 +151,28 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     private URI                         mPictureURI;
     private UUID                        mFaceId;
     private long                        mLastLocationUpdateTime = System.currentTimeMillis();
+
+    private BluetoothAdapter            mBluetoothAdapter;
+    private final int                   BT_DISCOVERY_PERMISSSION_REQUEST = 1001;
+    private final BroadcastReceiver     mBtReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                BtDeviceUser btDeviceUser = btAnalyzeDevice(device);
+                if( btDeviceUser != null ) {
+
+                    int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE);
+                    btDeviceUser.set_Rssi(rssi);
+
+                    _mDriversAdapter.add(btDeviceUser);
+                    _mDriversAdapter.notifyDataSetChanged();
+                }
+            }
+        }
+    };
 
     @Override
     @CallSuper
@@ -164,15 +195,19 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             }
 
             if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_DRIVERS) ) {
-                ArrayList<WifiP2pDeviceUser> drivers = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_DRIVERS);
+                ArrayList<BtDeviceUser> drivers = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_DRIVERS);
                 if( drivers != null ) {
 
-                    mDrivers.addAll(drivers);
-                    mDriversAdapter.notifyDataSetChanged();
+                    _mDrivers.addAll(drivers);
+                    _mDriversAdapter.notifyDataSetChanged();
                 }
             }
         } else {
-            refresh();
+
+            btInit();
+
+            btRefresh();
+            //refresh();
         }
     }
 
@@ -191,11 +226,17 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             driversRecycler.setLayoutManager(new LinearLayoutManager(this));
             driversRecycler.setItemAnimator(new DefaultItemAnimator());
 
-            mDriversAdapter = new WiFiPeersAdapter2(this,
-                    R.layout.drivers_header,
-                    R.layout.row_devices,
-                    mDrivers);
-            driversRecycler.setAdapter(mDriversAdapter);
+            _mDriversAdapter = new BtPeersAdapter(this,
+                                                R.layout.drivers_header,
+                                                R.layout.row_devices,
+                                                _mDrivers);
+            driversRecycler.setAdapter(_mDriversAdapter);
+
+//            mDriversAdapter = new WiFiPeersAdapter2(this,
+//                    R.layout.drivers_header,
+//                    R.layout.row_devices,
+//                    mDrivers);
+//            driversRecycler.setAdapter(mDriversAdapter);
         }
 
         mDriversShown = false;
@@ -304,6 +345,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         try {
 
             switch (requestCode) {
+
+                case BT_DISCOVERY_PERMISSSION_REQUEST: {
+                    mBluetoothAdapter.startDiscovery();
+                }
+                break;
 
                 case Globals.LOCATION_PERMISSION_REQUEST: {
 
@@ -458,29 +504,29 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     if (data != null) {
                         Bundle extras = data.getExtras();
 
-                        FloatingActionButton passengerPicture = (FloatingActionButton) this.findViewById(R.id.join_ride_button);
-                        if( passengerPicture == null )
-                            break;
-
-                        passengerPicture.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.green)));
-                        Bitmap bmp = extras.getParcelable(getString(R.string.detection_face_bitmap));
-                        if (bmp != null) {
-                            Drawable drawable = new BitmapDrawable(this.getResources(), bmp);
-
-                            drawable = RoundedDrawable.fromDrawable(drawable);
-                            ((RoundedDrawable) drawable)
-                                    .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-                                    .setBorderColor(Color.WHITE)
-                                    .setBorderWidth(0)
-                                    .setOval(true);
-
-                            passengerPicture.setImageDrawable(drawable);
-                        }
-
-                        mPictureURI = (URI) extras.getSerializable(getString(R.string.detection_face_uri));
-                        mFaceId = (UUID) extras.getSerializable(getString(R.string.detection_face_id));
-
-                        mTextSwitcher.setText(getString(R.string.instruction_make_additional_selfies));
+//                        FloatingActionButton passengerPicture = (FloatingActionButton) this.findViewById(R.id.join_ride_button);
+//                        if( passengerPicture == null )
+//                            break;
+//
+//                        passengerPicture.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.green)));
+//                        Bitmap bmp = extras.getParcelable(getString(R.string.detection_face_bitmap));
+//                        if (bmp != null) {
+//                            Drawable drawable = new BitmapDrawable(this.getResources(), bmp);
+//
+//                            drawable = RoundedDrawable.fromDrawable(drawable);
+//                            ((RoundedDrawable) drawable)
+//                                    .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
+//                                    .setBorderColor(Color.WHITE)
+//                                    .setBorderWidth(0)
+//                                    .setOval(true);
+//
+//                            passengerPicture.setImageDrawable(drawable);
+//                        }
+//
+//                        mPictureURI = (URI) extras.getSerializable(getString(R.string.detection_face_uri));
+//                        mFaceId = (UUID) extras.getSerializable(getString(R.string.detection_face_id));
+//
+//                        mTextSwitcher.setText(getString(R.string.instruction_make_additional_selfies));
                     }
                 }
                 break;
@@ -567,14 +613,113 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     }
 
+    private void btInit() {
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter == null) {
+            Log.e(LOG_TAG, "Device does not support Bluetooth");
+        }
+
+        try {
+            // Register the BroadcastReceiver
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(BluetoothDevice.ACTION_FOUND);
+            filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
+            filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+            filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+            registerReceiver(mBtReceiver, filter); // Don't forget to unregister during onDestroy
+        } catch(IllegalArgumentException e) {
+            // There is no API to check if a receiver is registered.
+            // When trying to register it for more than first time, the IllegalArgumentException
+            // is raised. Here this exception may be safely ignored.
+        }
+    }
+
+    private void btStartDiscovery() {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            int permissionCheck = this.checkSelfPermission("Manifest.permission.ACCESS_FINE_LOCATION");
+            permissionCheck += this.checkSelfPermission("Manifest.permission.ACCESS_COARSE_LOCATION");
+
+            if( permissionCheck != 0 ) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION},
+                                BT_DISCOVERY_PERMISSSION_REQUEST);
+            }
+        } else {
+            mBluetoothAdapter.startDiscovery();
+        }
+    }
+
+    private void btRestore() {
+        unregisterReceiver(mBtReceiver);
+    }
+
+    private BtDeviceUser btAnalyzeDevice(BluetoothDevice device){
+        if( device == null )
+            return null;
+
+        String deviceName = device.getName();
+
+        BluetoothClass bluetoothClass = device.getBluetoothClass();
+        if( bluetoothClass == null )
+            return null;
+
+        int deviceClass = bluetoothClass.getMajorDeviceClass();
+
+        if( deviceClass != BluetoothClass.Device.Major.PHONE) {
+            Log.d(LOG_TAG, "Device " + deviceName + "is not PHONE");
+            return null;
+        }
+
+        String[] tokens = deviceName.split(Globals.BT_DELIMITER);
+        if( tokens.length != 3)
+            return null;
+
+        String authProvider = tokens[0];
+        Log.d(LOG_TAG, "Provider: " + authProvider);
+
+        String userId = tokens[1];
+        Log.d(LOG_TAG, "User registration id: " + userId);
+
+        String rideCode = tokens[2];
+        Log.d(LOG_TAG, "Ride code: " + rideCode);
+
+        BtDeviceUser btDeviceUser = new BtDeviceUser(device);
+        btDeviceUser.set_authProvider(authProvider);
+        btDeviceUser.set_UserId(userId);
+        btDeviceUser.set_RideCode(rideCode);
+
+
+        return btDeviceUser;
+    }
+
+    public void btRefresh() {
+
+        _mDrivers.clear();
+        _mDriversAdapter.notifyDataSetChanged();
+
+        final ImageButton btnRefresh = (ImageButton) findViewById(R.id.btnRefresh);
+        if (btnRefresh != null) // This may happens because
+            // the button is actually created by adapter
+            btnRefresh.setVisibility(View.GONE);
+        final ProgressBar progress_refresh = (ProgressBar) findViewById(R.id.progress_refresh);
+        if (progress_refresh != null)
+            progress_refresh.setVisibility(View.VISIBLE);
+
+        btStartDiscovery();
+
+        showCountDownDialog();
+    }
+
     //
     // Implementation of IRefreshable
     //
     @Override
     @UiThread
     public void refresh() {
-        mDrivers.clear();
-        mDriversAdapter.notifyDataSetChanged();
+        _mDrivers.clear();
+        _mDriversAdapter.notifyDataSetChanged();
 
         final ImageButton btnRefresh = (ImageButton) findViewById(R.id.btnRefresh);
         if (btnRefresh != null) // This may happens because
@@ -623,9 +768,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     private void showCountDownDialog() {
         try {
 
-//            final BallView waitView = (BallView)findViewById(R.id.wait_search_driver);
-//            waitView.setVisibility(View.VISIBLE);
-
             mSearchDriverDialog = new MaterialDialog.Builder(this)
                     .title(R.string.passenger_progress_dialog)
                     .content(R.string.please_wait)
@@ -653,9 +795,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                         Log.d(LOG_TAG,
                                 String.format("CountDown tick. Remains %d sec. Drivers size: %d",
-                                        millisUntilFinished, mDrivers.size()));
+                                        millisUntilFinished, _mDrivers.size()));
 
-                        if (mDrivers.size() != 0) {
+                        if (_mDrivers.size() != 0) {
                             this.cancel();
                             //waitView.setVisibility(View.GONE);
                             mSearchDriverDialog.dismiss();
@@ -679,7 +821,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                             // to some other activity
                         }
 
-                        if (mDrivers.size() == 0) {
+                        if( _mDrivers.size() == 0) {
 
                             if (mCountDiscoveryTrials++ > Globals.MAX_DISCOVERY_TRIALS) {
                                 showRideCodePane(R.string.ride_code_dialog_content,
@@ -1004,8 +1146,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mDriversAdapter.add(device);
-                    mDriversAdapter.notifyDataSetChanged();
+//                    mDriversAdapter.add(device);
+//                    mDriversAdapter.notifyDataSetChanged();
                 }
             });
         } else {
@@ -1016,8 +1158,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mDriversAdapter.add(device);
-                    mDriversAdapter.notifyDataSetChanged();
+//                    mDriversAdapter.add(device);
+//                    mDriversAdapter.notifyDataSetChanged();
 
                     mDriversShown = true;
                 }
@@ -1120,13 +1262,13 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 // Ride code was stored if the activity is invoked from notification
                 // In this case the position is -1 because this
                 // function is called manually (from within onNewIntent())
-                Assert.assertNotNull(mDrivers);
+                Assert.assertNotNull(_mDrivers);
 
-                WifiP2pDeviceUser driverDevice = mDrivers.get(position);
+                BtDeviceUser driverDevice = _mDrivers.get(position);
                 Assert.assertNotNull(driverDevice);
 
-                mRideCode = driverDevice.getRideCode();
-                mDriverName = driverDevice.getUserName();
+                mRideCode = driverDevice.get_RideCode();
+                mDriverName = driverDevice.get_UserName();
             }
 
             DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
@@ -1135,12 +1277,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 public void onClick(DialogInterface dialogInterface, int which) {
                     if (which == DialogInterface.BUTTON_POSITIVE) {
 
-                        //findViewById(R.id.join_ride_button).setVisibility(View.INVISIBLE);
-
-                        FloatingActionButton passengerPicture = (FloatingActionButton) findViewById(R.id.join_ride_button);
-                        passengerPicture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.ColorAccent)));
-                        Drawable drawable = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_action_camera, null);
-                        passengerPicture.setImageDrawable(drawable);
+//                        FloatingActionButton passengerPicture = (FloatingActionButton) findViewById(R.id.join_ride_button);
+//                        passengerPicture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.ColorAccent)));
+//                        Drawable drawable = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_action_camera, null);
+//                        passengerPicture.setImageDrawable(drawable);
 
                         onSubmitCode();
                     }
@@ -1150,7 +1290,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             StringBuilder sb = new StringBuilder(getString(R.string.passenger_confirm));
             if (mDriverName != null) {
                 sb.append(" ");
-                getString(R.string.with);
+                sb.append(getString(R.string.with));
                 sb.append(" ");
                 sb.append(mDriverName);
             }
