@@ -127,11 +127,11 @@
         <activity
             android:name=".AppealCameraActivity"
             android:label="@string/title_activity_camera_appeal" />
-        <activity
-            android:name=".CameraCVActivity"
-            android:label="@string/title_activity_camera_cv"
-            android:screenOrientation="landscape"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
+        <!--<activity-->
+            <!--android:name=".CameraCVActivity"-->
+            <!--android:label="@string/title_activity_camera_cv"-->
+            <!--android:screenOrientation="landscape"-->
+            <!--android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />-->
 
         <!-- <receiver android:name=".utils.sms.SMSReceiver" -->
         <!-- android:permission="android.permission.BROADCAST_SMS"> -->
@@ -149,6 +149,19 @@
                 <category android:name="com.labs.okey.oneride" />
             </intent-filter>
         </receiver>
+
+        <service android:name=".AzureInstanceIDService"
+                    android:exported="false">
+            <intent-filter>
+                <!--<action android:name="com.google.android.gms.iid.InstanceID"/>-->
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".AzureRegistrationIntentService"
+            android:exported="false">
+        </service>
 
         <activity
             android:name=".AdvSettingsActivity"

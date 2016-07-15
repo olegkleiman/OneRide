@@ -19,13 +19,17 @@ import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.LoggingBehavior;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.labs.okey.oneride.gcm.GCMHandler;
 import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.wamsUtils;
+import com.microsoft.windowsazure.notifications.NotificationsManager;
 
 import java.text.DateFormat;
 import java.util.concurrent.Callable;
@@ -39,7 +43,7 @@ import java.util.concurrent.Executors;
  */
 public class SplashScreen extends AppCompatActivity {
 
-    private static final String LOG_TAG = "FR.Splash";
+    private final String        LOG_TAG = getClass().getSimpleName();
 
     /**
      * Whether or not the system UI should be auto-hidden after
@@ -52,6 +56,8 @@ public class SplashScreen extends AppCompatActivity {
      * user interaction before hiding the system UI.
      */
     private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
+
+    private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
 
     /**
      * Some older devices needs a small delay between UI widget updates
@@ -168,6 +174,48 @@ public class SplashScreen extends AppCompatActivity {
                 Log.d(LOG_TAG, "Validation exception thrown");
             }
         });
+
+        NotificationsManager.handleNotifications(getApplicationContext(),
+                                                 Globals.SENDER_ID,
+                                                 GCMHandler.class);
+        registerWithNotificationHubs();
+    }
+
+    /**
+     * Check the device to make sure it has the Google Play Services APK. If
+     * it doesn't, display a dialog that allows users to download the APK from
+     * the Google Play Store or enable it in the device's system settings.
+     */
+    private boolean checkPlayServices() {
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        int resultCode = apiAvailability.isGooglePlayServicesAvailable(this);
+
+        if (resultCode != ConnectionResult.SUCCESS) {
+
+            if (apiAvailability.isUserResolvableError(resultCode)) {
+                apiAvailability.getErrorDialog(this, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST)
+                        .show();
+            } else {
+                Log.i(LOG_TAG, "This device is not supported by Google Play Services.");
+                //ToastNotify("This device is not supported by Google Play Services.");
+
+                finish();
+            }
+
+            return false;
+        } else
+            return true;
+
+    }
+
+    public void registerWithNotificationHubs(){
+        Log.i(LOG_TAG, " Registering with Notification Hubs");
+
+        if (checkPlayServices()) {
+            // Start IntentService to register this application with GCM.
+            Intent intent = new Intent(this, AzureRegistrationIntentService.class);
+            startService(intent);
+        }
     }
 
     private boolean isSimPresent() {

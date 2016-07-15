@@ -22,15 +22,16 @@ import com.labs.okey.oneride.utils.Globals;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.notifications.MobileServicePush;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
+import com.microsoft.windowsazure.notifications.NotificationsHandler;
 
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
-
 /**
- * Created by Oleg Kleiman on 11-Apr-15.
+ * @author Oleg Kleiman
+ * created 11-Apr-15.
  */
-public class GCMHandler extends  com.microsoft.windowsazure.notifications.NotificationsHandler{
+public class GCMHandler extends NotificationsHandler {
 
     private final String LOG_TAG = getClass().getSimpleName();
 
@@ -38,83 +39,83 @@ public class GCMHandler extends  com.microsoft.windowsazure.notifications.Notifi
     private static final int NOTIFICATION_ID = 1;
     private static final String NOTIFICATIONS_HANDLER_CLASS = "WAMS_NotificationsHandlerClass";
 
-    @Override
-    public void onRegistered(final Context context,  final String gcmRegistrationId) {
-        super.onRegistered(context, gcmRegistrationId);
-
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-        final String userID = sharedPrefs.getString(Globals.USERIDPREF, "");
-
-        new AsyncTask<Void, Void, Void>() {
-
-            @Override
-            protected Void doInBackground(Void... voids) {
-
-                try {
-                    String[] tags = {userID};
-
-                    final MobileServicePush msp = Globals.getMobileServiceClient().getPush();
-                    if( msp == null ) {
-                        if( Crashlytics.getInstance() != null )
-                            Crashlytics.log(Log.ERROR, LOG_TAG, "Unable to get PUSH");
-
-                        return null;
-                    }
-
-                    ListenableFuture<Void> lf = msp.register(gcmRegistrationId);
-
-                    final User user = User.load(context);
-                    final CustomEvent subscriptionEvent =
-                            new CustomEvent(context.getString(R.string.push_subscription_answer_name));
-
-                    Futures.addCallback(lf, new FutureCallback<Void>() {
-                        @Override
-                        public void onSuccess(Void result) {
-                            subscriptionEvent.putCustomAttribute(context.getString(R.string.push_subscription_attribute), "Success");
-                            if( user != null )
-                                subscriptionEvent.putCustomAttribute("User", user.getFullName());
-                            Answers.getInstance().logCustom(subscriptionEvent);
-
-                            Log.d(LOG_TAG, "Azure Notification Hub registration succeeded");
-                        }
-
-                        @Override
-                        public void onFailure(Throwable t) {
-
-                            try {
-
-                                subscriptionEvent.putCustomAttribute(context.getString(R.string.push_subscription_attribute), "Failed");
-                                if( user != null )
-                                    subscriptionEvent.putCustomAttribute("User", user.getFullName());
-                                Answers.getInstance().logCustom(subscriptionEvent);
-
-                                if( Crashlytics.getInstance() != null )
-                                    Crashlytics.logException(t);
-
-                                verifyStorageVersion(context);
-
-                                //msp.unregister().get();
-                                //msp.unregisterAll(gcmRegistrationId).get();
-                            } catch (Exception ex) {
-                                Log.e(LOG_TAG, ex.getLocalizedMessage());
-                            }
-                        }
-                    });
-
-                } catch (Exception e) {
-
-                    if( Crashlytics.getInstance() != null)
-                        Crashlytics.logException(e);
-
-                    String msg = e.getLocalizedMessage();
-                    Log.e(LOG_TAG, "Registration error: " + msg);
-
-                }
-
-                return null;
-            }
-        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-    }
+//    @Override
+//    public void onRegistered(final Context context,  final String gcmRegistrationId) {
+//        super.onRegistered(context, gcmRegistrationId);
+//
+//        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+//        final String userID = sharedPrefs.getString(Globals.USERIDPREF, "");
+//
+//        new AsyncTask<Void, Void, Void>() {
+//
+//            @Override
+//            protected Void doInBackground(Void... voids) {
+//
+//                try {
+//                    String[] tags = {userID};
+//
+//                    final MobileServicePush msp = Globals.getMobileServiceClient().getPush();
+//                    if( msp == null ) {
+//                        if( Crashlytics.getInstance() != null )
+//                            Crashlytics.log(Log.ERROR, LOG_TAG, "Unable to get PUSH");
+//
+//                        return null;
+//                    }
+//
+//                    ListenableFuture<Void> lf = msp.register(gcmRegistrationId);
+//
+//                    final User user = User.load(context);
+//                    final CustomEvent subscriptionEvent =
+//                            new CustomEvent(context.getString(R.string.push_subscription_answer_name));
+//
+//                    Futures.addCallback(lf, new FutureCallback<Void>() {
+//                        @Override
+//                        public void onSuccess(Void result) {
+//                            subscriptionEvent.putCustomAttribute(context.getString(R.string.push_subscription_attribute), "Success");
+//                            if( user != null )
+//                                subscriptionEvent.putCustomAttribute("User", user.getFullName());
+//                            Answers.getInstance().logCustom(subscriptionEvent);
+//
+//                            Log.d(LOG_TAG, "Azure Notification Hub registration succeeded");
+//                        }
+//
+//                        @Override
+//                        public void onFailure(Throwable t) {
+//
+//                            try {
+//
+//                                subscriptionEvent.putCustomAttribute(context.getString(R.string.push_subscription_attribute), "Failed");
+//                                if( user != null )
+//                                    subscriptionEvent.putCustomAttribute("User", user.getFullName());
+//                                Answers.getInstance().logCustom(subscriptionEvent);
+//
+//                                if( Crashlytics.getInstance() != null )
+//                                    Crashlytics.logException(t);
+//
+//                                verifyStorageVersion(context);
+//
+//                                //msp.unregister().get();
+//                                //msp.unregisterAll(gcmRegistrationId).get();
+//                            } catch (Exception ex) {
+//                                Log.e(LOG_TAG, ex.getLocalizedMessage());
+//                            }
+//                        }
+//                    });
+//
+//                } catch (Exception e) {
+//
+//                    if( Crashlytics.getInstance() != null)
+//                        Crashlytics.logException(e);
+//
+//                    String msg = e.getLocalizedMessage();
+//                    Log.e(LOG_TAG, "Registration error: " + msg);
+//
+//                }
+//
+//                return null;
+//            }
+//        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+//    }
 
     @Override
     public void onUnregistered(Context context, String gcmRegistrationId) {

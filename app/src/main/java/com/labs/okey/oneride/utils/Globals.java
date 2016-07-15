@@ -304,6 +304,8 @@ public class Globals {
     // See Google Developer Console -> Billing & settings
     // https://console.developers.google.com/project/oneride-1273/settings
     public static final String SENDER_ID = "982244912173";
+    public static final String AZURE_HUB_NAME = "oneridehub";
+    public static final String AZURE_HUB_CONNECTION_STRING = "Endpoint=sb://oneridehub-ns.servicebus.windows.net/;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=VA/kIgB0KzxhenuquHpqbqceD2z9MUwarmN+FdOFTck=";
 
     public static final String NOTIFICATION_ID_EXTRA = "NOTIFICATION_ID";
     public static final String ACTION_CONFIRM = "oneride.intent.action.CONFIRM";
