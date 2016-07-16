@@ -56,8 +56,8 @@ android {
         applicationId "com.labs.okey.oneride"
         minSdkVersion 16
         targetSdkVersion 24
-        versionCode 4
-        versionName "4.71"
+        versionCode 5
+        versionName "5.0"
         multiDexEnabled = true
     }
 
@@ -97,6 +97,7 @@ dependencies {
     compile('com.afollestad.material-dialogs:core:0.8.6.1@aar') {
         transitive = true
     }
+
     // Twitter
     compile('com.twitter.sdk.android:twitter:1.12.0@aar') {
         transitive = true;

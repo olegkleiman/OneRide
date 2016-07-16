@@ -323,6 +323,8 @@ public class Globals {
     public static final String WAMSTOKENPREF = "wamsToken";
     public static final String SHOW_SELFIE_DESC = "selfieDesc";
     public static final String PREF_DEBUG_WITHOUT_GEOFENCES = "debug_without_geofences";
+    public static final String PREF_RSSI_LEVEL = "rssi_level";
+    public static final int DEFAULT_RSSI_LEVEL = 80;
 
     private static final Object lock2 = new Object();
     private static String MONITOR_STATUS;

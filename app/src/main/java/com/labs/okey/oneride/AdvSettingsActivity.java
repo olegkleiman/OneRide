@@ -1,5 +1,6 @@
 package com.labs.okey.oneride;
 
+import android.preference.PreferenceFragment;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -23,6 +24,8 @@ import com.labs.okey.oneride.advsettings.LocalLinkAdvSettingsFragment;
 import com.labs.okey.oneride.advsettings.OpenCVAdvSettingsFragment;
 
 public class AdvSettingsActivity extends AppCompatActivity {
+
+    private final String LOG_TAG = getClass().getSimpleName();
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide

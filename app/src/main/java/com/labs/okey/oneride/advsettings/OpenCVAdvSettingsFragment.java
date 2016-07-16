@@ -1,6 +1,7 @@
 package com.labs.okey.oneride.advsettings;
 
 import android.os.Bundle;
+import android.preference.PreferenceFragment;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,8 @@ import com.labs.okey.oneride.R;
  * created 16-Jul-16.
  */
 public class OpenCVAdvSettingsFragment extends Fragment {
+
+    private final String LOG_TAG = getClass().getSimpleName();
 
     private static OpenCVAdvSettingsFragment FragmentInstance;
 

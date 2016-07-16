@@ -335,5 +335,5 @@ limitations under the License.</string>
     <string name="error_no_google_map">Unable to connect to Google Maps API</string>
 
     <string name="title_activity_adv_settings" translatable="false">Advanced Settings</string>
-    <string name="txt_rssi_level">RSSI Level</string>
+    <string name="txt_rssi_level">RSSI Level: </string>
 </resources>

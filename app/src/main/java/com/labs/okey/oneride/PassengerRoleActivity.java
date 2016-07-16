@@ -153,12 +153,20 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     private UUID                        mFaceId;
     private long                        mLastLocationUpdateTime = System.currentTimeMillis();
 
+    private SharedPreferences           mSharedPrefs = null; // declared here to enable the access
+                                                             // from BroadcastReceiver
+
     private BluetoothAdapter            mBluetoothAdapter;
     private final int                   BT_DISCOVERY_PERMISSSION_REQUEST = 1001;
     private final BroadcastReceiver     mBtReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
+
+            int currentRssiLevel = Globals.DEFAULT_RSSI_LEVEL;
+
+            if( mSharedPrefs!= null )
+                currentRssiLevel = mSharedPrefs.getInt(Globals.PREF_RSSI_LEVEL, Globals.DEFAULT_RSSI_LEVEL);
 
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
@@ -168,8 +176,18 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE);
                     btDeviceUser.set_Rssi(rssi);
 
-                    _mDriversAdapter.add(btDeviceUser);
-                    _mDriversAdapter.notifyDataSetChanged();
+                    Log.i(LOG_TAG, String.format("Got device with RSSI: %d. Current level: %d",
+                                                rssi, currentRssiLevel));
+
+                    if( rssi >= -(currentRssiLevel) ) { // these are negative values
+
+                        Log.i(LOG_TAG, "Adding device");
+
+                        _mDriversAdapter.add(btDeviceUser);
+                        _mDriversAdapter.notifyDataSetChanged();
+                    } else {
+                        Log.i(LOG_TAG, "Skipping device due to poor RSSI");
+                    }
                 }
             }
         }
@@ -180,6 +198,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_passenger);
+
+        mSharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 
         setupUI(getString(R.string.title_activity_passenger_role), "");
 
@@ -648,6 +668,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                                 BT_DISCOVERY_PERMISSSION_REQUEST);
             }
         } else {
+            if( mBluetoothAdapter == null )
+                mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
             mBluetoothAdapter.startDiscovery();
         }
     }
