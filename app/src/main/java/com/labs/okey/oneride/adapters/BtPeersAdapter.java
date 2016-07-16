@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -232,8 +233,10 @@ public class BtPeersAdapter extends RecyclerView.Adapter<BtPeersAdapter.ViewHold
                 imageStatus = (ImageView) itemLayoutView.findViewById(R.id.imgStatus);
                 rowLayout.setOnClickListener(this);
 
-                drawableAvailable = context.getResources().getDrawable(R.drawable.ic_action_disconnected);
-                drawableConnected = context.getResources().getDrawable(R.drawable.accept_24);
+                drawableAvailable = ResourcesCompat.getDrawable(context.getResources(),
+                                                    R.drawable.ic_action_disconnected, null);
+                drawableConnected = ResourcesCompat.getDrawable(context.getResources(),
+                                                    R.drawable.accept_24, null);
 
             }
 
@@ -255,10 +258,10 @@ public class BtPeersAdapter extends RecyclerView.Adapter<BtPeersAdapter.ViewHold
             switch (deviceStatus) {
                 case BluetoothDevice.BOND_BONDED:
                 case BluetoothDevice.BOND_BONDING:
-                    drawable = drawableAvailable;
+                    drawable =  drawableConnected;
                     break;
                 case BluetoothDevice.BOND_NONE:
-                    drawable = drawableConnected;
+                    drawable = drawableAvailable;
                     break;
 
                 default:

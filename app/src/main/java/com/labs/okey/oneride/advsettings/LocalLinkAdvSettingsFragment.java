@@ -57,7 +57,7 @@ public class LocalLinkAdvSettingsFragment extends Fragment {
 
         final TextView txtRssiLevel = (TextView)rootView.findViewById(R.id.current_rssi_level);
         mRssiCurrentValue = sharedPrefs.getInt(Globals.PREF_RSSI_LEVEL, Globals.DEFAULT_RSSI_LEVEL);
-        txtRssiLevel.setText(String.format(Locale.getDefault(), "%d dBm", mRssiCurrentValue));
+        txtRssiLevel.setText(String.format(Locale.getDefault(), "-%d dBm", mRssiCurrentValue));
 
         SeekBar rssiSeekBar = (SeekBar)rootView.findViewById(R.id.rssiSeekBar);
         rssiSeekBar.setProgress(mRssiCurrentValue);
@@ -82,7 +82,7 @@ public class LocalLinkAdvSettingsFragment extends Fragment {
                 editor.putInt(Globals.PREF_RSSI_LEVEL, mRssiCurrentValue);
                 editor.apply();
 
-                txtRssiLevel.setText(String.format(Locale.getDefault(), "%d dBm", mRssiCurrentValue));
+                txtRssiLevel.setText(String.format(Locale.getDefault(), "-%d dBm", mRssiCurrentValue));
             }
         });
 

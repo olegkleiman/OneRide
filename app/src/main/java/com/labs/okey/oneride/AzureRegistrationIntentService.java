@@ -34,9 +34,6 @@ public class AzureRegistrationIntentService extends IntentService {
         try {
 
             String token = FirebaseInstanceId.getInstance().getToken();
-//
-//            String token = instanceID.getToken(Globals.SENDER_ID,
-//                                               GoogleCloudMessaging.INSTANCE_ID_SCOPE);
             Log.i(LOG_TAG, "Got FCM Registration Token: " + token);
 
             if (((regID=sharedPreferences.getString("registrationID", null)) == null)){
