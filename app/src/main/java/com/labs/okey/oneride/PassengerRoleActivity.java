@@ -71,6 +71,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.labs.okey.oneride.adapters.BtPeersAdapter;
 import com.labs.okey.oneride.adapters.WiFiPeersAdapter2;
 import com.labs.okey.oneride.model.BtDeviceUser;
@@ -828,7 +829,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                                         Color.BLACK);
                                 mCountDiscoveryTrials = 1;
                             } else {
-                                refresh();
+                                //refresh();
+                                btRefresh();
                             }
                         }
 
@@ -999,9 +1001,14 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 CustomEvent confirmEvent = new CustomEvent(getString(R.string.passenger_confirmation_answer_name));
                 confirmEvent.putCustomAttribute("User", getUser().getFullName());
 
+                Bundle fireEventBundle = new Bundle();
+                fireEventBundle.putString(FirebaseAnalytics.Param.VALUE, getString(R.string.passenger_confirmation_answer_name));
+                fireEventBundle.putString("Passenger", getUser().getFullName());
+
                 if (mEx != null) {
 
                     confirmEvent.putCustomAttribute("Error", 0);
+                    fireEventBundle.putBoolean("Error", true);
 
                     try {
                         MobileServiceException mse = (MobileServiceException) mEx.getCause();
@@ -1076,6 +1083,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 } else {
 
                     confirmEvent.putCustomAttribute("Success", 1);
+                    fireEventBundle.putBoolean("Success", true);
 
                     lt.success();
                     beepSuccess.start();
@@ -1085,6 +1093,12 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 }
 
                 Answers.getInstance().logCustom(confirmEvent);
+
+                FirebaseAnalytics firebaseAnalytics =
+                        FirebaseAnalytics.getInstance(getApplicationContext());
+                firebaseAnalytics.logEvent(getString(R.string.passenger_confirmation_answer_name),
+                                           fireEventBundle);
+
 
             }
 

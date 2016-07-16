@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="com.maximum.fastride.MyRidesActivity" >
+    tools:context="com.labs.okey.oneride.MyRidesActivity" >
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -39,9 +39,6 @@
             android:layout_height="0px"
             android:layout_weight="1"
             android:background="@android:color/white" />
-
-
-
 
     </LinearLayout>
 

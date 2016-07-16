@@ -330,12 +330,10 @@ limitations under the License.</string>
     <string name="camera_tag" translatable="false">camera_tag</string>
     <string name="submit_tag" translatable="false">submit_tag</string>
 
-    <string name="title_activity_splash_screen">SplashScreen</string>
+    <string name="title_activity_splash_screen" translatable="false">SplashScreen</string>
 
     <string name="error_no_google_map">Unable to connect to Google Maps API</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="title_activity_adv_settings">AdvSettingsActivity</string>
-    <string name="section_format">Hello World from section: %1$d</string>
+    <string name="title_activity_adv_settings" translatable="false">Advanced Settings</string>
+    <string name="txt_rssi_level">RSSI Level</string>
 </resources>

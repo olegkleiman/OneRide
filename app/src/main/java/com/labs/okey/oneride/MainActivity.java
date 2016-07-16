@@ -34,6 +34,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.gson.JsonObject;
 import com.labs.okey.oneride.adapters.ModesPeersAdapter;
 import com.labs.okey.oneride.gcm.GCMHandler;
@@ -300,6 +301,8 @@ public class MainActivity extends BaseActivity
         startActivity(intent);
     }
 
+
+
     private void login(String accessToken, String accessTokenSecret) {
         final MobileServiceAuthenticationProvider tokenProvider = getTokenProvider();
         if (tokenProvider == null)
@@ -329,6 +332,13 @@ public class MainActivity extends BaseActivity
                 updateUserRegistration(userRegistrationId, mobileServiceUser.getUserId());
 
                 mWAMSLogedIn = true;
+
+                FirebaseAnalytics firebaseAnalytics =
+                        FirebaseAnalytics.getInstance(getApplicationContext());
+                Bundle bundle = new Bundle();
+                bundle.putString(FirebaseAnalytics.Param.SIGN_UP_METHOD, tokenProvider.toString());
+                bundle.putBoolean(FirebaseAnalytics.Param.VALUE, true);
+                firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundle);
 
                 if (Answers.getInstance() != null)
                     Answers.getInstance().logLogin(new LoginEvent()

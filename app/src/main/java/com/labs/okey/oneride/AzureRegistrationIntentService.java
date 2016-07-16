@@ -2,10 +2,10 @@ package com.labs.okey.oneride;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
-import com.google.android.gms.gcm.GoogleCloudMessaging;
-import com.google.android.gms.iid.InstanceID;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.labs.okey.oneride.utils.Globals;
 import com.microsoft.windowsazure.messaging.NotificationHub;
@@ -26,16 +26,22 @@ public class AzureRegistrationIntentService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
 
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
         String resultString = null;
         String regID = null;
 
         try {
 
-            FirebaseInstanceId instanceID = FirebaseInstanceId.getInstance();
-
-            String token = instanceID.getToken(Globals.SENDER_ID,
-                    GoogleCloudMessaging.INSTANCE_ID_SCOPE);
+            String token = FirebaseInstanceId.getInstance().getToken();
+//
+//            String token = instanceID.getToken(Globals.SENDER_ID,
+//                                               GoogleCloudMessaging.INSTANCE_ID_SCOPE);
             Log.i(LOG_TAG, "Got FCM Registration Token: " + token);
+
+            if (((regID=sharedPreferences.getString("registrationID", null)) == null)){
+
+            }
 
             NotificationHub hub = new NotificationHub(Globals.AZURE_HUB_NAME,
                                                       Globals.AZURE_HUB_CONNECTION_STRING, this);

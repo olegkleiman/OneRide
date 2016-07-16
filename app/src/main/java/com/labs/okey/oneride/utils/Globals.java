@@ -15,6 +15,7 @@ import com.facebook.FacebookSdk;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.labs.okey.oneride.model.PassengerFace;
 import com.labs.okey.oneride.model.User;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
@@ -139,6 +140,8 @@ public class Globals {
     public static MobileServiceClient getMobileServiceClient() {
         return wamsClient;
     }
+
+    private FirebaseAnalytics mFirebaseAnalytics;
 
     private static Boolean _monitorInitialized = false;
     private static Boolean isMonitorInitialized() {

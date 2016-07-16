@@ -2,14 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.labs.okey.oneride">
 
-    <permission
-        android:name="com.labs.okey.oneride.permission.C2D_MESSAGE"
-        android:protectionLevel="signature" />
-
-    <uses-permission android:name="com.labs.okey.freeride.permission.C2D_MESSAGE" />
+    <!--<permission-->
+        <!--android:name="com.labs.okey.oneride.permission.C2D_MESSAGE"-->
+        <!--android:protectionLevel="signature" />-->
+    <!--<uses-permission android:name="com.labs.okey.freeride.permission.C2D_MESSAGE" />-->
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!--<uses-permission android:name="android.permission.WAKE_LOCK" />-->
     <uses-permission
         android:name="android.permission.INTERNET"
         android:required="true" />

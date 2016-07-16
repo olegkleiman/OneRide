@@ -22,9 +22,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-
 /**
- * Created by eli max on 18/06/2015.
+ * @author eli max
+ * created 18/06/2015.
  */
 public class GeneralMyRidesFragment extends Fragment {
 
