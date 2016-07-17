@@ -385,7 +385,7 @@ public class MainActivity extends BaseActivity
 
                     MobileServiceList<User> _users =
                             usersTable.where()
-                                    .field("registration_id").eq(Globals.MICROSOFT_PROVIDER_FOR_STORE + registrationId)
+                                    .field("registration_id").eq(Globals.MICROSOFT_PROVIDER + Globals.BT_DELIMITER + registrationId)
                                     .execute().get();
                     if (_users.size() >= 1) {
                         User _user = _users.get(0);

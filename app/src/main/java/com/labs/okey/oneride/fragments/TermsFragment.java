@@ -62,7 +62,7 @@ public class TermsFragment extends Fragment {
         });
 
 
-        webView.loadUrl("http://maxelmt.wix.com/fastride#!terms-of-service/m9aiq");
+        webView.loadUrl("https://oneride.azurewebsites.net/terms_of_service.html");
         return  rootView;
     }
 }

@@ -115,36 +115,40 @@ public class BtPeersAdapter extends RecyclerView.Adapter<BtPeersAdapter.ViewHold
 
             SCModule scModule = new SCModule();
             SCUser scUser = scModule.getUser(device.get_authProvider(), device.get_UserId());
-            String pictureURL = scUser.get_PictureURL();
-            PropertyHolder<String> callback = new PropertyHolder<String>() {
-                @Override
-                public Void call() throws Exception {
-                    if( this.property != null ) {
-                        holder.txtDriverName.setText(this.property);
+            if( scUser != null ) {
+                String pictureURL = scUser.get_PictureURL();
+                PropertyHolder<String> callback = new PropertyHolder<String>() {
+                    @Override
+                    public Void call() throws Exception {
+                        if (this.property != null) {
+                            holder.txtDriverName.setText(this.property);
+                        }
+                        if (device.get_UserName() == null ||
+                                device.get_UserName().isEmpty())
+                            device.set_UserName(this.property);
+                        return null;
                     }
-                    if( device.get_UserName() == null ||
-                            device.get_UserName().isEmpty() )
-                        device.set_UserName(this.property);
-                    return null;
-                }
-            };
-            scUser.get_FullName(callback);
+                };
+                scUser.get_FullName(callback);
 
-            ImageLoader imageLoader = Globals.volley.getImageLoader();
-            imageLoader.get(pictureURL,
-                    new ImageLoader.ImageListener() {
-                        @Override
-                        public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
-                            Bitmap bitmap = response.getBitmap();
-                            if (bitmap != null)
-                                holder.userPicture.setImageBitmap(bitmap);
-                        }
+                ImageLoader imageLoader = Globals.volley.getImageLoader();
+                imageLoader.get(pictureURL,
+                        new ImageLoader.ImageListener() {
+                            @Override
+                            public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
+                                Bitmap bitmap = response.getBitmap();
+                                if (bitmap != null)
+                                    holder.userPicture.setImageBitmap(bitmap);
+                            }
 
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            Log.e(LOG_TAG, error.toString());
-                        }
-                    });
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+                                Log.e(LOG_TAG, error.toString());
+                            }
+                        });
+            } else {
+                Log.i(LOG_TAG, "User was unrecognized");
+            }
         }
 
     }

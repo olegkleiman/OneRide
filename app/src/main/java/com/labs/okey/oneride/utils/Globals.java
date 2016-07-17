@@ -294,13 +294,9 @@ public class Globals {
 
     public static final String FB_PROVIDER = "fb"; //"Facebook";
     public static final String GOOGLE_PROVIDER = "g"; //"Google";
-    public static final String TWITTER_PROVIDER = "Twitter";
+    public static final String TWITTER_PROVIDER = "t";
     public static final String DIGITS_PROVIDER = "Digits";
     public static final String MICROSOFT_PROVIDER = "MicrosoftAccount";
-    public static final String FB_PROVIDER_FOR_STORE = "Facebook:";
-    public static final String GOOGLE_PROVIDER_FOR_STORE = "Google:";
-    public static final String MICROSOFT_PROVIDER_FOR_STORE = "MicrosoftAccount:";
-    public static final String TWITTER_PROVIDER_FOR_STORE = "Twitter:";
     public static final String PLATFORM = "Android" + Build.VERSION.SDK_INT;
 
     // 'Project number' of project 'FastRide"

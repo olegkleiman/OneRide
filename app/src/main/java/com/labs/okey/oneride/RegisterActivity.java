@@ -366,7 +366,7 @@ public class RegisterActivity extends FragmentActivity
 
                         mNewUser = new User();
                         String userID = userResult.data.idStr;
-                        mNewUser.setRegistrationId(Globals.TWITTER_PROVIDER_FOR_STORE + userID);
+                        mNewUser.setRegistrationId(Globals.TWITTER_PROVIDER + Globals.BT_DELIMITER + userID);
                         String userName = userResult.data.name;
                         String[] unTokens = userName.split(" ");
                         mNewUser.setFirstName(unTokens[0]);
@@ -550,7 +550,7 @@ public class RegisterActivity extends FragmentActivity
                         @Override
                         protected void onCurrentProfileChanged(Profile oldProfile, final Profile profile) {
 
-                            mNewUser.setRegistrationId(Globals.FB_PROVIDER_FOR_STORE + profile.getId());
+                            mNewUser.setRegistrationId(Globals.FB_PROVIDER + Globals.BT_DELIMITER + profile.getId());
                             mNewUser.setFirstName(profile.getFirstName());
                             mNewUser.setLastName(profile.getLastName());
                             String pictureURI = profile.getProfilePictureUri(100, 100).toString();
@@ -567,7 +567,7 @@ public class RegisterActivity extends FragmentActivity
                 } else {
                     Profile profile = Profile.getCurrentProfile();
 
-                    mNewUser.setRegistrationId(Globals.FB_PROVIDER_FOR_STORE + profile.getId());
+                    mNewUser.setRegistrationId(Globals.FB_PROVIDER + Globals.BT_DELIMITER + profile.getId());
                     mNewUser.setFirstName(profile.getFirstName());
                     mNewUser.setLastName(profile.getLastName());
                     String pictureURI = profile.getProfilePictureUri(100, 100).toString();
@@ -632,7 +632,7 @@ public class RegisterActivity extends FragmentActivity
 
         mAccessToken = acct.getIdToken();
         String regId = acct.getId();
-        mNewUser.setRegistrationId(Globals.GOOGLE_PROVIDER_FOR_STORE + regId);
+        mNewUser.setRegistrationId(Globals.GOOGLE_PROVIDER + Globals.BT_DELIMITER + regId);
         saveProviderAccessToken(Globals.GOOGLE_PROVIDER, regId);
 
         mNewUser.setFullName(acct.getDisplayName());
@@ -663,7 +663,7 @@ public class RegisterActivity extends FragmentActivity
                             String email = gUser.getString("email");
                             mNewUser.setEmail(email);
 
-                            String regID = Globals.FB_PROVIDER_FOR_STORE + regId;
+                            String regID = Globals.FB_PROVIDER + Globals.BT_DELIMITER + regId;
                             saveProviderAccessToken(Globals.FB_PROVIDER, regID);
 
                             new VerifyAccountTask().execute();

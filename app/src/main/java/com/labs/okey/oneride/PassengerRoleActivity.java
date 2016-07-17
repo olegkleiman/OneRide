@@ -69,6 +69,7 @@ import com.labs.okey.oneride.model.BtDeviceUser;
 import com.labs.okey.oneride.model.GFCircle;
 import com.labs.okey.oneride.model.Join;
 import com.labs.okey.oneride.model.WifiP2pDeviceUser;
+import com.labs.okey.oneride.model.sc.SCFacebookUser;
 import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.IRecyclerClickListener;
 import com.labs.okey.oneride.utils.IRefreshable;
@@ -691,7 +692,12 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             return null;
 
         String authProvider = tokens[0];
-        Log.d(LOG_TAG, "Provider: " + authProvider);
+        if( !Globals.GOOGLE_PROVIDER.equalsIgnoreCase(authProvider) &&
+           !Globals.FB_PROVIDER.equalsIgnoreCase(authProvider)){
+            Log.i(LOG_TAG, "Unrecognized provider: " + authProvider);
+            return null;
+        } else
+            Log.d(LOG_TAG, "Provider: " + authProvider);
 
         String userId = tokens[1];
         Log.d(LOG_TAG, "User registration id: " + userId);
@@ -703,7 +709,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         btDeviceUser.set_authProvider(authProvider);
         btDeviceUser.set_UserId(userId);
         btDeviceUser.set_RideCode(rideCode);
-
 
         return btDeviceUser;
     }

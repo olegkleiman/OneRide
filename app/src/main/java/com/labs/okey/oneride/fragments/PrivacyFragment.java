@@ -61,7 +61,7 @@ public class PrivacyFragment extends Fragment {
             }
         });
 
-        webView.loadUrl("http://maxelmt.wix.com/fastride#!privacy-policy/mfvig");
+        webView.loadUrl("https://oneride.azurewebsites.net/privacy_policy.html");
         return  rootView;
     }
 }

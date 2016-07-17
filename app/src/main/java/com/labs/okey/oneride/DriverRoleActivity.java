@@ -289,6 +289,16 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 //setupNetwork();
             }
         }
+
+        mCheckPasengersTimer.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(LOG_TAG, "Passengers check arrived");
+            }
+        },
+        1, // 1-sec delay
+        2, // period between successive executions
+        TimeUnit.SECONDS);
     }
 
     private void restoreState(Bundle savedInstanceState) {
@@ -1126,6 +1136,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     protected void onDestroy() {
 
         btRestore();
+
+        mCheckPasengersTimer = null;
 
         super.onDestroy();
     }
