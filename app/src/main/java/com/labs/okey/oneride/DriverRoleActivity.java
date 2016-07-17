@@ -97,6 +97,7 @@ import net.steamcrafted.loadtoast.LoadToast;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.text.SimpleDateFormat;
@@ -752,6 +753,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     private void btRestore() {
+
+        try {
+            _disableBluetoothDiscoverability();
+        } catch (Exception e) {
+          Log.e(LOG_TAG, "" + e);
+        }
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String bluetoothOriginalName = prefs.getString("btOriginalName", "");
 
@@ -760,14 +768,20 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     private void btStartAdvertise() {
 
-        int discoverableDuration = 300;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        int discoverableDuration = prefs.getInt(Globals.PREF_DISCOVERABLE_DURATION,
+                                                Globals.PREF_DISCOVERABLE_DURATION_DEFAULT);
 
         if( Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2 ) {
             try {
-                Method method = mBluetoothAdapter.getClass().getMethod("setScanMode", int.class, int.class);
-                method.invoke(mBluetoothAdapter, BluetoothAdapter.SCAN_MODE_CONNECTABLE,
-                        discoverableDuration);
-                Log.i("invoke","setScanMode() invoke successfully");
+
+                int nScanMode = mBluetoothAdapter.getScanMode();
+                Log.d(LOG_TAG, String.format("Scan mode is %d", nScanMode));
+
+                _enableBluetoothDiscoverability(discoverableDuration);
+
+                nScanMode = mBluetoothAdapter.getScanMode();
+                Log.d(LOG_TAG, String.format("Now scan mode is %d", nScanMode));
             }
             catch (Exception e){
                 Throwable t = e.getCause();
@@ -779,6 +793,28 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         } else {
             enableBluetoothDiscoverability(discoverableDuration);
         }
+    }
+
+    private void _disableBluetoothDiscoverability()
+            throws NoSuchMethodException,
+            IllegalAccessException,
+            InvocationTargetException {
+        Method method = mBluetoothAdapter.getClass().getMethod("setScanMode", int.class, int.class);
+        method.invoke(mBluetoothAdapter, BluetoothAdapter.SCAN_MODE_NONE, 1);
+        Log.d("invoke","setScanMode() invoke successfully");
+
+        //_enableBluetoothDiscoverability(1);
+    }
+
+    private void _enableBluetoothDiscoverability(int duration)
+            throws NoSuchMethodException,
+                   IllegalAccessException,
+                   InvocationTargetException {
+
+        Method method = mBluetoothAdapter.getClass().getMethod("setScanMode", int.class, int.class);
+        method.invoke(mBluetoothAdapter, BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE,
+                    duration);
+        Log.d("invoke","setScanMode() invoke successfully");
     }
 
     private void enableBluetoothDiscoverability(int duration){

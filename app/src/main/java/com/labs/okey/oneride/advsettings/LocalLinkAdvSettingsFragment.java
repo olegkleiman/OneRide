@@ -5,11 +5,16 @@ import android.os.Bundle;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.ShareCompat;
 import android.support.v4.widget.TextViewCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -22,13 +27,18 @@ import java.util.Locale;
  * @author Oleg Kleiman
  * created 16-Jul-16.
  */
-public class LocalLinkAdvSettingsFragment extends Fragment {
+public class LocalLinkAdvSettingsFragment extends Fragment
+        implements CompoundButton.OnCheckedChangeListener,
+        View.OnClickListener {
 
     private final String LOG_TAG = getClass().getSimpleName();
 
     private static LocalLinkAdvSettingsFragment FragmentInstance;
 
-    private int mRssiCurrentValue;
+    private int                                 mRssiCurrentValue;
+    private SharedPreferences                   mSharedPrefs;
+
+    private EditText                            mTxtPeriod;
 
     public static LocalLinkAdvSettingsFragment getInstance() {
 
@@ -41,9 +51,6 @@ public class LocalLinkAdvSettingsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
-
     }
 
     @Override
@@ -53,10 +60,10 @@ public class LocalLinkAdvSettingsFragment extends Fragment {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_local_link_settings, container, false);
 
-        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this.getActivity());
+        mSharedPrefs = PreferenceManager.getDefaultSharedPreferences(this.getActivity());
 
         final TextView txtRssiLevel = (TextView)rootView.findViewById(R.id.current_rssi_level);
-        mRssiCurrentValue = sharedPrefs.getInt(Globals.PREF_RSSI_LEVEL, Globals.DEFAULT_RSSI_LEVEL);
+        mRssiCurrentValue = mSharedPrefs.getInt(Globals.PREF_RSSI_LEVEL, Globals.DEFAULT_RSSI_LEVEL);
         txtRssiLevel.setText(String.format(Locale.getDefault(), "-%d dBm", mRssiCurrentValue));
 
         SeekBar rssiSeekBar = (SeekBar)rootView.findViewById(R.id.rssiSeekBar);
@@ -78,7 +85,7 @@ public class LocalLinkAdvSettingsFragment extends Fragment {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                SharedPreferences.Editor editor = sharedPrefs.edit();
+                SharedPreferences.Editor editor = mSharedPrefs.edit();
                 editor.putInt(Globals.PREF_RSSI_LEVEL, mRssiCurrentValue);
                 editor.apply();
 
@@ -86,7 +93,62 @@ public class LocalLinkAdvSettingsFragment extends Fragment {
             }
         });
 
+        CheckBox cbPushNotification = (CheckBox)rootView.findViewById(R.id.cbPushNotificationTransport);
+        cbPushNotification.setOnCheckedChangeListener(this);
+        CheckBox cbScanNotification = (CheckBox)rootView.findViewById(R.id.cbTablesScan);
+        cbScanNotification.setOnCheckedChangeListener(this);
+        CheckBox cbSocketsNotification = (CheckBox)rootView.findViewById(R.id.cbSockets);
+        cbSocketsNotification.setOnCheckedChangeListener(this);
+
+        mTxtPeriod = (EditText)rootView.findViewById(R.id.txtDiscoveryPeriod);
+        int discoverableDuration = mSharedPrefs.getInt(Globals.PREF_DISCOVERABLE_DURATION,
+                                        Globals.PREF_DISCOVERABLE_DURATION_DEFAULT);
+        mTxtPeriod.setText(Integer.toString(discoverableDuration));
+
+        Button btnDiscoveryApply = (Button)rootView.findViewById(R.id.btnDiscoveryPeriodApply);
+        btnDiscoveryApply.setOnClickListener(this);
 
         return rootView;
+    }
+
+    @Override
+    public void onClick(View view) {
+        int discoverableDuration = Integer.parseInt(mTxtPeriod.getText().toString());
+        SharedPreferences.Editor editor = mSharedPrefs.edit();
+        editor.putInt(Globals.PREF_DISCOVERABLE_DURATION, discoverableDuration);
+        editor.apply();
+    }
+
+    @Override
+    public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+
+        switch (compoundButton.getId() ) {
+            case R.id.cbPushNotificationTransport: {
+                Log.d(LOG_TAG, String.format("PushTransport checked: %d", isChecked));
+
+                SharedPreferences.Editor editor = mSharedPrefs.edit();
+                editor.putBoolean(Globals.PREF_PUSH_MODE, isChecked);
+                editor.apply();
+            }
+            break;
+
+            case R.id.cbTablesScan: {
+                Log.d(LOG_TAG, String.format("TableScan checked: %d", isChecked));
+
+                SharedPreferences.Editor editor = mSharedPrefs.edit();
+                editor.putBoolean(Globals.PREF_SCAN_MODE, isChecked);
+                editor.apply();
+            }
+            break;
+
+            case R.id.cbSockets: {
+                Log.d(LOG_TAG, "Socket transport checked");
+
+                SharedPreferences.Editor editor = mSharedPrefs.edit();
+                editor.putBoolean(Globals.PREF_SOCKETS_MODE, isChecked);
+                editor.apply();
+            }
+            break;
+        }
     }
 }

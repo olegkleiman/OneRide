@@ -336,4 +336,9 @@ limitations under the License.</string>
 
     <string name="title_activity_adv_settings" translatable="false">Advanced Settings</string>
     <string name="txt_rssi_level">RSSI Level: </string>
+    <string name="local_link_transport">Transport</string>
+    <string name="local_link_discovery">Discovery</string>
+    <string name="push_notifications_transport">Push Notifications</string>
+    <string name="table_scan_transport">Remote table scan</string>
+    <string name="sockets_transport">Sockets</string>
 </resources>

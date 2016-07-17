@@ -7,6 +7,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.labs.okey.oneride.model.User;
 import com.labs.okey.oneride.utils.Globals;
 import com.microsoft.windowsazure.messaging.NotificationHub;
 
@@ -42,11 +43,13 @@ public class AzureRegistrationIntentService extends IntentService {
 
             NotificationHub hub = new NotificationHub(Globals.AZURE_HUB_NAME,
                                                       Globals.AZURE_HUB_CONNECTION_STRING, this);
-            regID = hub.register(token).getRegistrationId();
+            //regID = hub.register(token).getRegistrationId();
 
             // If you want to use tags...
             // Refer to : https://azure.microsoft.com/en-us/documentation/articles/notification-hubs-routing-tag-expressions/
-            // regID = hub.register(token, "tag1,tag2").getRegistrationId();
+            User user = User.load(getApplicationContext());
+            String tag = user.getRegistrationId();
+            regID = hub.register(token, tag).getRegistrationId();
 
             resultString = "Registered Successfully - RegId : " + regID;
             Log.i(LOG_TAG, resultString);

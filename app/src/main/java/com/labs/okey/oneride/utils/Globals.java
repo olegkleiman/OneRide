@@ -275,6 +275,8 @@ public class Globals {
     public static final String SERVICE_REG_TYPE = "_presence._tcp";
 
     public static final String BT_DELIMITER = ":";
+    public static final String PREF_DISCOVERABLE_DURATION = "bt_discoverable_period";
+    public static final int PREF_DISCOVERABLE_DURATION_DEFAULT = 300;
 
     public static final String WAMS_URL = "https://oneride.azurewebsites.net";
     //public static final String WAMS_API_KEY = "omCudOMCUJgIGbOklMKYckSiGKajJU91";
@@ -292,9 +294,9 @@ public class Globals {
     public static final String PHONE_PREF = "phone";
     public static final String USE_PHONE_PFER = "usephone";
 
-    public static final String FB_PROVIDER = "fb"; //"Facebook";
-    public static final String GOOGLE_PROVIDER = "g"; //"Google";
-    public static final String TWITTER_PROVIDER = "t";
+    public static final String FB_PROVIDER = "Facebook";
+    public static final String GOOGLE_PROVIDER = "Google";
+    public static final String TWITTER_PROVIDER = "Twitter";
     public static final String DIGITS_PROVIDER = "Digits";
     public static final String MICROSOFT_PROVIDER = "MicrosoftAccount";
     public static final String PLATFORM = "Android" + Build.VERSION.SDK_INT;
@@ -321,6 +323,10 @@ public class Globals {
     public static final String PREF_DEBUG_WITHOUT_GEOFENCES = "debug_without_geofences";
     public static final String PREF_RSSI_LEVEL = "rssi_level";
     public static final int DEFAULT_RSSI_LEVEL = 80;
+
+    public static final String PREF_PUSH_MODE = "push_mode";
+    public static final String PREF_SCAN_MODE = "scan_mode";
+    public static final String PREF_SOCKETS_MODE = "sockets_mode";
 
     private static final Object lock2 = new Object();
     private static String MONITOR_STATUS;

@@ -75,7 +75,7 @@
                     android:gravity="start" />
 
                 <LinearLayout
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_width="match_parent"
                     android:gravity="center_vertical|start"
                     android:orientation="horizontal">
@@ -83,12 +83,24 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginLeft="6dp"
+                        android:layout_marginStart="6dp"
                         android:text="@string/rssi_label"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginLeft="4dp"
+                        android:layout_marginStart="4dp"
                         android:id="@+id/txt_rssi"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:gravity="center_vertical|start"
+                    android:orientation="horizontal">
 
                     <TextView
                         android:layout_width="wrap_content"

@@ -139,7 +139,7 @@ public class DrawerAccountAdapter extends RecyclerView.Adapter<DrawerAccountAdap
             holder.headerLayout.setBackground(d);
 
             // Retrieves an image through Volley
-            if( !mPictureURL.isEmpty() ) {
+            if( !mPictureURL.isEmpty() && Globals.volley != null ) {
                 RequestQueue requestQueue = Globals.volley.getRequestQueue();
                 if (requestQueue == null)
                     return;
