@@ -93,6 +93,17 @@ public class User implements Parcelable {
     public String getConfiramtionCode() { return confirmationCode; }
     public void setConfirmationCode(String code) { confirmationCode = code; }
 
+    @Override
+    public boolean equals(Object object) {
+
+        if( object != null && object instanceof User ) {
+            User that = (User) object;
+            if( that.getRegistrationId().equalsIgnoreCase(this.getRegistrationId()))
+                return true;
+        }
+
+        return false;
+    }
 
     public boolean compare(User _user) {
         return this.registration_id.compareTo(_user.registration_id) == 0

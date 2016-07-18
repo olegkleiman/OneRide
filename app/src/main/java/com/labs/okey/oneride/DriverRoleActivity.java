@@ -768,13 +768,17 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     public void addPassenger(User passenger) {
-        mPassengers.add(passenger);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mPassengersAdapter.notifyDataSetChanged();
-            }
-        });
+
+        if( !mPassengers.contains(passenger) ) {
+
+            mPassengers.add(passenger);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mPassengersAdapter.notifyDataSetChanged();
+                }
+            });
+        }
     }
 
     private void wamsInit() {

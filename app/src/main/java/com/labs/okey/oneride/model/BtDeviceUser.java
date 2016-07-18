@@ -56,6 +56,18 @@ public class BtDeviceUser implements Parcelable {
         mBluetoothDevice = device;
     }
 
+    @Override
+    public boolean equals(Object object) {
+
+        if( object != null && object instanceof BtDeviceUser ) {
+            BtDeviceUser that = (BtDeviceUser)object;
+            if( that.get_UserId().equalsIgnoreCase(this.get_UserId()))
+                return true;
+        }
+
+        return false;
+    }
+
     // Parcelable implementation
     @Override
     public int describeContents() {
