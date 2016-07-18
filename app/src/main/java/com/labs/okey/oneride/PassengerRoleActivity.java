@@ -224,6 +224,14 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+
+        outState.putParcelableArrayList(Globals.PARCELABLE_KEY_DRIVERS, _mDrivers);
+
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
     @UiThread
     protected void setupUI(String title, String subTitle) {
         super.setupUI(title, subTitle);
