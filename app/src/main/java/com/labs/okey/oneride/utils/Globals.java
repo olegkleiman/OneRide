@@ -16,6 +16,10 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
+import com.labs.okey.oneride.BuildConfig;
+import com.labs.okey.oneride.DriverRoleActivity;
 import com.labs.okey.oneride.model.PassengerFace;
 import com.labs.okey.oneride.model.User;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
@@ -24,6 +28,7 @@ import com.twitter.sdk.android.core.TwitterAuthConfig;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.sql.Driver;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,13 +36,11 @@ import java.util.List;
 
 import io.fabric.sdk.android.Fabric;
 
-//import com.microsoft.live.LiveAuthClient;
 
 /**
- * Created by Oleg Kleiman on 22-Aug-15.
+ * @author Oleg Kleiman
+ * created 22-Aug-15.
  */
-
-
 public class Globals {
 
     private static final String LOG_TAG = "FR";
@@ -142,6 +145,7 @@ public class Globals {
     }
 
     private FirebaseAnalytics mFirebaseAnalytics;
+    private static FirebaseRemoteConfig mFirebaseRemoteConfig;
 
     private static Boolean _monitorInitialized = false;
     private static Boolean isMonitorInitialized() {
@@ -163,6 +167,12 @@ public class Globals {
             Crashlytics.setUserName(user.getFullName());
             Crashlytics.setUserEmail(user.getEmail());
 
+            mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+            FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
+                    .setDeveloperModeEnabled(BuildConfig.DEBUG)
+                    .build();
+            mFirebaseRemoteConfig.setConfigSettings(configSettings);
+
             _monitorInitialized = true;
 
         } catch(Exception e) {
@@ -182,81 +192,12 @@ public class Globals {
 
     public static int CABIN_PICTURES_BUTTON_SHOW_INTERVAL = 40 * 1000;
 
-    private static boolean _passengerListAlerted = false;
-    public static boolean isPassengerListAlerted() {
-        return _passengerListAlerted;
+    private static DriverRoleActivity driverActivity;
+    public static void setDriverActivity(DriverRoleActivity activity) {
+        driverActivity = activity;
     }
-    public static void setPassengerListAlerted(boolean value){
-        _passengerListAlerted = value;
-    }
-
-    private static List<String> _passengersIds = new ArrayList<>();
-    public static boolean isPassengerIdJoined(String passengerId) {
-
-        for (String _id: _passengersIds) {
-
-            if( _id.equalsIgnoreCase(passengerId))
-                return true;
-
-        }
-
-        return false;
-    }
-    public static void addMyPassengerId(String _id) {
-        _passengersIds.add(_id);
-    }
-    public static void clearMyPassengerIds() { _passengersIds.clear(); }
-
-    private static final Object lockPassengers = new Object();
-    private static List<User> _passengers = new ArrayList<>();
-    public static List<User> getMyPassengers() {
-        synchronized (lockPassengers) {
-            return _passengers;
-        }
-    }
-    public static void addMyPassenger(User passenger) {
-
-        synchronized (lockPassengers) {
-
-            if( passenger.wasSelfPictured() ) {// Clear the passengers that have not been pictured
-
-                Iterator<User> iter = _passengers.iterator();
-
-                while (iter.hasNext()) {
-
-                    User _p = iter.next();
-
-                    if( !_p.wasSelfPictured() ) {
-                        iter.remove();
-
-                        _passengerListAlerted = true; // redundant for each item
-                    }
-                }
-
-                _passengers.add(passenger);
-
-            } else { // Reject the passenger without a picture
-                     // if there are already other passengers with pictures there
-                boolean bReject = false;
-                for(User p: _passengers) {
-                    if( p.wasSelfPictured() ) {
-                        bReject = true;
-                        continue;
-                    }
-                }
-
-                if( !bReject )
-                    _passengers.add(passenger);
-
-            }
-
-
-        }
-    }
-    public static void clearMyPassengers() {
-        synchronized (lockPassengers) {
-            _passengers.clear();
-        }
+    public static DriverRoleActivity getDriverActivity() {
+        return driverActivity;
     }
 
     // PERMISSIONS

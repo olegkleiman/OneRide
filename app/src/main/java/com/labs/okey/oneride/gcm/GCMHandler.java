@@ -15,9 +15,12 @@ import com.crashlytics.android.answers.CustomEvent;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.labs.okey.oneride.DriverRoleActivity;
 import com.labs.okey.oneride.R;
 import com.labs.okey.oneride.model.PassengerFace;
 import com.labs.okey.oneride.model.User;
+import com.labs.okey.oneride.model.sc.SCModule;
+import com.labs.okey.oneride.model.sc.SCUser;
 import com.labs.okey.oneride.utils.Globals;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.notifications.MobileServicePush;
@@ -35,7 +38,6 @@ public class GCMHandler extends NotificationsHandler {
 
     private final String LOG_TAG = getClass().getSimpleName();
 
-    Context ctx;
     private static final int NOTIFICATION_ID = 1;
     private static final String NOTIFICATIONS_HANDLER_CLASS = "WAMS_NotificationsHandlerClass";
 
@@ -123,172 +125,64 @@ public class GCMHandler extends NotificationsHandler {
     }
 
     @Override
-    public void onReceive(Context context, Bundle bundle) {
-
-        ctx = context;
-        boolean bSend = false;
-
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(ctx);
-        String userRegistrationId = sharedPrefs.getString(Globals.USERIDPREF, "");
-
-        String extras = bundle.getString("extras");
-        if( extras == null || extras.isEmpty() ) {
-            if( Crashlytics.getInstance() != null)
-                Crashlytics.logException(new Throwable(ctx.getString(R.string.no_extra)));
-            return;
-        }
-
-        boolean _bUserSelfPictured = false;
-        String[] tokens = extras.split(";");
-        final String userId = tokens[0];
-
-        // Prevent to receive the notifications from myself
-        if( userId != null
-                && userId.equalsIgnoreCase(userRegistrationId))
-            return;
-
-        if( tokens.length > 1) { // FaceID is embedded
-
-            _bUserSelfPictured = true;
-
-            PassengerFace pf = new PassengerFace();
-            String faceID = tokens[1];
-            pf.setFaceId(faceID);
-
-            if( tokens.length > 2 ) {
-                String pictureURL = tokens[2];
-                pf.setPictureUrl(pictureURL);
-            }
-
-            Globals.add_PassengerFace(pf);
-        }
-
-        final boolean bUserSelfPictured = _bUserSelfPictured;
-
-        if( (userId != null  && !Globals.isPassengerIdJoined(userId) )
-                || bUserSelfPictured ) {
-
-            Globals.addMyPassengerId(userId);
-
-            try {
-
-                final MobileServiceTable<User> usersTable = Globals.getMobileServiceClient()
-                                                            .getTable("users", User.class);
-
-                new AsyncTask<Void, Void, Void>() {
-
-                    @Override
-                    protected Void doInBackground(Void... voids) {
-
-                        try {
-
-                            MobileServiceList<User> users =
-                                    usersTable.where().field("registration_id").eq(userId).execute().get();
-                            if (users.size() > 0) {
-                                User passenger = users.get(0);
-                                passenger.setSelfPictured(bUserSelfPictured);
-                                Globals.addMyPassenger(passenger);
-                            }
-                        } catch(ExecutionException | InterruptedException ex ){
-                            if( Crashlytics.getInstance() != null)
-                                Crashlytics.logException(ex);
-
-                            Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
-                        }
-
-                        return null;
-                    }
-                }.execute();
-
-
-            } catch(Exception ex ) {
-                if( Crashlytics.getInstance() != null)
-                    Crashlytics.logException(ex);
-
-                Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
-            }
-
-        }
-//        String faceId  = bundle.getString("extras");
-//
-//        // TODO: review this limitation for pictures
-//        if( Globals.passengerFaces.size() <= 4 ) {
-//
-//            PassengerFace pf = new PassengerFace(faceId);
-//
-//            int nIndex = Globals.passengerFaces.indexOf(pf);
-//            Globals.passengerFaces.add(pf);
-//
-//            faceapiUtils.Analyze(ctx);
-//        }
+    public void onReceive(final Context context, Bundle bundle) {
 
         String message = bundle.getString("message");
-        tokens = message.split(";");
-        if( tokens.length > 1) {
-            message = tokens[1];
+        if( message == null || message.isEmpty() )
+            return;
 
-            int flag = Integer.parseInt(tokens[0]);
-            // Message flag (first token) means only by 4 bit: X000 where X=1 means display message, X=0 - not display
-            bSend = ( flag >> 3 == 0) ? false : true;
-        }
+        final String user = message;
 
-        if( bSend ) {
-            String title = context.getResources().getString(R.string.app_label);
-            sendNotification(message, title);
-        }
+        final MobileServiceTable<User> usersTable = Globals.getMobileServiceClient()
+                                                    .getTable("users", User.class);
+
+        new AsyncTask<Void, Void, Void>() {
+             @Override
+             protected Void doInBackground(Void... voids) {
+
+                 try {
+                     MobileServiceList<User> users =
+                                    usersTable.where().field("registration_id").eq(user).execute().get();
+                     if (users.size() > 0) {
+                         User passenger = users.get(0);
+
+                         DriverRoleActivity driverActivity = Globals.getDriverActivity();
+                         if( driverActivity != null ) {
+                             if( !driverActivity.isPassengerJoined(passenger) )
+                                driverActivity.addPassenger(passenger);
+                         }
+
+                         String title = context.getResources().getString(R.string.app_label);
+                         String format = context.getString(R.string.notification_message_format);
+                         String _message = String.format(format, passenger.getFullName());
+                         sendNotification(context, _message, title);
+                     }
+                 } catch(ExecutionException | InterruptedException ex ){
+                        if( Crashlytics.getInstance() != null)
+                            Crashlytics.logException(ex);
+
+                        Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
+                 }
+
+                 return null;
+             }
+        }.execute();
     }
 
-    private void sendNotification(String msg, String title) {
+    private void sendNotification(Context ctx, String msg, String title) {
         NotificationManager mNotificationManager = (NotificationManager)
                 ctx.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        // TODO: Define to which activity the notification should be delivered
-//        Intent launchIntent = new Intent(ctx, DriverRoleActivity.class);
-//        Bundle b = new Bundle();
-//        launchIntent.putExtras(b);
-//
-//        PendingIntent contentIntent =
-//                PendingIntent.getActivity(ctx, 0,
-//                        launchIntent, PendingIntent.FLAG_CANCEL_CURRENT);
-
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(ctx)
-                        .setSmallIcon(R.mipmap.ic_launcher2)
-                        .setVibrate(new long[]{500, 500})
+                        .setSmallIcon(R.mipmap.oneride_notification)
                         .setContentTitle(title)
                         .setAutoCancel(true)
                         .setStyle(new NotificationCompat.BigTextStyle()
                                 .bigText(msg))
                         .setContentText(msg);
 
-//one        mBuilder.setContentIntent(contentIntent);
         mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
-    }
-
-    private static final String STORAGE_PREFIX = "__NH_";
-    private static final String STORAGE_VERSION_KEY = "STORAGE_VERSION";
-    private static final String STORAGE_VERSION = "1.0.0";
-
-    private void verifyStorageVersion(Context context) {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
-        String currentStorageVersion = preferences.getString(STORAGE_PREFIX + STORAGE_VERSION_KEY, "");
-
-        //if (!currentStorageVersion.equals(STORAGE_VERSION)) {
-
-            SharedPreferences.Editor editor = preferences.edit();
-
-            Set<String> keys = preferences.getAll().keySet();
-
-            for (String key : keys) {
-                if (key.startsWith(STORAGE_PREFIX)) {
-                    editor.remove(key);
-                }
-            }
-
-            editor.commit();
-
-        //}
-
     }
 
 }

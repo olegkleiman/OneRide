@@ -341,4 +341,6 @@ limitations under the License.</string>
     <string name="push_notifications_transport">Push Notifications</string>
     <string name="table_scan_transport">Remote table scan</string>
     <string name="sockets_transport">Sockets</string>
+
+    <string name="notification_message_format">%s has confirmed participation in your ride</string>
 </resources>

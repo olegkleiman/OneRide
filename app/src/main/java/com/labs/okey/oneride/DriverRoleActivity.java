@@ -140,9 +140,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private PassengersAdapter                   mPassengersAdapter;
     SwipeableRecyclerViewTouchListener          mSwipeTouchListener;
     private ArrayList<User>                     mPassengers = new ArrayList<>();
-    private int                                 mLastPassengersLength;
-
-    private ArrayList<Integer>                  mCapturedPassengersIDs = new ArrayList<>();
 
     private ImageView                           mImageTransmit;
     private GoogleMap                           mGoogleMap;
@@ -153,9 +150,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     Uri                                         mUriPhotoAppeal;
     private String                              mRideCode;
     int                                         mEmojiID;
-
-    private ScheduledExecutorService            mCheckPasengersTimer = Executors.newScheduledThreadPool(1);
-    private ScheduledFuture<?>                  mCheckPassengerTimerResult;
 
     private P2pPreparer                         mP2pPreparer;
     private P2pConversator                      mP2pConversator;
@@ -235,8 +229,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                     mOfflineDialog.show();
                                 }
                             }, 200);
-                        } else {
-                            setupNetwork();
                         }
                     }
                 }).build();
@@ -291,15 +283,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             }
         }
 
-        mCheckPasengersTimer.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                Log.d(LOG_TAG, "Passengers check arrived");
-            }
-        },
-        1, // 1-sec delay
-        2, // period between successive executions
-        TimeUnit.SECONDS);
+        Globals.setDriverActivity(this);
+
     }
 
     private void restoreState(Bundle savedInstanceState) {
@@ -338,10 +323,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 mPassengers.addAll(passengers);
                 mPassengersAdapter.notifyDataSetChanged();
 
-                for (User passenger : passengers) {
-                    Globals.addMyPassenger(passenger);
-                }
-
                 if (passengers.size() >= Globals.REQUIRED_PASSENGERS_NUMBER) {
                     FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
                     Context ctx = getApplicationContext();
@@ -361,42 +342,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 findViewById(R.id.submit_ride_button).setVisibility(View.VISIBLE);
             else
                 findViewById(R.id.submit_ride_button).setVisibility(View.GONE);
-        }
-
-        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS)) {
-            bInitializedBeforeRotation = true;
-
-            mCapturedPassengersIDs =
-                    savedInstanceState.getIntegerArrayList(Globals.PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS);
-
-            if (mCapturedPassengersIDs != null) {
-                for (int i = 0; i < mCapturedPassengersIDs.size(); i++) {
-
-                    int nCaptured = mCapturedPassengersIDs.get(i);
-
-                    int fabID = getResources().getIdentifier("passenger" + Integer.toString(i + 1),
-                            "id", this.getPackageName());
-
-                    FloatingActionButton fab = (FloatingActionButton) findViewById(fabID);
-                    if (fab != null) {
-                        if (nCaptured == 1) {
-
-                            fab.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.green)));
-
-                            String parcelableKey = Globals.PARCELABLE_KEY_PASSENGER_PREFIX + (i + 1);
-                            if (savedInstanceState.containsKey(parcelableKey)) {
-                                Bitmap passengerThumb = savedInstanceState.getParcelable(parcelableKey);
-                                fab.setImageBitmap(passengerThumb);
-                            } else
-                                fab.setImageResource(R.drawable.ic_action_done);
-                        } else
-                            fab.setImageResource(R.drawable.ic_action_camera);
-                    } else {
-                        String msg = String.format("onCreate: Passenger FAB %d is not found", i + 1);
-                        Log.e(LOG_TAG, msg);
-                    }
-                }
-            }
         }
 
         if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS)) {
@@ -467,9 +412,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             }
             mAppealDialog.show();
         }
-
-        if( !bInitializedBeforeRotation )
-            setupNetwork();
     }
 
     @Override
@@ -489,8 +431,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             outState.putParcelable(Globals.PARCELABLE_KEY_CURRENT_RIDE, mCurrentRide);
 
             outState.putBoolean(Globals.PARCELABLE_KEY_CABIN_PICTURES_BUTTON_SHOWN, mCabinPictureButtonShown);
-
-            outState.putIntegerArrayList(Globals.PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS, mCapturedPassengersIDs);
 
             outState.putSerializable(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS, Globals.get_PassengerFaces());
 
@@ -722,9 +662,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         Globals.setMonitorStatus(getString(R.string.geofence_outside_title));
 
-        for(int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++)
-            mCapturedPassengersIDs.add(0);
-
         if( Globals.REQUIRED_PASSENGERS_NUMBER == 3 ) {
             View view = findViewById(R.id.passenger4);
             if( view != null )
@@ -826,73 +763,18 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         startActivityForResult(discoverableIntent, BT_REQUEST_DISCOVERABLE_CODE);
     }
 
-    private void setupNetwork() {
+    public boolean isPassengerJoined(User passenger) {
+        return mPassengers.contains(passenger);
+    }
 
-        startAdvertise(this,
-                getUser().getRegistrationId(),
-                mRideCode,
-                getUser().getFullName());
-
-        getHandler().postDelayed(mEnableCabinPictureButtonRunnable,
-                Globals.CABIN_PICTURES_BUTTON_SHOW_INTERVAL);
-
-        mCheckPassengerTimerResult =
-                mCheckPasengersTimer.scheduleAtFixedRate(new Runnable() {
-                                                             @Override
-                                                             public void run() {
-
-                                                                 final List<User> passengers = Globals.getMyPassengers();
-
-                                                                 if( mLastPassengersLength != passengers.size()
-                                                                         || Globals.isPassengerListAlerted() ) {
-
-                                                                     mLastPassengersLength = passengers.size();
-                                                                     Globals.setPassengerListAlerted(false);
-
-                                                                     // Update UI on UI thread
-                                                                     runOnUiThread(new Runnable() {
-                                                                         @Override
-                                                                         public void run() {
-                                                                             mPassengers.clear();
-                                                                             mPassengers.addAll(passengers);
-
-                                                                             for(User passenger: mPassengers) {
-                                                                                 if( passenger.wasSelfPictured() ) {
-                                                                                     mTextSwitcher.setText(getString(R.string.instruction_advanced_mode));
-                                                                                     break;
-                                                                                 }
-                                                                             }
-
-                                                                             mPassengersAdapter.notifyDataSetChanged();
-
-                                                                             View v = findViewById(R.id.empty_view);
-                                                                             if( v != null ) {
-                                                                                 mEmptyTextShown = false;
-                                                                                 v.setVisibility(View.GONE);
-                                                                             }
-
-                                                                             if( mLastPassengersLength >= Globals.REQUIRED_PASSENGERS_NUMBER){
-                                                                                 FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.submit_ride_button);
-
-                                                                                 Context ctx =  getApplicationContext();
-                                                                                 fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
-                                                                                 fab.setTag(getString(R.string.submit_tag));
-
-                                                                                 mTextSwitcher.setText(getString(R.string.instruction_can_submit_no_fee));
-                                                                             }
-
-                                                                         }
-                                                                     });
-
-                                                                 }
-
-                                                             }
-                                                         },
-                        1, // 1-sec delay
-                        2, // period between successive executions
-                        TimeUnit.SECONDS);
-
-
+    public void addPassenger(User passenger) {
+        mPassengers.add(passenger);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mPassengersAdapter.notifyDataSetChanged();
+            }
+        });
     }
 
     private void wamsInit() {
@@ -977,8 +859,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         addPassengerFace(requestCode - 1, _faceId, faceURI.toString());
                 }
             }
-
-            mCapturedPassengersIDs.set(requestCode -1, 1);
         }
     }
 
@@ -1090,7 +970,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     mOfflineDialog.dismiss();
                 }
 
-                setupNetwork();
+                //setupNetwork();
 
             }
         }catch(Exception ex) {
@@ -1173,7 +1053,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         btRestore();
 
-        mCheckPasengersTimer = null;
+        Globals.setDriverActivity(null);
 
         super.onDestroy();
     }
@@ -1483,21 +1363,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     private void onSubmitRideInternal() {
 
-        if( mPassengers.size() < Globals.REQUIRED_PASSENGERS_NUMBER )
-        {
-            showCabinView();
-            return;
-        }
-
         boolean bRequestApprovalBySefies = false;
-
-        for(User passenger: Globals.getMyPassengers() ){
-            if( passenger.wasSelfPictured() ) {
-                bRequestApprovalBySefies = true;
-                break;
-            }
-
-        }
 
         if( bRequestApprovalBySefies )
             onSubmitRidePics(null);

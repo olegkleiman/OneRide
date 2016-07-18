@@ -3,8 +3,10 @@ package com.labs.okey.oneride.model.sc;
 import com.labs.okey.oneride.utils.Globals;
 
 /**
- * Created by Oleg on 10-Jul-16.
+ * @author Oleg Kleiman
+ * created 10-Jul-16.
  */
+
 //@Module
 public class SCModule {
 

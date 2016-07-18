@@ -8,9 +8,9 @@ import android.preference.PreferenceManager;
 
 import com.labs.okey.oneride.utils.Globals;
 
-
 /**
- * Created by Oleg Kleiman on 11-Apr-15.
+ * @author Oleg Kleiman
+ * created 11-Apr-15.
  */
 public class User implements Parcelable {
 
