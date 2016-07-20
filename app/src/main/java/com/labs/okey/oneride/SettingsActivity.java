@@ -11,6 +11,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
@@ -86,6 +87,7 @@ public class SettingsActivity extends BaseActivity
         setupUI(binding, getString(R.string.title_activity_settings), "");
     }
 
+    @CallSuper
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -95,6 +97,7 @@ public class SettingsActivity extends BaseActivity
             headerLayout.setBackground(null);
     }
 
+    @CallSuper
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
 
@@ -112,6 +115,7 @@ public class SettingsActivity extends BaseActivity
         return super.onCreateOptionsMenu(menu);
     }
 
+    @CallSuper
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 

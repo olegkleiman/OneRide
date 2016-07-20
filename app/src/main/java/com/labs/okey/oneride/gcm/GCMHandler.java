@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.WorkerThread;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -132,13 +133,17 @@ public class GCMHandler extends NotificationsHandler {
             return;
 
         final String user = message;
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        final boolean allowSamePassengers = sharedPrefs.getBoolean(Globals.PREF_ALLOW_SAME_PASSENGERS, false);
 
         final MobileServiceTable<User> usersTable = Globals.getMobileServiceClient()
                                                     .getTable("users", User.class);
 
         new AsyncTask<Void, Void, Void>() {
-             @Override
-             protected Void doInBackground(Void... voids) {
+
+            @Override
+            @WorkerThread
+            protected Void doInBackground(Void... voids) {
 
                  try {
                      MobileServiceList<User> users =
@@ -148,14 +153,21 @@ public class GCMHandler extends NotificationsHandler {
 
                          DriverRoleActivity driverActivity = Globals.getDriverActivity();
                          if( driverActivity != null ) {
-                             if( !driverActivity.isPassengerJoined(passenger) )
-                                driverActivity.addPassenger(passenger);
+
+                             boolean bIsAlreadyJoined = driverActivity.isPassengerJoined(passenger);
+                             if( allowSamePassengers )
+                                 bIsAlreadyJoined = false;
+
+                             if( !bIsAlreadyJoined ) {
+                                 driverActivity.addPassenger(passenger, allowSamePassengers);
+
+                                 String title = context.getResources().getString(R.string.app_label);
+                                 String format = context.getString(R.string.notification_message_format);
+                                 String _message = String.format(format, passenger.getFullName());
+                                 sendNotification(context, _message, title);
+                             }
                          }
 
-                         String title = context.getResources().getString(R.string.app_label);
-                         String format = context.getString(R.string.notification_message_format);
-                         String _message = String.format(format, passenger.getFullName());
-                         sendNotification(context, _message, title);
                      }
                  } catch(ExecutionException | InterruptedException ex ){
                         if( Crashlytics.getInstance() != null)

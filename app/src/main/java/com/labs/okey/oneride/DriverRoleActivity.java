@@ -32,8 +32,12 @@ import android.os.Message;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.annotation.CallSuper;
+import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.RequiresPermission;
 import android.support.annotation.UiThread;
+import android.support.annotation.WorkerThread;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -207,7 +211,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     @Override
     @CallSuper
-    protected void onCreate(final Bundle savedInstanceState) {
+    protected void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver_role);
 
@@ -763,19 +767,29 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         startActivityForResult(discoverableIntent, BT_REQUEST_DISCOVERABLE_CODE);
     }
 
-    public boolean isPassengerJoined(User passenger) {
+    public boolean isPassengerJoined(@NonNull User passenger) {
         return mPassengers.contains(passenger);
     }
 
-    public void addPassenger(User passenger) {
+    @WorkerThread
+    public void addPassenger(User passenger, Boolean addEvenAlreadyJoined) {
 
-        if( !mPassengers.contains(passenger) ) {
-
+        if( addEvenAlreadyJoined || !mPassengers.contains(passenger) ) {
             mPassengers.add(passenger);
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     mPassengersAdapter.notifyDataSetChanged();
+
+                    View vEmptyText = findViewById(R.id.empty_view);
+                    vEmptyText.setVisibility(View.GONE);
+
+                    if( mPassengers.size() >= Globals.REQUIRED_PASSENGERS_NUMBER ) {
+                        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
+                        if( fab != null )
+                            fab.setVisibility(View.VISIBLE);
+                    }
+
                 }
             });
         }
@@ -922,13 +936,18 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     @Override
+    @MainThread
     @CallSuper
     protected void onStart() {
         super.onStart();
     }
 
     @Override
+    @MainThread
     @CallSuper
+    @RequiresPermission(anyOf = {
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+            android.Manifest.permission.ACCESS_FINE_LOCATION})
     public void onResume() {
         super.onResume();
 
@@ -985,6 +1004,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     @TargetApi(Build.VERSION_CODES.M)
     @Override
+    @MainThread
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults){
@@ -1007,7 +1027,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 case Globals.CAMERA_PERMISSION_REQUEST : {
                     if (grantResults.length > 0
                             && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                        onSubmitRideInternal();
+                        onSubmitRide(null);
                     }
                 }
                 break;
@@ -1021,6 +1041,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     @Override
+    @MainThread
     @CallSuper
     public void onPause() {
 
@@ -1045,13 +1066,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     @Override
-    @CallSuper
-    protected void onStop() {
-
-        super.onStop();
-    }
-
-    @Override
+    @MainThread
     @CallSuper
     protected void onDestroy() {
 
@@ -1209,7 +1224,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                             MobileServiceTable<Ride> ridesTable = Globals.getMobileServiceClient()
                                     .getTable("rides", Ride.class);
-                            return ridesTable.insert(ride).get();
+                            Ride _ride = ridesTable.insert(ride).get();
+                            Log.i(LOG_TAG, String.format("Ride inserted with id: %s" , _ride.id));
+                            return _ride;
 
                         } catch(ExecutionException | InterruptedException ex) {
                             return null;
@@ -1226,6 +1243,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         ride.setCarNumber(mCarNumber);
         ride.setGFenceName(getCurrentGFenceName());
         ride.setDriverName(getUser().getFullName());
+        ride.setDriverId(getUser().getRegistrationId());
         ride.setCreated(new Date());
         ride.setPictureRequiredByDriver(false);
 
@@ -1365,7 +1383,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     }
 
-    private void onSubmitRideInternal() {
+    public void onSubmitRide(View view) {
 
         boolean bRequestApprovalBySefies = false;
 
@@ -1566,7 +1584,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         new wamsAddAppeal(DriverRoleActivity.this,
                 getUser().getFullName(),
                 "appeals",
-                mCurrentRide.Id,
+                mCurrentRide.id,
                 getUser().getRegistrationId(),
                 mEmojiID)
                 .execute(new File(mUriPhotoAppeal.getPath()));

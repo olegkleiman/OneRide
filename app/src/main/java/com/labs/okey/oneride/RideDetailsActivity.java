@@ -218,7 +218,7 @@ public class RideDetailsActivity extends BaseActivity
                                     .getTable("appeal", Appeal.class);
 
                             final MobileServiceList<Appeal> mslAppeals =
-                                    appealsTable.where().field("rideid").eq(ride.Id).execute().get();
+                                    appealsTable.where().field("rideid").eq(ride.id).execute().get();
 
                             List<Appeal> appeals = mslAppeals;
                             Appeal appeal = appeals.get(0);

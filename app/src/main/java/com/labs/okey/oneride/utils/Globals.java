@@ -4,6 +4,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.os.Build;
 import android.renderscript.Matrix4f;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
@@ -15,6 +16,8 @@ import com.facebook.FacebookSdk;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
@@ -43,9 +46,9 @@ import io.fabric.sdk.android.Fabric;
  */
 public class Globals {
 
-    private static final String LOG_TAG = "FR";
+    private static final String LOG_TAG = "FR.Globals";
 
-    public static int REQUIRED_PASSENGERS_NUMBER = 3;
+    public static long REQUIRED_PASSENGERS_NUMBER = 3;
 
 //    @IntDef({RIDE_APPROVED, RIDE_NOT_APPROVED, RIDE_WAITING})
 //    public static int RIDE_APPROVED = 0;
@@ -173,6 +176,23 @@ public class Globals {
                     .build();
             mFirebaseRemoteConfig.setConfigSettings(configSettings);
 
+            long cacheExpiration = 10; // 10 sec;
+            mFirebaseRemoteConfig.fetch(cacheExpiration) // The default expiration duration is 43200
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+
+                            if (task.isSuccessful()) {
+                                REQUIRED_PASSENGERS_NUMBER = mFirebaseRemoteConfig.getLong("REQUIRED_PASSENGERS_NUMBER");
+                                mFirebaseRemoteConfig.activateFetched();
+                            } else {
+
+                            }
+
+
+                        }
+                    });
+
             _monitorInitialized = true;
 
         } catch(Exception e) {
@@ -265,6 +285,7 @@ public class Globals {
     public static final String PREF_RSSI_LEVEL = "rssi_level";
     public static final int DEFAULT_RSSI_LEVEL = 80;
 
+    public static final String PREF_ALLOW_SAME_PASSENGERS = "allow_same_passengers";
     public static final String PREF_PUSH_MODE = "push_mode";
     public static final String PREF_SCAN_MODE = "scan_mode";
     public static final String PREF_SOCKETS_MODE = "sockets_mode";

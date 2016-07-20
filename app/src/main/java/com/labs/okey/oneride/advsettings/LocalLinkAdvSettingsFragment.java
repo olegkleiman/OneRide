@@ -100,6 +100,18 @@ public class LocalLinkAdvSettingsFragment extends Fragment
         CheckBox cbSocketsNotification = (CheckBox)rootView.findViewById(R.id.cbSockets);
         cbSocketsNotification.setOnCheckedChangeListener(this);
 
+        CheckBox cbAllowSamePassengers = (CheckBox)rootView.findViewById(R.id.cbAllowSamePassengers);
+        boolean isSamePassengersAllowed = mSharedPrefs.getBoolean(Globals.PREF_ALLOW_SAME_PASSENGERS, false);
+        cbAllowSamePassengers.setChecked(isSamePassengersAllowed);
+        cbAllowSamePassengers.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                SharedPreferences.Editor editor = mSharedPrefs.edit();
+                editor.putBoolean(Globals.PREF_ALLOW_SAME_PASSENGERS, isChecked);
+                editor.apply();
+            }
+        });
+
         mTxtPeriod = (EditText)rootView.findViewById(R.id.txtDiscoveryPeriod);
         int discoverableDuration = mSharedPrefs.getInt(Globals.PREF_DISCOVERABLE_DURATION,
                                         Globals.PREF_DISCOVERABLE_DURATION_DEFAULT);

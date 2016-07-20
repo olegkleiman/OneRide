@@ -23,7 +23,7 @@ public class Ride implements Serializable, Parcelable {
 
     @Expose
     @com.google.gson.annotations.SerializedName("id")
-    public String Id;
+    public String id;
 
     @Expose
     @com.google.gson.annotations.SerializedName("ridecode")
@@ -110,7 +110,7 @@ public class Ride implements Serializable, Parcelable {
 
     private Ride(Parcel in) {
 
-        Id = in.readString();
+        id = in.readString();
 
         SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
         String _dt = in.readString();
@@ -136,7 +136,7 @@ public class Ride implements Serializable, Parcelable {
     @Override
     public void writeToParcel(Parcel parcel, int i) {
 
-        parcel.writeString(Id);
+        parcel.writeString(id);
 
         SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
         String created = formatter.format(getCreated());
