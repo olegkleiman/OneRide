@@ -77,6 +77,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.labs.okey.oneride.adapters.PassengersAdapter;
 import com.labs.okey.oneride.model.GFCircle;
 import com.labs.okey.oneride.model.Join;
@@ -1197,10 +1198,24 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     Snackbar.make(v, R.string.ride_uploaded, Snackbar.LENGTH_SHORT)
                             .show();
 
-                CustomEvent ce = new CustomEvent(getString(R.string.ride_started_answers_name))
-                        .putCustomAttribute("User", getUser().getFullName())
-                        .putCustomAttribute("RideCode", mRideCode);
-                Answers.getInstance().logCustom(ce);
+//                CustomEvent ce = new CustomEvent(getString(R.string.ride_started_answers_name))
+//                        .putCustomAttribute("User", getUser().getFullName())
+//                        .putCustomAttribute("RideCode", mRideCode);
+//                Answers.getInstance().logCustom(ce);
+
+                FirebaseAnalytics firebaseAnalytics =
+                        FirebaseAnalytics.getInstance(getApplicationContext());
+                Bundle params = new Bundle();
+                params.putString("User", getUser().getFullName());
+                params.putString("RideCode", mRideCode);
+                firebaseAnalytics.logEvent(getString(R.string.ride_started_answers_name), params);
+
+                boolean bPictureRequired = mCurrentRide.isPictureRequired();
+                if( bPictureRequired ) {
+                    Log.i(LOG_TAG, "Picture required");
+                }
+                else
+                    Log.i(LOG_TAG, "Picture IS NOT required");
             }
 
             @Override
@@ -1229,6 +1244,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                             return _ride;
 
                         } catch(ExecutionException | InterruptedException ex) {
+                            Log.e(LOG_TAG, ex.getMessage());
                             return null;
                         }
                     }
@@ -1814,10 +1830,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 String currentGeoFenceName = Globals.get_currentGeoFenceName();
                 mCurrentRide.setGFenceName(currentGeoFenceName);
                 mRidesTable.update(mCurrentRide).get();
-            } catch (InterruptedException | ExecutionException e) {
-                mEx = e;
-                Log.e(LOG_TAG, e.getMessage());
-            }
+        } catch (InterruptedException | ExecutionException e) {
+            mEx = e;
+            Log.e(LOG_TAG, e.getMessage());
+        }
             return null;
         }
 

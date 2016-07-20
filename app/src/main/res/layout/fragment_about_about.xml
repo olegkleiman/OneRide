@@ -42,7 +42,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:text="Smart Transportation"
+                    android:text="Transportation"
                     android:id="@+id/textView7"
                     android:textStyle="bold"
                     android:textColor="@android:color/black" />
@@ -131,12 +131,6 @@
                     style="@style/SubCaptionStyle"
                     android:text="This product includes 'material-dialogs' software by Aidan Michael Follestad (https://github.com/afollestad/material-dialogs) distributed under MIT licence. See file LICENCE. "
                     android:id="@+id/textView16"
-                    android:layout_marginTop="10dp" />
-
-                <TextView
-                    style="@style/SubCaptionStyle"
-                    android:text="App icons by Icons4Android (http://icons4android.com)"
-                    android:id="@+id/textView18"
                     android:layout_marginTop="10dp" />
 
                 <TextView

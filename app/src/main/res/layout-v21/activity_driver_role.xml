@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="com.maximum.fastride.DriverRoleActivity" >
+    tools:context="com.labs.okey.oneride.DriverRoleActivity" >
 
     <com.sothree.slidinguppanel.SlidingUpPanelLayout
         xmlns:sothree="http://schemas.android.com/apk/res-auto"
@@ -61,7 +61,6 @@
                 android:clickable="true"
                 android:src="@drawable/animation1"
                 android:layout_marginStart="8dp"
-                android:layout_marginLeft="8dp"
                 android:visibility="gone" />
         </LinearLayout>
 
@@ -105,7 +104,7 @@
                 android:id="@+id/submit_ride_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_action_camera"
+                android:src="@drawable/ic_action_done"
                 android:tag="camera_tag"
                 app:elevation="4dp"
 
@@ -120,8 +119,8 @@
                 android:onClick="onSubmitRide"
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentEnd="true"
-                android:layout_marginBottom="16dp"
-                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="4dp"
+                android:layout_marginEnd="4dp"
                 android:visibility="gone" />
 
         </RelativeLayout>
