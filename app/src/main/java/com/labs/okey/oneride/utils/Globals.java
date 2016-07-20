@@ -163,7 +163,11 @@ public class Globals {
 
             TwitterAuthConfig authConfig =  new TwitterAuthConfig(TWITTER_CONSUMER_KEY,
                                                                   TWITTER_CONSUMER_SECRET);
-            Fabric.with(ctx, new Twitter(authConfig), new Crashlytics(), new CrashlyticsNdk(), new Digits());
+            final Fabric fabric = new Fabric.Builder(ctx)
+                    .kits(new Crashlytics())
+                    .debuggable(true)
+                    .build();
+            Fabric.with(fabric);// ctx, new Twitter(authConfig), new Crashlytics(), new CrashlyticsNdk(), new Digits());
 
             User user = User.load(ctx);
             Crashlytics.setUserIdentifier(user.getRegistrationId());

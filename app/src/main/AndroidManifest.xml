@@ -2,13 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.labs.okey.oneride">
 
-    <!--<permission-->
-        <!--android:name="com.labs.okey.oneride.permission.C2D_MESSAGE"-->
-        <!--android:protectionLevel="signature" />-->
-    <!--<uses-permission android:name="com.labs.okey.freeride.permission.C2D_MESSAGE" />-->
+    <!-- <permission -->
+    <!-- android:name="com.labs.okey.oneride.permission.C2D_MESSAGE" -->
+    <!-- android:protectionLevel="signature" /> -->
+    <!-- <uses-permission android:name="com.labs.okey.freeride.permission.C2D_MESSAGE" /> -->
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <!--<uses-permission android:name="android.permission.WAKE_LOCK" />-->
+    <!-- <uses-permission android:name="android.permission.WAKE_LOCK" /> -->
     <uses-permission
         android:name="android.permission.INTERNET"
         android:required="true" />
@@ -126,11 +126,12 @@
         <activity
             android:name=".AppealCameraActivity"
             android:label="@string/title_activity_camera_appeal" />
-        <!--<activity-->
-            <!--android:name=".CameraCVActivity"-->
-            <!--android:label="@string/title_activity_camera_cv"-->
-            <!--android:screenOrientation="landscape"-->
-            <!--android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />-->
+        <!-- <activity -->
+        <!-- android:name=".CameraCVActivity" -->
+        <!-- android:label="@string/title_activity_camera_cv" -->
+        <!-- android:screenOrientation="landscape" -->
+        <!-- android:theme="@android:style/Theme.NoTitleBar.Fullscreen" /> -->
+
 
         <!-- <receiver android:name=".utils.sms.SMSReceiver" -->
         <!-- android:permission="android.permission.BROADCAST_SMS"> -->
@@ -149,18 +150,18 @@
             </intent-filter>
         </receiver>
 
-        <service android:name=".AzureInstanceIDService"
-                    android:exported="false">
+        <service
+            android:name=".AzureInstanceIDService"
+            android:exported="false">
             <intent-filter>
-                <!--<action android:name="com.google.android.gms.iid.InstanceID"/>-->
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+
+                <!-- <action android:name="com.google.android.gms.iid.InstanceID"/> -->
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
-
         <service
             android:name=".AzureRegistrationIntentService"
-            android:exported="false">
-        </service>
+            android:exported="false"></service>
 
         <activity
             android:name=".AdvSettingsActivity"
@@ -171,6 +172,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.labs.okey.oneride.SettingsActivity" />
         </activity>
+        <activity
+            android:name=".CameraCVActivity"
+            android:label="@string/title_activity_camera_cv"
+            android:theme="@style/AppTheme"></activity>
     </application>
 
 </manifest>

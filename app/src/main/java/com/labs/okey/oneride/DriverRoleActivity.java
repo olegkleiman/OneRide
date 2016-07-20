@@ -1198,10 +1198,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     Snackbar.make(v, R.string.ride_uploaded, Snackbar.LENGTH_SHORT)
                             .show();
 
-//                CustomEvent ce = new CustomEvent(getString(R.string.ride_started_answers_name))
-//                        .putCustomAttribute("User", getUser().getFullName())
-//                        .putCustomAttribute("RideCode", mRideCode);
-//                Answers.getInstance().logCustom(ce);
+                CustomEvent ce = new CustomEvent(getString(R.string.ride_started_answers_name))
+                        .putCustomAttribute("User", getUser().getFullName())
+                        .putCustomAttribute("RideCode", mRideCode);
+                Answers.getInstance().logCustom(ce);
 
                 FirebaseAnalytics firebaseAnalytics =
                         FirebaseAnalytics.getInstance(getApplicationContext());
