@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
@@ -20,6 +21,7 @@ import android.graphics.Point;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.hardware.Camera;
 import android.location.Location;
 import android.location.LocationProvider;
 import android.net.Uri;
@@ -568,6 +570,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                             });
             mPeersRecyclerView.addOnItemTouchListener(mSwipeTouchListener);
         }
+
+        TextView vEmptyText = (TextView)findViewById(R.id.empty_view);
+        String txt = String.format(getString(R.string.no_passengers_placeholder),
+                                   Globals.REQUIRED_PASSENGERS_NUMBER);
+        vEmptyText.setText(txt);
 
         int min = 100000;
         int max = 1000000;
@@ -1186,6 +1193,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     private void uploadRideControl(final Ride ride) {
 
+
         ListenableFuture<Ride> rideFuture = asyncUploadRide(ride);
         Futures.addCallback(rideFuture, new FutureCallback<Ride>() {
             @Override
@@ -1213,6 +1221,37 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 boolean bPictureRequired = mCurrentRide.isPictureRequired();
                 if( bPictureRequired ) {
                     Log.i(LOG_TAG, "Picture required");
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            new MaterialDialog.Builder(DriverRoleActivity.this)
+                                    .title(R.string.picture_required_dialog_title)
+                                    .content(R.string.picture_required_dialog_content)
+                                    .iconRes(R.drawable.ic_camera_blue)
+                                    .positiveText(android.R.string.ok)
+                                    .negativeText(android.R.string.no)
+                                    .cancelable(false)
+                                    .autoDismiss(false)
+                                    .onNegative(new MaterialDialog.SingleButtonCallback(){
+                                        @Override
+                                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                            dialog.dismiss();
+                                            finish();
+                                        }
+                                    })
+                                    .onPositive(new MaterialDialog.SingleButtonCallback(){
+                                        @Override
+                                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                            dialog.dismiss();
+
+                                            takePictureWithIntent();
+                                        }
+                                    })
+                                    .show();
+                        }
+                    });
+
                 }
                 else
                     Log.i(LOG_TAG, "Picture IS NOT required");
@@ -1261,7 +1300,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         ride.setDriverName(getUser().getFullName());
         ride.setDriverId(getUser().getRegistrationId());
         ride.setCreated(new Date());
-        ride.setPictureRequiredByDriver(false);
+        ride.setSmartMode(false);
 
         return ride;
     }
@@ -1599,7 +1638,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         mCurrentRide.setApproved(Globals.RIDE_STATUS.APPEAL.ordinal());
         new wamsAddAppeal(DriverRoleActivity.this,
                 getUser().getFullName(),
-                "appeals",
+                "pictures",
                 mCurrentRide.id,
                 getUser().getRegistrationId(),
                 mEmojiID)
@@ -1618,7 +1657,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     .callback(new MaterialDialog.ButtonCallback() {
                         @Override
                         public void onPositive(MaterialDialog dialog) {
-                            AppealCamera();
+                            takePictureWithIntent();
                         }
 
                         @Override
@@ -1657,10 +1696,21 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     }
 
-    public void AppealCamera(){
+    private boolean isDeviceSupportCamera() {
+        if (getApplicationContext().getPackageManager().hasSystemFeature(
+                PackageManager.FEATURE_CAMERA)) {
+            // this device has a camera
+            return true;
+        } else {
+            // no camera on this device
+            return false;
+        }
+    }
 
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (intent.resolveActivity(getPackageManager()) != null) {
+    public void takePictureWithIntent(){
+
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
 
             try {
                 mUriPhotoAppeal = createImageFile();
@@ -1670,8 +1720,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             if (mUriPhotoAppeal != null) {
 
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, mUriPhotoAppeal);
-                startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mUriPhotoAppeal);
+                takePictureIntent.putExtra("android.intent.extras.CAMERA_FACING",
+                                           Camera.CameraInfo.CAMERA_FACING_FRONT);
+                takePictureIntent.putExtra(MediaStore.EXTRA_SCREEN_ORIENTATION,
+                                            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             }
         }
     }

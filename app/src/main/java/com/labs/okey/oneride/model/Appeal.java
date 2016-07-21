@@ -41,10 +41,10 @@ public class Appeal implements Serializable {
         driverid = value;
     }
 
-    @com.google.gson.annotations.SerializedName("__createdAt")
-    private Date createdAt;
-    public Date getCreatedAt() {
-        return createdAt;
-    }
-    public void setCreatedAt(Date value) { createdAt = value; }
+//    @com.google.gson.annotations.SerializedName("__createdAt")
+//    private Date createdAt;
+//    public Date getCreatedAt() {
+//        return createdAt;
+//    }
+//    public void setCreatedAt(Date value) { createdAt = value; }
 }

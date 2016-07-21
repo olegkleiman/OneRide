@@ -188,6 +188,8 @@ public class Globals {
 
                             if (task.isSuccessful()) {
                                 REQUIRED_PASSENGERS_NUMBER = mFirebaseRemoteConfig.getLong("REQUIRED_PASSENGERS_NUMBER");
+                                String smartMode = mFirebaseRemoteConfig.getString("SMART_MODE");
+                                Log.e(LOG_TAG, "SmartMode read from Cache: " + smartMode);
                                 mFirebaseRemoteConfig.activateFetched();
                             } else {
 

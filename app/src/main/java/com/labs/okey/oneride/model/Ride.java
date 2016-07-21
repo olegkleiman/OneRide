@@ -74,11 +74,11 @@ public class Ride implements Serializable, Parcelable {
     public Boolean isPictureRequired() {return isPictureRequired; }
 
     @Expose
-    @com.google.gson.annotations.SerializedName("ispicturerequired_bydriver")
-    private Boolean isPictureRequiredByDriver;
-    public Boolean isPictureRequiredByDriver() {return isPictureRequiredByDriver; }
-    public void setPictureRequiredByDriver(Boolean value) {
-        isPictureRequiredByDriver = value;
+    @com.google.gson.annotations.SerializedName("smartmode")
+    private Boolean smartmode;
+    public Boolean isSmartMode() {return smartmode; }
+    public void setSmartMode(Boolean value) {
+        smartmode = value;
     }
 
     @Expose

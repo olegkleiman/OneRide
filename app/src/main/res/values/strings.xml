@@ -161,6 +161,8 @@
     <string name="done">Done</string>
     <string name="discover_devices">Discovering devices</string>
     <string name="ride_code_prompt">Type in the code as displayed at driver\'s  screen</string>
+    <string name="picture_required_dialog_title">Picture required</string>
+    <string name="picture_required_dialog_content">The system requires you to take the picture</string>
 
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
@@ -326,6 +328,7 @@ limitations under the License.</string>
     <string name="ride_not_uploaded">The ride has not been uploaded</string>
     <string name="location_inaccurate">Location is inaccurate. Considered as out of Gfs</string>
     <string name="no_passengers">No passengers yet</string>
+    <string name="no_passengers_placeholder">No passengers yet\n%d passengers required</string>
 
     <string name="camera_tag" translatable="false">camera_tag</string>
     <string name="submit_tag" translatable="false">submit_tag</string>

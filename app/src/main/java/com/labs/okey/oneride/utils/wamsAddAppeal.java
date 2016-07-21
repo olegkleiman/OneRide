@@ -49,10 +49,8 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
     LoadToast lt;
 
     public static final String storageConnectionString =
-            "DefaultEndpointsProtocol=http;" +
-            "DefaultEndpointsProtocol=http;" +
-                    "AccountName=fastride;" +
-                    "AccountKey=tuyeJ4EmEuaoeGsvptgyXD0Evvsu1cTiYPAF2cwaDzcGkONdAOZ/3VEY1RHAmGXmXwwkrPN1yQmRVdchXQVgIQ==";
+            "DefaultEndpointsProtocol=https;AccountName=oneride;" +
+                    "AccountKey=bdNIAOimN48pj29UmMQRgo5UK5a29cyJ3HnTM5Ikc4HzI7/DUOpxclfedehnQ/D7uSFEm8YOtcUyxUiSKpDqvw==";
 
     public wamsAddAppeal(Context ctx, String driverName,
                          String containerName,
@@ -113,11 +111,14 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
         else {
             lt.error();
 
-            new MaterialDialog.Builder(mContext)
-                    .title(mContext.getString(R.string.appeal_send_title))
-                    .content(error.getMessage())
-                    .iconRes(R.drawable.ic_exclamation)
-                    .show();
+            if( ((Activity)mContext).hasWindowFocus() ) { // User may leave parent window for a meanwhile
+
+                new MaterialDialog.Builder(mContext)
+                        .title(mContext.getString(R.string.appeal_send_title))
+                        .content(error.getMessage())
+                        .iconRes(R.drawable.ic_exclamation)
+                        .show();
+            }
         }
 
     }
