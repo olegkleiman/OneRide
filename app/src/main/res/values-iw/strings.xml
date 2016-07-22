@@ -121,12 +121,10 @@
     <string name="processing">מתבצע</string>
 
     <string name="appeal">ערעור</string>
-    <string name="appeal_another_picture">נסה שנית</string>
-    <string name="appeal_answer">לשלוח ערעור?</string>
+    <string name="approval_another_picture">נסה שנית</string>
+    <string name="approval_answer">לשלוח ערעור?</string>
     <string name="appeal_cancel">ביטול</string>
     <string name="appeal_send">שלח</string>
-    <string name="appeal_send_success">הערעור נשלח</string>
-    <string name="appeal_send_title">ערעור</string>
     <string name="appeal_take_picture">בקשתך נדחתה. ניתן להגיש ערעור באמצעות צילום משותף של כל הנוסעים ברכב מציגים כל אחד מחווה הבאה</string>
     <string name="help">עזרה</string>
     <string name="code_try_later">אזין מאוחר יותר</string>
@@ -150,6 +148,8 @@
     <string name="title_activity_ride_details">פרטי נסיעה</string>
     <string name="driver_no_name">ללא שם</string>
     <string name="registration_account_validation_failure">שגיאה באימות הנתונים</string>
+    <string name="approval_send_success">תמונתך התקבלה. נודיעך על בדיקתה.</string>
+    <string name="approval_send_title">בקשתך נשלחה</string>
 
 
 </resources>

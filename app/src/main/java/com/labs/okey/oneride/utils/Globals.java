@@ -9,8 +9,6 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
-import com.crashlytics.android.ndk.CrashlyticsNdk;
-import com.digits.sdk.android.Digits;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookSdk;
@@ -28,16 +26,12 @@ import com.labs.okey.oneride.DriverRoleActivity;
 import com.labs.okey.oneride.model.PassengerFace;
 import com.labs.okey.oneride.model.User;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
-import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
 
 import java.io.File;
 import java.net.MalformedURLException;
-import java.sql.Driver;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 
 import io.fabric.sdk.android.Fabric;
 
@@ -67,8 +61,8 @@ public class Globals {
         APPROVED, // = 1
         APPROVED_BY_SELFY, // = 2
         DENIED, // = 3
-        APPEAL // = 4
-
+        BE_VALIDATED_MANUALLY, // = 4
+        BE_VALIDATED_MANUALLY_SELFIE // = 5
     }; // use it as casted to int like : Globals.RIDE_STATUS.APPROVED.ordinal())
 
     public enum LayoutManagerType {
@@ -452,7 +446,7 @@ public class Globals {
     public static String PARCELABLE_KEY_CABIN_PICTURES_BUTTON_SHOWN = "cabin_button_shown";
     public static String PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS = "captured_passengers_ids";
     public static String PARCELABLE_KEY_PASSENGERS_FACE_IDS = "face_ids";
-    public static String PARCELABLE_KEY_APPEAL_PHOTO_URI = "appeal_uri";
+    public static String PARCELABLE_KEY_APPROVAL_PHOTO_URI = "approval_uri";
     public static String PARCELABLE_KEY_EMOJIID = "emoji_id";
     public static String PARCELABLE_KEY_DRIVER_CABIN_SHOWN = "cabin_shown";
     public static String PARCELABLE_KEY_EMPTY_TEXT_SHOWN = "empty_text_shown";
@@ -483,7 +477,7 @@ public class Globals {
                     "AccountKey=tuyeJ4EmEuaoeGsvptgyXD0Evvsu1cTiYPAF2cwaDzcGkONdAOZ/3VEY1RHAmGXmXwwkrPN1yQmRVdchXQVgIQ==";
 
     public static final int FACE_VERIFY_TASK_TAG = 1;
-    public static final int APPEAL_UPLOAD_TASK_TAG = 2;
+    public static final int APPROVAL_UPLOAD_TASK_TAG = 2;
 
     public static final int TUTORIAL_Intro      = 1;
     public static final int TUTORIAL_Driver     = 2;

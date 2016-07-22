@@ -298,7 +298,7 @@ limitations under the License.</string>
     <string name="no_fee_answer_name" translatable="false">No-fee request</string>
     <string name="push_subscription_answer_name" translatable="false">Push subscription</string>
     <string name="push_subscription_attribute" translatable="false">Subscribed</string>
-    <string name="appeal_answer_name" translatable="false">No-fee request</string>
+    <string name="approval_answer_name" translatable="false">Approval request</string>
     <string name="registration_answer_name" translatable="false">Registration</string>
     <string name="answer_approved_attribute" translatable="false">Sent</string>
     <string name="answer_success_attribute" translatable="false">Success</string>
@@ -313,10 +313,10 @@ limitations under the License.</string>
     <string name="title_activity_appeal_details">Appeal Details</string>
     <string name="appeal_take_picture">Your request is denied, but you can submit an appeal. Take a picture with all passengers in a cabin, each showing this gesture</string>
     <string name="appeal_cancel">Cancel</string>
-    <string name="appeal_another_picture">Try again</string>
-    <string name="appeal_send_success">The appeal was sent successfully</string>
-    <string name="appeal_send_title">Appeal</string>
-    <string name="appeal_answer">Send request appeal?</string>
+    <string name="approval_another_picture">Try again</string>
+    <string name="approval_send_success">Your image was uploaded. You\'ll be notified whether or not approved.</string>
+    <string name="approval_send_title">Approval sent</string>
+    <string name="approval_answer">Send approval request?</string>
     <string name="appeal_send">Send</string>
 
     <string name="instruction_make_additional_selfies">You can make photos of other passengers</string>

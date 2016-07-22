@@ -75,7 +75,7 @@ public class AppealCameraActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
 
-            ImageView imageViewAppeal = (ImageView) findViewById(R.id.imageViewAppeal);
+            ImageView imageViewAppeal = (ImageView) findViewById(R.id.imageViewApproval);
             imageViewAppeal.setImageURI(uriPhoto);
 
 //            Bundle extras = data.getExtras();

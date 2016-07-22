@@ -3,11 +3,10 @@ package com.labs.okey.oneride.model;
 import java.io.Serializable;
 
 /**
- * @author eli max
- * created 23/10/2015.
+ * @author Oleg Kleiman
+ * created 23-Jul-16.
  */
-public class Appeal implements Serializable {
-
+public class Approval implements Serializable {
     @com.google.gson.annotations.SerializedName("id")
     public String Id;
 
@@ -17,13 +16,6 @@ public class Appeal implements Serializable {
         return rideId;
     }
     public void setRideId(String value) { rideId = value; }
-
-    @com.google.gson.annotations.SerializedName("emojiid")
-    private String emojiId;
-    public String getEmojiId() {
-        return emojiId;
-    }
-    public void setEmojiId(String value) { emojiId = value; }
 
     @com.google.gson.annotations.SerializedName("pictureurl")
     private String pictureUrl;

@@ -63,7 +63,8 @@ public class MyAppealAdapter extends RecyclerView.Adapter<MyAppealAdapter.ViewHo
 
         int approveStatus = ride.getApproved();
 
-        if( approveStatus == Globals.RIDE_STATUS.APPEAL.ordinal()) {
+        if( approveStatus == Globals.RIDE_STATUS.BE_VALIDATED_MANUALLY.ordinal()
+                || approveStatus == Globals.RIDE_STATUS.BE_VALIDATED_MANUALLY_SELFIE.ordinal() ) {
             holder.approvedSign.setImageResource(R.drawable.gavel);
         } else if( approveStatus == Globals.RIDE_STATUS.DENIED.ordinal()){
             holder.approvedSign.setImageResource(R.drawable.ex_sing_26);

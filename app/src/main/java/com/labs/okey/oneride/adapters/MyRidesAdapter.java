@@ -75,7 +75,7 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
                    || approveStatus == Globals.RIDE_STATUS.APPROVED_BY_SELFY.ordinal() ){
                 holder.approvedSign.setImageResource(R.drawable.v_sing_26);
             } else if ( ride.getApproved() == Globals.RIDE_STATUS.DENIED.ordinal()
-                   ||approveStatus == Globals.RIDE_STATUS.APPEAL.ordinal() ) {
+                   ||approveStatus == Globals.RIDE_STATUS.DENIED.ordinal() ) {
                 holder.approvedSign.setImageResource(R.drawable.ex_sing_26);
             }
 

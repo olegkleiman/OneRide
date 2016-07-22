@@ -110,10 +110,8 @@ public class RejectedMyRidesFragment extends Fragment {
 
         for (Ride ride : mRides ){
 
-            if (           (ride.getApproved() == Globals.RIDE_STATUS.APPEAL.ordinal() ||
-                            ride.getApproved() == Globals.RIDE_STATUS.DENIED.ordinal()) &&
-                            ride.getDriverId().equals(userId)) {
-
+            if ( ride.getApproved() == Globals.RIDE_STATUS.DENIED.ordinal()
+                    && ride.getDriverId().equals(userId)) {
                 tempList.add(ride);
             }
         }

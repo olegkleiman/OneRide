@@ -1,13 +1,9 @@
 package com.labs.okey.oneride;
 
-import android.*;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
@@ -25,7 +21,6 @@ import android.hardware.Camera;
 import android.location.Location;
 import android.location.LocationProvider;
 import android.net.Uri;
-import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -93,7 +88,7 @@ import com.labs.okey.oneride.utils.IUploader;
 import com.labs.okey.oneride.utils.RoundedDrawable;
 import com.labs.okey.oneride.utils.UiThreadExecutor;
 import com.labs.okey.oneride.utils.faceapiUtils;
-import com.labs.okey.oneride.utils.wamsAddAppeal;
+import com.labs.okey.oneride.utils.wamsAddApproval;
 import com.labs.okey.oneride.utils.wifip2p.P2pConversator;
 import com.labs.okey.oneride.utils.wifip2p.P2pPreparer;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
@@ -123,9 +118,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -154,7 +146,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     private MobileServiceTable<Ride>            mRidesTable;
     String                                      mCarNumber;
-    Uri                                         mUriPhotoAppeal;
+    Uri                                         mUriPhotoApproval;
     private String                              mRideCode;
     int                                         mEmojiID;
 
@@ -183,7 +175,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     MaterialDialog                              mOfflineDialog;
-    MaterialDialog                              mAppealDialog;
+    MaterialDialog                              mApprovalDialog;
 
     private boolean                             mCabinPictureButtonShown = false;
     private boolean                             mCabinShown = false;
@@ -240,29 +232,32 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     }
                 }).build();
 
-        mAppealDialog = new MaterialDialog.Builder(this)
-                .title(R.string.appeal_answer)
+        mApprovalDialog = new MaterialDialog.Builder(this)
+                .title(R.string.approval_answer)
                 .iconRes(R.drawable.ic_info)
                 .positiveText(R.string.appeal_send)
                 .negativeText(R.string.appeal_cancel)
-                .neutralText(R.string.appeal_another_picture)
-                .customView(R.layout.dialog_appeal_answer, false) // do not wrap in scroll
-                .callback(new MaterialDialog.ButtonCallback() {
+                .neutralText(R.string.approval_another_picture)
+                .customView(R.layout.dialog_approval_answer, false) // do not wrap in scroll
+                .onPositive(new MaterialDialog.SingleButtonCallback(){
                     @Override
-                    public void onPositive(MaterialDialog dialog) {
-                        sendAppeal();
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        sendToValidateManually();
                     }
-
+                })
+                .onNegative(new MaterialDialog.SingleButtonCallback(){
                     @Override
-                    public void onNegative(MaterialDialog dialog) {
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                         finish();
                     }
-
+                })
+                .onNeutral(new MaterialDialog.SingleButtonCallback(){
                     @Override
-                    public void onNeutral(MaterialDialog dialog) {
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                         onAppealCamera();
                     }
-                }).build();
+                })
+                .build();
 
         // Keep device awake when advertising for Wi-Fi Direct
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -365,11 +360,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 //                Globals.set_PassengerFaces(_temp);
         }
 
-        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI)) {
+        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPROVAL_PHOTO_URI)) {
             bInitializedBeforeRotation = true;
 
-            String str = savedInstanceState.getString(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI);
-            mUriPhotoAppeal = Uri.parse(str);
+            String str = savedInstanceState.getString(Globals.PARCELABLE_KEY_APPROVAL_PHOTO_URI);
+            mUriPhotoApproval = Uri.parse(str);
         }
 
         if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_EMOJIID)) {
@@ -411,13 +406,13 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_DIALOG_SHOWN)) {
             bInitializedBeforeRotation = true;
 
-            View view = mAppealDialog.getCustomView();
+            View view = mApprovalDialog.getCustomView();
             if (view != null) {
-                ImageView imageViewAppeal = (ImageView) view.findViewById(R.id.imageViewAppeal);
+                ImageView imageViewAppeal = (ImageView) view.findViewById(R.id.imageViewApproval);
                 if (imageViewAppeal != null)
-                    imageViewAppeal.setImageURI(mUriPhotoAppeal);
+                    imageViewAppeal.setImageURI(mUriPhotoApproval);
             }
-            mAppealDialog.show();
+            mApprovalDialog.show();
         }
     }
 
@@ -441,8 +436,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             outState.putSerializable(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS, Globals.get_PassengerFaces());
 
-            if( mUriPhotoAppeal != null)
-                outState.putString(Globals.PARCELABLE_KEY_APPEAL_PHOTO_URI, mUriPhotoAppeal.toString());
+            if( mUriPhotoApproval != null)
+                outState.putString(Globals.PARCELABLE_KEY_APPROVAL_PHOTO_URI, mUriPhotoApproval.toString());
 
             outState.putInt(Globals.PARCELABLE_KEY_EMOJIID, mEmojiID);
 
@@ -489,7 +484,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 Log.e(LOG_TAG, ex.getMessage());
             }
 
-            if( mAppealDialog.isShowing() ) {
+            if( mApprovalDialog.isShowing() ) {
                 outState.putBoolean(Globals.PARCELABLE_KEY_APPEAL_DIALOG_SHOWN, true);
             }
         }
@@ -824,11 +819,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             try {
 
-                View view = mAppealDialog.getCustomView();
+                View view = mApprovalDialog.getCustomView();
                 if( view == null)
                     return;
 
-                ImageView imageViewAppeal =  (ImageView)view.findViewById(R.id.imageViewAppeal);
+                ImageView imageViewAppeal =  (ImageView)view.findViewById(R.id.imageViewApproval);
                 if( imageViewAppeal != null ) {
 
                     Drawable drawable = imageViewAppeal.getDrawable();
@@ -839,11 +834,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     // Downsample the image to consume less memory
                     BitmapFactory.Options options = new BitmapFactory.Options();
                     options.inSampleSize = 2;
-                    Bitmap bitmap = BitmapFactory.decodeFile(mUriPhotoAppeal.getPath(), options);
+                    Bitmap bitmap = BitmapFactory.decodeFile(mUriPhotoApproval.getPath(), options);
                     imageViewAppeal.setImageBitmap(bitmap);
                 }
 
-                mAppealDialog.show();
+                mApprovalDialog.show();
 
             } catch (Exception e) {
                 Log.e(LOG_TAG, e.getMessage());
@@ -1618,7 +1613,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             }
             break;
 
-            case Globals.APPEAL_UPLOAD_TASK_TAG: {
+            case Globals.APPROVAL_UPLOAD_TASK_TAG: {
                 finish();
             }
             break;
@@ -1634,15 +1629,28 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         return mutableBitmap;
     }
 
-    public  void sendAppeal(){
-        mCurrentRide.setApproved(Globals.RIDE_STATUS.APPEAL.ordinal());
-        new wamsAddAppeal(DriverRoleActivity.this,
-                getUser().getFullName(),
-                "pictures",
-                mCurrentRide.id,
-                getUser().getRegistrationId(),
-                mEmojiID)
-                .execute(new File(mUriPhotoAppeal.getPath()));
+    public  void sendToValidateManually(){
+        mCurrentRide.setApproved(Globals.RIDE_STATUS.BE_VALIDATED_MANUALLY.ordinal());
+
+        ListenableFuture<Ride> _rideFuture = mRidesTable.update(mCurrentRide);
+        Futures.addCallback(_rideFuture, new FutureCallback<Ride>() {
+            @Override
+            public void onSuccess(Ride result) {
+                new wamsAddApproval(DriverRoleActivity.this,
+                        getUser().getFullName(),
+                        "pictures",
+                        mCurrentRide.id,
+                        getUser().getRegistrationId())
+                        .execute(new File(mUriPhotoApproval.getPath()));
+
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                Log.e(LOG_TAG, t.getMessage());
+            }
+        });
+
     }
 
     public void onAppealCamera(){
@@ -1713,14 +1721,14 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
 
             try {
-                mUriPhotoAppeal = createImageFile();
+                mUriPhotoApproval = createImageFile();
             } catch (IOException e) {
                 Log.e(LOG_TAG, e.getMessage());
             }
 
-            if (mUriPhotoAppeal != null) {
+            if (mUriPhotoApproval != null) {
 
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mUriPhotoAppeal);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mUriPhotoApproval);
                 takePictureIntent.putExtra("android.intent.extras.CAMERA_FACING",
                                            Camera.CameraInfo.CAMERA_FACING_FRONT);
                 takePictureIntent.putExtra(MediaStore.EXTRA_SCREEN_ORIENTATION,
@@ -1733,7 +1741,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private Uri createImageFile() throws IOException {
 
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String photoFileName = "AppealJPEG_" + timeStamp + "_";
+        String photoFileName = "ApprovalJPEG_" + timeStamp + "_";
 
         File storageDir = getExternalFilesDir(null);
 

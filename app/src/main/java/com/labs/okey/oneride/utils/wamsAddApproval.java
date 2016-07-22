@@ -13,7 +13,7 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.labs.okey.oneride.R;
-import com.labs.okey.oneride.model.Appeal;
+import com.labs.okey.oneride.model.Approval;
 import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
@@ -26,12 +26,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.net.URI;
 
-
 /**
- * Created by eli max on 23/10/2015.
+ * @author eli max
+ * created 23/10/2015.
  */
 
-public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
+public class wamsAddApproval extends AsyncTask<File, Void, Void> {
 
     private final String    LOG_TAG = getClass().getSimpleName();
 
@@ -40,11 +40,10 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
     String                              mRideID;
     String                              mDriverID;
     String                              mDriverName;
-    int                                 mEmojiID;
     Context                             mContext;
     String                              mContainerName;
     IUploader                           mUploader;
-    Appeal                              mCurrentAppeal;
+    Approval                            mCurrentApproval;
 
     LoadToast lt;
 
@@ -52,17 +51,16 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
             "DefaultEndpointsProtocol=https;AccountName=oneride;" +
                     "AccountKey=bdNIAOimN48pj29UmMQRgo5UK5a29cyJ3HnTM5Ikc4HzI7/DUOpxclfedehnQ/D7uSFEm8YOtcUyxUiSKpDqvw==";
 
-    public wamsAddAppeal(Context ctx, String driverName,
+    public wamsAddApproval(Context ctx,
+                           String driverName,
                          String containerName,
                          String rideID,
-                         String driverID,
-                         int emojiID){
+                         String driverID){
 
         mContainerName = containerName;
         mRideID = rideID;
         mDriverID = driverID;
         mDriverName = driverName;
-        mEmojiID = emojiID;
 
         mContext = ctx;
         if( ctx instanceof IUploader )
@@ -89,21 +87,21 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
 
             lt.success();
 
-            CustomEvent requestEvent = new CustomEvent(mContext.getString(R.string.appeal_answer_name));
+            CustomEvent requestEvent = new CustomEvent(mContext.getString(R.string.approval_answer_name));
             requestEvent.putCustomAttribute("User", mDriverName);
 
             Answers.getInstance().logCustom(requestEvent);
 
             new MaterialDialog.Builder(mContext)
-                    .title(mContext.getString(R.string.appeal_send_title))
-                    .content(mContext.getString(R.string.appeal_send_success))
+                    .title(mContext.getString(R.string.approval_send_title))
+                    .content(mContext.getString(R.string.approval_send_success))
                     .iconRes(R.drawable.ic_info)
                     .positiveText(android.R.string.ok)
                     .onPositive(new MaterialDialog.SingleButtonCallback() {
                         @Override
                         public void onClick(@NonNull MaterialDialog dialog,
                                             @NonNull DialogAction which) {
-                            mUploader.finished(Globals.APPEAL_UPLOAD_TASK_TAG, true);
+                            mUploader.finished(Globals.APPROVAL_UPLOAD_TASK_TAG, true);
                         }
                     })
                     .show();
@@ -114,7 +112,7 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
             if( ((Activity)mContext).hasWindowFocus() ) { // User may leave parent window for a meanwhile
 
                 new MaterialDialog.Builder(mContext)
-                        .title(mContext.getString(R.string.appeal_send_title))
+                        .title(mContext.getString(R.string.approval_send_title))
                         .content(error.getMessage())
                         .iconRes(R.drawable.ic_exclamation)
                         .show();
@@ -140,14 +138,13 @@ public class wamsAddAppeal extends AsyncTask<File, Void, Void> {
 
             publishedUri = blob.getQualifiedUri();
 
-            Appeal appeal = new Appeal();
-            appeal.setRideId(mRideID);
-            appeal.setPictureUrl(publishedUri.toString());
-            appeal.setEmojiId(Integer.toString(mEmojiID));
-            appeal.setDriverId(mDriverID);
+            Approval approval = new Approval();
+            approval.setRideId(mRideID);
+            approval.setPictureUrl(publishedUri.toString());
+            approval.setDriverId(mDriverID);
 
-            MobileServiceTable<Appeal>  wamsAppealTable = Globals.getMobileServiceClient().getTable("appeal", Appeal.class);
-            mCurrentAppeal = wamsAppealTable.insert(appeal).get();
+            MobileServiceTable<Approval> wamsApprovalsTable = Globals.getMobileServiceClient().getTable("approvals", Approval.class);
+            mCurrentApproval = wamsApprovalsTable.insert(approval).get();
 
         } catch (Exception e) {
             error = e;
