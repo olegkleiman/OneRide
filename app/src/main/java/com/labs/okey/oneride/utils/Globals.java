@@ -1,5 +1,6 @@
 package com.labs.okey.oneride.utils;
 
+import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.os.Build;
@@ -13,6 +14,7 @@ import com.digits.sdk.android.Digits;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
@@ -154,12 +156,17 @@ public class Globals {
     private static Boolean isMonitorInitialized() {
         return _monitorInitialized;
     }
-    public static void initializeMonitor(Context ctx){
+    public static void initializeMonitor(Context ctx, Application app){
 
         if( isMonitorInitialized() )
             return;
 
         try {
+
+            if( !FacebookSdk.isInitialized() )
+                FacebookSdk.sdkInitialize(ctx);
+
+            AppEventsLogger.activateApp(app);
 
             TwitterAuthConfig authConfig =  new TwitterAuthConfig(TWITTER_CONSUMER_KEY,
                                                                   TWITTER_CONSUMER_SECRET);
