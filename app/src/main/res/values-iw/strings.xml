@@ -150,6 +150,7 @@
     <string name="registration_account_validation_failure">שגיאה באימות הנתונים</string>
     <string name="approval_send_success">תמונתך התקבלה. נודיעך על בדיקתה.</string>
     <string name="approval_send_title">בקשתך נשלחה</string>
+    <string name="push_approval_format">נסיעתך אושרה. קוד הנסיעה : %s</string>
 
 
 </resources>

@@ -70,7 +70,6 @@ import com.labs.okey.oneride.model.BtDeviceUser;
 import com.labs.okey.oneride.model.GFCircle;
 import com.labs.okey.oneride.model.Join;
 import com.labs.okey.oneride.model.WifiP2pDeviceUser;
-import com.labs.okey.oneride.model.sc.SCFacebookUser;
 import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.IRecyclerClickListener;
 import com.labs.okey.oneride.utils.IRefreshable;
@@ -320,6 +319,14 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         meCircle = mGoogleMap.addCircle(circleOpt);
         mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         mGoogleMap.animateCamera(CameraUpdateFactory.zoomTo(17));
+    }
+
+    @Override
+    @CallSuper
+    public void onDestroy() {
+        super.onDestroy();
+
+        btRestore();
     }
 
     @Override

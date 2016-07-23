@@ -17,14 +17,18 @@ import android.widget.TextView;
 
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
+import com.crashlytics.android.Crashlytics;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.labs.okey.oneride.R;
 import com.labs.okey.oneride.model.BtDeviceUser;
-import com.labs.okey.oneride.model.PropertyHolder;
-import com.labs.okey.oneride.model.sc.SCModule;
-import com.labs.okey.oneride.model.sc.SCUser;
+import com.labs.okey.oneride.model.User;
 import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.IRecyclerClickListener;
 import com.labs.okey.oneride.utils.IRefreshable;
+import com.microsoft.windowsazure.mobileservices.MobileServiceList;
+import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import java.util.List;
 import java.util.Locale;
@@ -113,42 +117,81 @@ public class BtPeersAdapter extends RecyclerView.Adapter<BtPeersAdapter.ViewHold
             }
             holder.setImageStatus(device.getStatus());
 
-            SCModule scModule = new SCModule();
-            SCUser scUser = scModule.getUser(device.get_authProvider(), device.get_UserId());
-            if( scUser != null ) {
-                String pictureURL = scUser.get_PictureURL();
-                PropertyHolder<String> callback = new PropertyHolder<String>() {
-                    @Override
-                    public Void call() throws Exception {
-                        if (this.property != null) {
-                            holder.txtDriverName.setText(this.property);
+            final MobileServiceTable<User> usersTable = Globals.getMobileServiceClient()
+                    .getTable("users", User.class);
+            String regId = device.get_authProvider() + Globals.BT_DELIMITER + device.get_UserId();
+            ListenableFuture<MobileServiceList<User>> future =
+                    usersTable.where().field("registration_id").eq(regId).execute();
+            Futures.addCallback(future, new FutureCallback<MobileServiceList<User>>() {
+                        @Override
+                        public void onSuccess(MobileServiceList<User> users) {
+                            if( !users.isEmpty() ) {
+                                User passenger = users.get(0);
+                                holder.txtDriverName.setText(passenger.getFullName());
+
+                                String pictureURL  = passenger.getPictureURL();
+                                ImageLoader imageLoader = Globals.volley.getImageLoader();
+                                imageLoader.get(pictureURL,
+                                        new ImageLoader.ImageListener() {
+                                            @Override
+                                            public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
+                                                Bitmap bitmap = response.getBitmap();
+                                                if (bitmap != null)
+                                                    holder.userPicture.setImageBitmap(bitmap);
+                                            }
+
+                                            @Override
+                                            public void onErrorResponse(VolleyError error) {
+                                                Log.e(LOG_TAG, error.toString());
+                                            }
+                                        });
+                            }
                         }
-                        if (device.get_UserName() == null ||
-                                device.get_UserName().isEmpty())
-                            device.set_UserName(this.property);
-                        return null;
-                    }
-                };
-                scUser.get_FullName(callback);
+                        @Override
+                        public void onFailure(Throwable t) {
+                            if( Crashlytics.getInstance() != null)
+                                Crashlytics.logException(t);
 
-                ImageLoader imageLoader = Globals.volley.getImageLoader();
-                imageLoader.get(pictureURL,
-                        new ImageLoader.ImageListener() {
-                            @Override
-                            public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
-                                Bitmap bitmap = response.getBitmap();
-                                if (bitmap != null)
-                                    holder.userPicture.setImageBitmap(bitmap);
-                            }
+                            Log.e(LOG_TAG, t.getMessage() + " Cause: " + t.getCause());
+                        }
+                    });
 
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-                                Log.e(LOG_TAG, error.toString());
-                            }
-                        });
-            } else {
-                Log.i(LOG_TAG, "User was unrecognized");
-            }
+//            SCModule scModule = new SCModule();
+//            SCUser scUser = scModule.getUser(device.get_authProvider(), device.get_UserId());
+//            if( scUser != null ) {
+//                String pictureURL = scUser.get_PictureURL();
+//                PropertyHolder<String> callback = new PropertyHolder<String>() {
+//                    @Override
+//                    public Void call() throws Exception {
+//                        if (this.property != null) {
+//                            holder.txtDriverName.setText(this.property);
+//                        }
+//                        if (device.get_UserName() == null ||
+//                                device.get_UserName().isEmpty())
+//                            device.set_UserName(this.property);
+//                        return null;
+//                    }
+//                };
+//                scUser.get_FullName(callback);
+//
+//                ImageLoader imageLoader = Globals.volley.getImageLoader();
+//                imageLoader.get(pictureURL,
+//                        new ImageLoader.ImageListener() {
+//                            @Override
+//                            public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
+//                                Bitmap bitmap = response.getBitmap();
+//                                if (bitmap != null)
+//                                    holder.userPicture.setImageBitmap(bitmap);
+//                            }
+//
+//                            @Override
+//                            public void onErrorResponse(VolleyError error) {
+//                                Log.e(LOG_TAG, error.toString());
+//                            }
+//                        });
+//            } else {
+//                Log.i(LOG_TAG, "User was unrecognized");
+//            }
         }
 
     }

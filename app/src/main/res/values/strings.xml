@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!--
-    This is the service identifier for Nearby Connections.
-    -->
-    <string name="service_id" translatable="false">com.maximum.fastride.service</string>
     <!-- Please refer to http://oxford-portal.azurewebsites.net/doc/general/subscription-key-mgmt to get your subscription key -->
     <!-- If you have one subscription key, you can add it here to use the service -->
     <string name="oxford_subscription_key" translatable="false">f862259efc314bdbbef51000f399f168</string>
@@ -344,6 +340,8 @@ limitations under the License.</string>
     <string name="push_notifications_transport">Push Notifications</string>
     <string name="table_scan_transport">Remote table scan</string>
     <string name="sockets_transport">Sockets</string>
+
+    <string name="push_approval_format">Your ride was approved. Ride code: %s</string>
 
     <string name="notification_message_format">%s has confirmed participation in your ride</string>
 </resources>

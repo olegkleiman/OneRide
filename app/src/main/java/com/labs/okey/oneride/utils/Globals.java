@@ -62,13 +62,17 @@ public class Globals {
         APPROVED_BY_SELFY, // = 2
         DENIED, // = 3
         BE_VALIDATED_MANUALLY, // = 4
-        BE_VALIDATED_MANUALLY_SELFIE // = 5
+        BE_VALIDATED_MANUALLY_SELFIE, // = 5
+        VALIDATED_MANUALLY // = 6
     }; // use it as casted to int like : Globals.RIDE_STATUS.APPROVED.ordinal())
 
     public enum LayoutManagerType {
         GRID_LAYOUT_MANAGER,
         LINEAR_LAYOUT_MANAGER
     }
+
+    public final static String PUSH_NOTIFICATION_JOIN = "join";
+    public final static String PUSH_NOTIFICATION_APPROVAL = "approval";
 
     public static int NUM_OF_EMOJIS = 7;
 

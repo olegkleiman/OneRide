@@ -237,7 +237,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 .iconRes(R.drawable.ic_info)
                 .positiveText(R.string.appeal_send)
                 .negativeText(R.string.appeal_cancel)
-                .neutralText(R.string.approval_another_picture)
                 .customView(R.layout.dialog_approval_answer, false) // do not wrap in scroll
                 .onPositive(new MaterialDialog.SingleButtonCallback(){
                     @Override
@@ -249,12 +248,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     @Override
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                         finish();
-                    }
-                })
-                .onNeutral(new MaterialDialog.SingleButtonCallback(){
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        onAppealCamera();
                     }
                 })
                 .build();
