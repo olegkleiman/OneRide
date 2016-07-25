@@ -95,7 +95,6 @@
         <item>Start</item>
         <item>My rides</item>
         <item>Settings</item>
-        <item>Tutorials</item>
     </string-array>
     <string-array name="tutorial_titles">
         <item>Intro</item>

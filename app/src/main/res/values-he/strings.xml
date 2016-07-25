@@ -10,7 +10,6 @@
         <item>התחלה</item>
         <item>נסיעות שלי</item>
         <item>הגדרות</item>
-        <item>עזרה</item>
     </string-array>
     <string-array name="my_rides_titles">
         <item>כל הנסיעות</item>

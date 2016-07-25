@@ -2,8 +2,10 @@ package com.labs.okey.oneride;
 
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
@@ -183,6 +185,26 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private boolean                             mEmptyTextShown = true;
 
     private BluetoothAdapter                    mBluetoothAdapter;
+
+    private final BroadcastReceiver mBtReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+
+            if( BluetoothAdapter.ACTION_SCAN_MODE_CHANGED.equals(action) ) {
+                final int newScanMode = intent.getIntExtra( BluetoothAdapter.EXTRA_SCAN_MODE,
+                                                            BluetoothAdapter.ERROR);
+                Log.i(LOG_TAG, String.format("Scan mode changed to: %d", newScanMode) );
+                if( newScanMode == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE ) {
+                    // Start animation
+                    startTransmitAnimation();
+                } else {
+                    // Stop animation
+                    stopTransmitAnimation();
+                }
+            }
+        }
+    };
 
     private Runnable                            mEnableCabinPictureButtonRunnable = new Runnable() {
 
@@ -643,13 +665,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mCarNumber = cars[0];
         }
 
-
         mImageTransmit = (ImageView) findViewById(R.id.img_transmit);
-        if( mImageTransmit != null ) {
-            mImageTransmit.setVisibility(View.VISIBLE);
-            AnimationDrawable animationDrawable = (AnimationDrawable) mImageTransmit.getDrawable();
-            animationDrawable.start();
-        }
+//        if( mImageTransmit != null ) {
+//            mImageTransmit.setVisibility(View.VISIBLE);
+//            AnimationDrawable animationDrawable = (AnimationDrawable) mImageTransmit.getDrawable();
+//            animationDrawable.start();
+//        }
 
         mTextSwitcher = (TextSwitcher) findViewById(R.id.monitor_text_switcher);
         Animation in = AnimationUtils.loadAnimation(this, R.anim.push_up_in);
@@ -666,6 +687,22 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             View view = findViewById(R.id.passenger4);
             if( view != null )
                 view.setVisibility(View.GONE);
+        }
+    }
+
+    private void startTransmitAnimation() {
+        if( mImageTransmit != null ) {
+            mImageTransmit.setVisibility(View.VISIBLE);
+            AnimationDrawable animationDrawable = (AnimationDrawable) mImageTransmit.getDrawable();
+            animationDrawable.start();
+        }
+    }
+
+    private void stopTransmitAnimation() {
+        if( mImageTransmit != null ) {
+            mImageTransmit.setVisibility(View.VISIBLE);
+            AnimationDrawable animationDrawable = (AnimationDrawable) mImageTransmit.getDrawable();
+            animationDrawable.stop();
         }
     }
 
@@ -692,10 +729,17 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private void btRestore() {
 
         try {
-            _disableBluetoothDiscoverability();
+            if( Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2 ) {
+                _disableBluetoothDiscoverability();
+            }
+            else {
+                enableBluetoothDiscoverability(1); // 1 actually means 'enable for 1 sec.', i.e. disable
+            }
         } catch (Exception e) {
           Log.e(LOG_TAG, "" + e);
         }
+
+        unregisterReceiver(mBtReceiver);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String bluetoothOriginalName = prefs.getString("btOriginalName", "");
@@ -704,6 +748,17 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     private void btStartAdvertise() {
+
+        try {
+            // Register the BroadcastReceiver
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
+            registerReceiver(mBtReceiver, filter); // Don't forget to unregister during onDestroy
+        } catch(IllegalArgumentException e) {
+            // There is no API to check if a receiver is registered.
+            // When trying to register it for more than first time, the IllegalArgumentException
+            // is raised. Here this exception may be safely ignored.
+        }
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         int discoverableDuration = prefs.getInt(Globals.PREF_DISCOVERABLE_DURATION,
@@ -737,10 +792,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             IllegalAccessException,
             InvocationTargetException {
         Method method = mBluetoothAdapter.getClass().getMethod("setScanMode", int.class, int.class);
-        method.invoke(mBluetoothAdapter, BluetoothAdapter.SCAN_MODE_NONE, 1);
+        method.invoke(mBluetoothAdapter, BluetoothAdapter.SCAN_MODE_CONNECTABLE, 1);
         Log.d("invoke","setScanMode() invoke successfully");
-
-        //_enableBluetoothDiscoverability(1);
     }
 
     private void _enableBluetoothDiscoverability(int duration)
