@@ -698,8 +698,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         int deviceClass = bluetoothClass.getMajorDeviceClass();
 
-        if( deviceClass != BluetoothClass.Device.Major.PHONE) {
-            Log.d(LOG_TAG, "Device " + deviceName + "is not PHONE");
+        if( deviceClass != BluetoothClass.Device.Major.PHONE
+                && deviceClass != BluetoothClass.Device.Major.COMPUTER) {
+            Log.d(LOG_TAG, "Device " + deviceName + "is not PHONE nor COMPUTER");
             return null;
         }
 
