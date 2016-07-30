@@ -69,7 +69,7 @@
                             android:layout_height="wrap_content"
                             android:textAppearance="?android:attr/textAppearanceLarge"
                             android:textColor="@color/white"
-                            android:text="@string/default_value"
+                            android:text="@{user.firstName + ' ' + user.lastName}"
                             android:id="@+id/textUserName"
                             android:layout_gravity="top|center_vertical"
                             android:layout_marginStart="12dp"
@@ -118,7 +118,7 @@
                                 android:ellipsize="end"
                                 android:maxLines="1"
                                 android:scrollHorizontally="true"
-                                android:text="@string/default_value"
+                                android:text="@{user.email}"
                                 android:id="@+id/textUserEmail"
                                 android:layout_gravity="center_vertical" />
                         </LinearLayout>
@@ -146,7 +146,7 @@
                                 android:clickable="true"
                                 android:onClick="onPhoneClick"
                                 android:textAppearance="?android:attr/textAppearanceMedium"
-                                android:text="@string/default_value"
+                                android:text="@{user.phone}"
                                 android:id="@+id/textUserPhone"
                                 android:layout_gravity="center_vertical" />
                         </LinearLayout>

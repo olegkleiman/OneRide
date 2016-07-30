@@ -62,7 +62,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textAppearance="?android:attr/textAppearanceLarge"
-                        android:text="@string/default_value"
+                        android:text="@{user.firstName + ' ' + user.lastName}"
                         android:textColor="@color/white"
                         android:id="@+id/textUserName"
                         android:layout_gravity="top|center_vertical"
@@ -107,7 +107,7 @@
                         android:layout_marginStart="12dp"
                         android:layout_marginLeft="12dp"
                         android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:text="@string/default_value"
+                        android:text="@{user.email}"
                         android:id="@+id/textUserEmail"
                         android:layout_gravity="center_vertical" />
                 </LinearLayout>
@@ -135,7 +135,7 @@
                         android:clickable="true"
                         android:onClick="onPhoneClick"
                         android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:text="@string/default_value"
+                        android:text="@{user.phone}"
                         android:id="@+id/textUserPhone"
                         android:layout_gravity="center_vertical" />
                 </LinearLayout>

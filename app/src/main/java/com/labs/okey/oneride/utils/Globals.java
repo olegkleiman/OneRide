@@ -5,7 +5,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.os.Build;
 import android.renderscript.Matrix4f;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
@@ -16,16 +15,17 @@ import com.facebook.appevents.AppEventsLogger;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.firebase.analytics.FirebaseAnalytics;
-import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
-import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
-import com.labs.okey.oneride.BuildConfig;
 import com.labs.okey.oneride.DriverRoleActivity;
+import com.labs.okey.oneride.model.GlobalSettings;
 import com.labs.okey.oneride.model.PassengerFace;
 import com.labs.okey.oneride.model.User;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
+import com.microsoft.windowsazure.mobileservices.MobileServiceList;
+import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
 
 import java.io.File;
@@ -45,6 +45,7 @@ public class Globals {
     private static final String LOG_TAG = "FR.Globals";
 
     public static long REQUIRED_PASSENGERS_NUMBER = 3;
+    public static boolean APPLY_CHALLENGE = false;
 
 //    @IntDef({RIDE_APPROVED, RIDE_NOT_APPROVED, RIDE_WAITING})
 //    public static int RIDE_APPROVED = 0;
@@ -148,7 +149,6 @@ public class Globals {
     }
 
     private FirebaseAnalytics mFirebaseAnalytics;
-    private static FirebaseRemoteConfig mFirebaseRemoteConfig;
 
     private static Boolean _monitorInitialized = false;
     private static Boolean isMonitorInitialized() {
@@ -179,30 +179,39 @@ public class Globals {
             Crashlytics.setUserName(user.getFullName());
             Crashlytics.setUserEmail(user.getEmail());
 
-            mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
-            FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
-                    .setDeveloperModeEnabled(BuildConfig.DEBUG)
-                    .build();
-            mFirebaseRemoteConfig.setConfigSettings(configSettings);
+            MobileServiceTable<GlobalSettings> settingsTable
+                    = Globals.getMobileServiceClient()
+                      .getTable("globalsettings", GlobalSettings.class);
+            ListenableFuture<MobileServiceList<GlobalSettings>> settingsFuture =
+                    settingsTable
+                    .execute();
+            Futures.addCallback(settingsFuture, new FutureCallback<MobileServiceList<GlobalSettings>>(){
+                @Override
+                public void onSuccess(MobileServiceList<GlobalSettings> list) {
 
-            long cacheExpiration = 10; // 10 sec;
-            mFirebaseRemoteConfig.fetch(cacheExpiration) // The default expiration duration is 43200
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
+                    if( !list.isEmpty() ) {
 
-                            if (task.isSuccessful()) {
-                                REQUIRED_PASSENGERS_NUMBER = mFirebaseRemoteConfig.getLong("REQUIRED_PASSENGERS_NUMBER");
-                                String smartMode = mFirebaseRemoteConfig.getString("SMART_MODE");
-                                Log.e(LOG_TAG, "SmartMode read from Cache: " + smartMode);
-                                mFirebaseRemoteConfig.activateFetched();
-                            } else {
+                        for (GlobalSettings _s : list) {
+                            switch(_s.getName() ) {
+                                case "apply_challenge": {
+                                    APPLY_CHALLENGE = Boolean.parseBoolean(_s.getValue());
+                                }
+                                break;
 
+                                case "passengers_required": {
+                                    REQUIRED_PASSENGERS_NUMBER = Long.parseLong(_s.getValue());
+                                }
+                                break;
                             }
-
-
                         }
-                    });
+                    }
+                }
+
+                @Override
+                public void onFailure(Throwable t){
+                    Log.e(LOG_TAG, t.getMessage());
+                }
+            });
 
             _monitorInitialized = true;
 

@@ -112,10 +112,10 @@ public class SplashScreen extends AppCompatActivity {
 
         setContentView(R.layout.activity_splash_screen);
 
+        Globals.initMobileServices(getApplicationContext());
+
         // Setup up Crashlytics as app monitor
         Globals.initializeMonitor(this, this.getApplication());
-
-        Globals.initMobileServices(getApplicationContext());
 
         Globals.InitializeVolley(getApplicationContext());
 
