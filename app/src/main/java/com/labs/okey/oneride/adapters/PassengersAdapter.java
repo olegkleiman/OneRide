@@ -14,7 +14,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.facebook.FacebookSdk;
-import com.facebook.Profile;
 import com.labs.okey.oneride.R;
 import com.labs.okey.oneride.model.User;
 import com.labs.okey.oneride.utils.Globals;
@@ -101,7 +100,9 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
             }
 
             String userId = passenger.getRegistrationId();
-            String pictureURL = getUserPictureURL(userId);
+            String pictureURL = passenger.getPictureURL(); // getUserPictureURL(userId);
+            if( pictureURL == null || pictureURL.isEmpty() )
+                return;
 
             Drawable drawable = null;
             try {
@@ -163,19 +164,19 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
             return "";
 
         String[] tokens = userId.split(":");
-        if( tokens.length > 1 ){
-            if( Globals.FB_PROVIDER.equals(tokens[0]) ) {
-                if( !FacebookSdk.isInitialized() )
-                    FacebookSdk.sdkInitialize(mContext);
+        if( tokens.length < 2 )
+            return "";
 
-                com.facebook.Profile profile = Profile.getCurrentProfile();
-                return profile.getProfilePictureUri(100, 100).toString();
-                //return "http://graph.facebook.com/" + tokens[1] + "/picture?type=large";
-            } else {
+        if( Globals.FB_PROVIDER.equals(tokens[0]) ) {
+            if( !FacebookSdk.isInitialized() )
+                FacebookSdk.sdkInitialize(mContext);
+
+            return "http://graph.facebook.com/" + tokens[1] + "/picture?type=large";
+        } else if( Globals.GOOGLE_PROVIDER.equals(tokens[0])) {
                 return "";
-            }
         } else
             return "";
+
     }
     public static class ViewHolder extends RecyclerView.ViewHolder {
 

@@ -157,7 +157,8 @@
     <string name="discover_devices">Discovering devices</string>
     <string name="ride_code_prompt">Type in the code as displayed at driver\'s  screen</string>
     <string name="picture_required_dialog_title">Picture required</string>
-    <string name="picture_required_dialog_content">The system requires you to take the picture</string>
+    <string name="picture_required_challenge_dialog_title">Picture required with challenge</string>
+    <string name="picture_required_dialog_content">The system requires you to take the picture of all passengers in the cabin</string>
 
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>

@@ -12,7 +12,6 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Debug;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -44,7 +43,6 @@ import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.Profile;
 import com.facebook.ProfileTracker;
-import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.api.Auth;
@@ -54,7 +52,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
-
 import com.google.android.gms.common.api.Status;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.FutureCallback;
@@ -120,6 +117,7 @@ public class RegisterActivity extends FragmentActivity
 
     private User                mNewUser;
     private String              mAccessToken;
+    private String              mAuthorizationCode;
     private String              mAccessTokenSecret; // used by Twitter
     private boolean             mAddNewUser = true;
 
@@ -412,6 +410,7 @@ public class RegisterActivity extends FragmentActivity
         // Google+ stuff
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.server_client_id))
+                .requestServerAuthCode(getString(R.string.server_client_id))
                 .requestEmail()
                 .build();
 
@@ -631,6 +630,7 @@ public class RegisterActivity extends FragmentActivity
             return false;
 
         mAccessToken = acct.getIdToken();
+        mAuthorizationCode = acct.getServerAuthCode();
         String regId = acct.getId();
         mNewUser.setRegistrationId(Globals.GOOGLE_PROVIDER + Globals.BT_DELIMITER + regId);
         saveProviderAccessToken(Globals.GOOGLE_PROVIDER, regId);
@@ -755,9 +755,12 @@ public class RegisterActivity extends FragmentActivity
 
         editor.putString(Globals.REG_PROVIDER_PREF, provider);
         editor.putString(Globals.USERIDPREF, userID);
-        editor.putString(Globals.TOKENPREF, mAccessToken);
+        editor.putString(Globals.TOKEN_PREF, mAccessToken);
         if( mAccessTokenSecret != null && !mAccessTokenSecret.isEmpty() )
-            editor.putString(Globals.TOKENSECRETPREF, mAccessTokenSecret);
+            editor.putString(Globals.TOKENSECRET_PREF, mAccessTokenSecret);
+
+        if( mAuthorizationCode != null && !mAuthorizationCode.isEmpty() )
+           editor.putString(Globals.AUTHORIZATION_CODE_PREF, mAuthorizationCode);
 
         editor.apply();
     }

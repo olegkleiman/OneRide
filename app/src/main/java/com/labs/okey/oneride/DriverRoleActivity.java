@@ -1,5 +1,6 @@
 package com.labs.okey.oneride;
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
@@ -739,7 +740,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
           Log.e(LOG_TAG, "" + e);
         }
 
-        unregisterReceiver(mBtReceiver);
+        try {
+            unregisterReceiver(mBtReceiver);
+        } catch( IllegalArgumentException ex){
+            Log.e(LOG_TAG, ex.getMessage());
+        }
+
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String bluetoothOriginalName = prefs.getString("btOriginalName", "");
@@ -1076,7 +1082,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 case Globals.CAMERA_PERMISSION_REQUEST : {
                     if (grantResults.length > 0
                             && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                        onSubmitRide(null);
+                        requestCameraPermissions();
                     }
                 }
                 break;
@@ -1234,7 +1240,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     private void uploadRideControl(final Ride ride) {
 
-
         ListenableFuture<Ride> rideFuture = asyncUploadRide(ride);
         Futures.addCallback(rideFuture, new FutureCallback<Ride>() {
             @Override
@@ -1263,36 +1268,68 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 if( bPictureRequired ) {
                     Log.i(LOG_TAG, "Picture required");
 
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            new MaterialDialog.Builder(DriverRoleActivity.this)
-                                    .title(R.string.picture_required_dialog_title)
-                                    .content(R.string.picture_required_dialog_content)
-                                    .iconRes(R.drawable.ic_camera_blue)
-                                    .positiveText(android.R.string.ok)
-                                    .negativeText(android.R.string.no)
-                                    .cancelable(false)
-                                    .autoDismiss(false)
-                                    .onNegative(new MaterialDialog.SingleButtonCallback(){
-                                        @Override
-                                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                            dialog.dismiss();
-                                            finish();
-                                        }
-                                    })
-                                    .onPositive(new MaterialDialog.SingleButtonCallback(){
-                                        @Override
-                                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                            dialog.dismiss();
+                    if( Globals.APPLY_CHALLENGE ) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                new MaterialDialog.Builder(DriverRoleActivity.this)
+                                        .title(R.string.picture_required_challenge_dialog_title)
+                                        .content(R.string.picture_required_dialog_content)
+                                        .iconRes(R.drawable.ic_camera_blue)
+                                        .positiveText(android.R.string.ok)
+                                        .negativeText(android.R.string.no)
+                                        .cancelable(false)
+                                        .autoDismiss(false)
+                                        .onNegative(new MaterialDialog.SingleButtonCallback() {
+                                            @Override
+                                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                                dialog.dismiss();
+                                                finish();
+                                            }
+                                        })
+                                        .onPositive(new MaterialDialog.SingleButtonCallback() {
+                                            @Override
+                                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                                dialog.dismiss();
 
-                                            takePictureWithIntent();
-                                        }
-                                    })
-                                    .show();
-                        }
-                    });
+                                                takePictureWithIntent();
+                                            }
+                                        })
+                                        .show();
+                            }
+                        });
+                    } else {
 
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                new MaterialDialog.Builder(DriverRoleActivity.this)
+                                        .title(R.string.picture_required_dialog_title)
+                                        .content(R.string.picture_required_dialog_content)
+                                        .iconRes(R.drawable.ic_camera_blue)
+                                        .positiveText(android.R.string.ok)
+                                        .negativeText(android.R.string.no)
+                                        .cancelable(false)
+                                        .autoDismiss(false)
+                                        .onNegative(new MaterialDialog.SingleButtonCallback() {
+                                            @Override
+                                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                                dialog.dismiss();
+                                                finish();
+                                            }
+                                        })
+                                        .onPositive(new MaterialDialog.SingleButtonCallback() {
+                                            @Override
+                                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                                dialog.dismiss();
+
+                                                takePictureWithIntent();
+                                            }
+                                        })
+                                        .show();
+                            }
+                        });
+                    }
                 }
                 else
                     Log.i(LOG_TAG, "Picture IS NOT required");
@@ -1761,6 +1798,23 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     }
 
+    private void requestCameraPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                    != PackageManager.PERMISSION_GRANTED)
+
+                // Should we show an explanation?
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        Manifest.permission.CAMERA)) {
+                } else {
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{Manifest.permission.CAMERA},
+                            Globals.CAMERA_PERMISSION_REQUEST);
+                }
+        }
+    }
+
+    @RequiresPermission(Manifest.permission.CAMERA)
     public void takePictureWithIntent(){
 
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);

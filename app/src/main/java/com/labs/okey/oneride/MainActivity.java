@@ -46,6 +46,7 @@ import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.IRecyclerClickListener;
 import com.labs.okey.oneride.utils.WAMSVersionTable;
 import com.labs.okey.oneride.utils.wamsUtils;
+import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceAuthenticationProvider;
 import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUser;
@@ -127,19 +128,23 @@ public class MainActivity extends BaseActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        setupUI(getString(R.string.title_activity_main), "");
+
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        String accessToken = sharedPrefs.getString(Globals.TOKENPREF, "");
-        String accessTokenSecret =  sharedPrefs.getString(Globals.TOKENSECRETPREF, "");
+        String accessToken = sharedPrefs.getString(Globals.TOKEN_PREF, "");
+        String accessTokenSecret = sharedPrefs.getString(Globals.TOKENSECRET_PREF, "");
+        String authorizationToken = sharedPrefs.getString(Globals.AUTHORIZATION_CODE_PREF, "");
 
         // Don't confuse with BaseActivity.wamsInit();
         if( !wamsInit() ) {
-            login(accessToken, accessTokenSecret);
+            if( !login(accessToken, accessTokenSecret, authorizationToken) ) {
+                // TBD: provide UI error for login failure
+                Log.e(LOG_TAG, "WAMS login failed");
+            }
 
             NotificationsManager.handleNotifications(this, Globals.SENDER_ID,
                                                     GCMHandler.class);
         }
-
-        setupUI(getString(R.string.title_activity_main), "");
 
         if( Crashlytics.getInstance() != null)
             Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_start));
@@ -220,6 +225,10 @@ public class MainActivity extends BaseActivity
 
         if( mWAMSLogedIn )
             return true;
+
+        MobileServiceClient wamsClient = Globals.getMobileServiceClient();
+        if( wamsClient == null )
+            Globals.initMobileServices(this);
 
         if( !wamsUtils.loadUserTokenCache(Globals.getMobileServiceClient(), this) )
             return false;
@@ -302,18 +311,20 @@ public class MainActivity extends BaseActivity
         startActivity(intent);
     }
 
-
-
-    private void login(String accessToken, String accessTokenSecret) {
+    private Boolean login(String accessToken, String accessTokenSecret, String authorizationCode) {
         final MobileServiceAuthenticationProvider tokenProvider = getTokenProvider();
         if (tokenProvider == null)
             throw new AssertionError("Token provider cannot be null");
+
+        if( wamsUtils.isJWTTokenExpired(accessToken) )
+            return false;
 
         final JsonObject body = new JsonObject();
         if (tokenProvider == MobileServiceAuthenticationProvider.MicrosoftAccount) {
             body.addProperty("authenticationToken", accessToken);
         } else if (tokenProvider == MobileServiceAuthenticationProvider.Google) {
             body.addProperty("id_token", accessToken);
+            body.addProperty("authorization_code", authorizationCode);
         } else {
             body.addProperty("access_token", accessToken);
             if (!accessTokenSecret.isEmpty())
@@ -359,6 +370,7 @@ public class MainActivity extends BaseActivity
             }
         });
 
+        return true;
     }
 
     private void cacheUserToken(MobileServiceUser mobileServiceUser) {
@@ -442,6 +454,9 @@ public class MainActivity extends BaseActivity
 
             if( !pictureURL.contains("https") )
                 pictureURL = pictureURL.replace("http", "https");
+            if( Globals.volley == null )
+                Globals.InitializeVolley(this);
+
             Cache cache = Globals.volley.getRequestQueue().getCache();
             Cache.Entry entry = cache.get(pictureURL);
             if( entry != null ) {

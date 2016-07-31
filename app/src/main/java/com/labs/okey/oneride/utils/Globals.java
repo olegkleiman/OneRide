@@ -95,16 +95,6 @@ public class Globals {
         volley = VolleySingletone.getInstance(context);
     }
 
-//    private static Tracker mGoogleTracker;
-//    synchronized public static Tracker getGoogleTracker(Context context) {
-//        if( mGoogleTracker == null ) {
-//            GoogleAnalytics analytics = GoogleAnalytics.getInstance(context);
-//            mGoogleTracker = analytics.newTracker(R.xml.global_tracker);
-//        }
-//
-//        return mGoogleTracker;
-//    }
-
     private static AccessTokenTracker mFbAccessTokenTracker;
     public static void initializeTokenTracker(Context context) {
 
@@ -282,7 +272,7 @@ public class Globals {
     public static final String MICROSOFT_PROVIDER = "MicrosoftAccount";
     public static final String PLATFORM = "Android" + Build.VERSION.SDK_INT;
 
-    // 'Project number' of project 'FastRide"
+    // 'Project number' of project 'OneRide"
     // See Google Developer Console -> Billing & settings
     // https://console.developers.google.com/project/oneride-1273/settings
     public static final String SENDER_ID = "982244912173";
@@ -297,8 +287,9 @@ public class Globals {
     // Names of shared preferences
     public static final String USERIDPREF = "userid";
     public static final String CARS_PREF = "cars";
-    public static final String TOKENPREF = "accessToken";
-    public static final String TOKENSECRETPREF = "accessTokenSecret";
+    public static final String TOKEN_PREF = "accessToken";
+    public static final String TOKENSECRET_PREF = "accessTokenSecret";
+    public static final String AUTHORIZATION_CODE_PREF = "authorizationToken";
     public static final String WAMSTOKENPREF = "wamsToken";
     public static final String SHOW_SELFIE_DESC = "selfieDesc";
     public static final String PREF_DEBUG_WITHOUT_GEOFENCES = "debug_without_geofences";

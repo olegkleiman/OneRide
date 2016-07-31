@@ -228,13 +228,14 @@ public class wamsUtils {
 
         editor.remove(Globals.REG_PROVIDER_PREF);
         editor.remove(Globals.USERIDPREF);
-        editor.remove(Globals.TOKENPREF);
-        editor.remove(Globals.TOKENSECRETPREF);
+        editor.remove(Globals.TOKEN_PREF);
+        editor.remove(Globals.TOKENSECRET_PREF);
+        editor.remove(Globals.WAMSTOKENPREF);
 
         editor.apply();
     }
 
-    static public boolean isJWTTokenExpired(String jwtToken) throws Exception{
+    static public boolean isJWTTokenExpired(String jwtToken) {
         StringTokenizer jwtTokens = new StringTokenizer(jwtToken, ".");
 
         // JWT (http://self-issued.info/docs/draft-ietf-oauth-json-web-token-25.html) is a concatenation of
@@ -262,6 +263,9 @@ public class wamsUtils {
             String jsonString = new String(jwtData, "UTF-8");
             JsonObject jsonObj = (new JsonParser()).parse(jsonString).getAsJsonObject();
 
+            String audience = jsonObj.get("aud").getAsString();
+            Log.d(LOG_TAG, "aud claim: " + audience);
+
             String issuer = jsonObj.get("iss").getAsString();
             Log.d(LOG_TAG, "JWT issuer: " + issuer);
 
@@ -280,7 +284,8 @@ public class wamsUtils {
             //return !expiryDate.before(new Date());
 
         } catch(UnsupportedEncodingException ex) {
-            throw new Exception(ex);
+            Log.e(LOG_TAG, ex.getMessage());
+            return false;
         }
 
     }

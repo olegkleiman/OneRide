@@ -309,7 +309,7 @@ public class SplashScreen extends AppCompatActivity {
         } else if( provider.equalsIgnoreCase(Globals.GOOGLE_PROVIDER) ) {
             // If Google tokens are expire?
 
-            String token = sharedPrefs.getString(Globals.TOKENPREF, "");
+            String token = sharedPrefs.getString(Globals.TOKEN_PREF, "");
             try {
                 Boolean _bRes = !wamsUtils.isJWTTokenExpired(token);
                 bRes[0] = _bRes;
