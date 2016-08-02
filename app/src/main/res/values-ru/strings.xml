@@ -75,7 +75,6 @@
     <string name="registration_next">Следующий шаг</string>
     <string name="add_cars_caption">Добавить описание машин</string>
     <string name="add_car_nick">Название</string>
-    <string name="prompt_use_phone">Показывать этот номер другим пользователям</string>
     <string name="edit_car_dialog_text">Не указаны машины, на которых осуществляются поездки.</string>
     <string name="registration_account_validate">Проверка учетной записи</string>
     <string name="registration_add_title">Выполняется регистрация</string>

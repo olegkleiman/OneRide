@@ -21,7 +21,6 @@
     <string name="prompt_phone">Phone number</string>
     <string name="prompt_sms_confirm">PIN</string>
     <string name="phone_hint">050-1234-567</string>
-    <string name="prompt_use_phone">Show your number to others</string>
     <string name="prompt_password">Password (optional)</string>
     <string name="action_sign_in">Sign in or register</string>
     <string name="action_sign_in_short">Sign in</string>

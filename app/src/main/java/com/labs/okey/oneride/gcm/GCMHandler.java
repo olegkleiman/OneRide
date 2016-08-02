@@ -20,6 +20,8 @@ import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.notifications.NotificationsHandler;
 
+import io.fabric.sdk.android.Fabric;
+
 /**
  * @author Oleg Kleiman
  * created 11-Apr-15.
@@ -94,7 +96,7 @@ public class GCMHandler extends NotificationsHandler {
             }
             @Override
             public void onFailure(Throwable t) {
-                if( Crashlytics.getInstance() != null)
+                if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
                     Crashlytics.logException(t);
 
                 Log.e(LOG_TAG, t.getMessage() + " Cause: " + t.getCause());

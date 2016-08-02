@@ -42,12 +42,13 @@ import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import io.fabric.sdk.android.Fabric;
 
 /**
  * @author Oleg Kleiman
@@ -109,7 +110,7 @@ public class BaseActivityWithGeofences extends BaseActivity
             } catch (Exception ex) {
                 Log.e(LOG_TAG, ex.getMessage());
 
-                if( Crashlytics.getInstance() != null )
+                if( Fabric.isInitialized() && Crashlytics.getInstance() != null )
                     Crashlytics.logException(ex);
 
             }
@@ -140,7 +141,7 @@ public class BaseActivityWithGeofences extends BaseActivity
         } catch (Exception ex) {
             Log.e(LOG_TAG, ex.getMessage());
 
-            if( Crashlytics.getInstance() != null )
+            if( Fabric.isInitialized() && Crashlytics.getInstance() != null )
                 Crashlytics.logException(ex);
         }
 
@@ -451,7 +452,7 @@ public class BaseActivityWithGeofences extends BaseActivity
 
         } catch(IllegalStateException ex) { // Nothing special here :
             // it may happen if GoogleApiClient was not connected yet
-            if( Crashlytics.getInstance() != null )
+            if( Fabric.isInitialized() && Crashlytics.getInstance() != null )
                 Crashlytics.logException(ex);
 
             Log.e(LOG_TAG, ex.getMessage());
@@ -476,7 +477,7 @@ public class BaseActivityWithGeofences extends BaseActivity
             // Return a GeofencingRequest.
             return builder.build();
         } catch (Exception ex) {
-            if( Crashlytics.getInstance() != null ) {
+            if( Fabric.isInitialized() && Crashlytics.getInstance() != null ) {
                 Crashlytics.logException(ex);
             }
 

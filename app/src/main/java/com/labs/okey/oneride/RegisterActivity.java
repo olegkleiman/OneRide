@@ -24,7 +24,6 @@ import android.util.Log;
 import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -823,9 +822,6 @@ public class RegisterActivity extends FragmentActivity
             }
 
             mNewUser.setPhone(txtPhoneNumber.getText().toString());
-            CheckBox cbUsePhone = (CheckBox)findViewById(R.id.cbUsePhone);
-            mNewUser.setUsePhone(cbUsePhone.isChecked());
-
             mNewUser.save(RegisterActivity.this);
 
             if( mAddNewUser ) {
@@ -901,9 +897,6 @@ public class RegisterActivity extends FragmentActivity
                                 user.setDeviceId(mAndroidId);
 
                                 user.setPhone(txtPhoneNumber.getText().toString());
-                                CheckBox cbUsePhone = (CheckBox) findViewById(R.id.cbUsePhone);
-                                user.setUsePhone(cbUsePhone.isChecked());
-
                             }
 
                             return user;

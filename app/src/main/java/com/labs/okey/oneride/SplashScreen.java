@@ -117,21 +117,13 @@ public class SplashScreen extends AppCompatActivity {
         // Setup up Crashlytics as app monitor
         Globals.initializeMonitor(this, this.getApplication());
 
-        Globals.InitializeVolley(getApplicationContext());
+        Globals.initializeVolley(getApplicationContext());
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         Globals.myRides_update_required = sharedPrefs.getBoolean(Globals.UPDATE_MYRIDES_REQUIRED, false);
 
         mVisible = true;
         mContentView = findViewById(R.id.fullscreen_content);
-
-        // Set up the user interaction to manually show or hide the system UI.
-//        mContentView.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                toggle();
-//            }
-//        });
 
         ExecutorService service = Executors.newFixedThreadPool(1);
         ListeningExecutorService executor = MoreExecutors.listeningDecorator(service);
@@ -164,9 +156,8 @@ public class SplashScreen extends AppCompatActivity {
                         startActivity(intent);
                         SplashScreen.this.finish();
 
-                        return;
                     }
-                }, 3000);
+                }, 2000);
             }
 
             @Override

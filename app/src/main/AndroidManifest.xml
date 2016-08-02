@@ -161,7 +161,7 @@
         </service>
         <service
             android:name=".AzureRegistrationIntentService"
-            android:exported="false"></service>
+            android:exported="false" />
 
         <activity
             android:name=".AdvSettingsActivity"
@@ -175,7 +175,7 @@
         <activity
             android:name=".CameraCVActivity"
             android:label="@string/title_activity_camera_cv"
-            android:theme="@style/AppTheme"></activity>
+            android:theme="@style/AppTheme" />
     </application>
 
 </manifest>

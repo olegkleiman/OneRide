@@ -1,7 +1,7 @@
 package com.labs.okey.oneride.adapters;
 
 import android.content.Context;
-import android.graphics.Color;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -13,15 +13,16 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageLoader;
 import com.facebook.FacebookSdk;
 import com.labs.okey.oneride.R;
 import com.labs.okey.oneride.model.User;
 import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.IRecyclerClickListener;
-import com.labs.okey.oneride.utils.RoundedDrawable;
+import com.pkmmte.view.CircularImageView;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Oleg Kleiman on 26-May-15.
@@ -83,7 +84,7 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, int position) {
         if (holder.holderId == TYPE_ITEM) {
 
             int nPosition = ( mManagerType == Globals.LayoutManagerType.LINEAR_LAYOUT_MANAGER) ?
@@ -104,28 +105,27 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
             if( pictureURL == null || pictureURL.isEmpty() )
                 return;
 
-            Drawable drawable = null;
-            try {
-                drawable = (Globals.drawMan.userDrawable(mContext,
-                        userId,
-                        pictureURL)).get(); // May be null because of pictureURL
-                                            // but handled in catch block
-                if( drawable != null ) {
+            if( !pictureURL.contains("https") )
+                pictureURL = pictureURL.replace("http", "https");
 
-                    drawable = RoundedDrawable.fromDrawable(drawable);
-                    ((RoundedDrawable) drawable)
-                            .setCornerRadius(Globals.PICTURE_CORNER_RADIUS)
-                            .setBorderColor(Color.LTGRAY)
-                            .setBorderWidth(Globals.PICTURE_BORDER_WIDTH)
-                            .setOval(true);
+            if( Globals.volley == null )
+                Globals.initializeVolley(mContext);
 
-                    holder.userPicture.setImageDrawable(drawable);
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                Log.e(LOG_TAG, e.getMessage());
-            } catch (NullPointerException ex) {
-                Log.e(LOG_TAG, "No drawable for pictureURL");
-            }
+            ImageLoader imageLoader = Globals.volley.getImageLoader();
+            imageLoader.get(pictureURL,
+                    new ImageLoader.ImageListener() {
+                        @Override
+                        public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
+                            Bitmap bitmap = response.getBitmap();
+                            if (bitmap != null )
+                                holder.userPicture.setImageBitmap(bitmap);
+                        }
+
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Log.e(LOG_TAG, error.toString());
+                        }
+                    });
         }
 
     }
@@ -183,13 +183,13 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
         int holderId;
 
         // Header views
-        ImageButton     btnRefresh;
+        ImageButton         btnRefresh;
 
         // Row views
-        TextView        txtDriverName;
-        ImageView       userPicture;
-        RelativeLayout  rowLayout;
-        ImageView       imageStatus;
+        TextView            txtDriverName;
+        CircularImageView   userPicture;
+        RelativeLayout      rowLayout;
+        ImageView           imageStatus;
 
         Drawable drawableAvailable;
         Drawable drawableConnected;
@@ -209,7 +209,7 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
                 holderId = viewType;
 
                 txtDriverName   = (TextView) itemLayoutView.findViewById(R.id.txt_peer_name);
-                userPicture     = (ImageView) itemLayoutView.findViewById(R.id.userPicture);
+                userPicture     = (CircularImageView) itemLayoutView.findViewById(R.id.userPicture);
                 rowLayout       = (RelativeLayout)itemLayoutView.findViewById(R.id.device_row);
                 imageStatus     = (ImageView) itemLayoutView.findViewById(R.id.imgStatus);
 

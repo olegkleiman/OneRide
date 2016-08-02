@@ -26,7 +26,6 @@ import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
@@ -140,11 +139,28 @@ public class SettingsActivity extends BaseActivity
         }
         else if( id == R.id.action_logoff) {
             wamsUtils.logOff(this);
+
+            reRegisterWithNotificationHubs();
+
             Intent intent = new Intent(this, RegisterActivity.class);
             startActivity(intent);
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void reRegisterWithNotificationHubs() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        sharedPreferences.edit().remove(Globals.NH_REGISTRATION_ID_PREF);
+        sharedPreferences.edit().remove(Globals.FCM_TOKEN_PREF);
+        editor.apply();
+
+        // Start IntentService to register this application with GCM.
+        Intent registrationIntent = new Intent(this, AzureRegistrationIntentService.class);
+        stopService(registrationIntent);
+        startService(registrationIntent);
     }
 
     //

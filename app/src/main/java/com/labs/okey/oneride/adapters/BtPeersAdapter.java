@@ -33,6 +33,8 @@ import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import java.util.List;
 import java.util.Locale;
 
+import io.fabric.sdk.android.Fabric;
+
 /**
  * @author Oleg Kleiman
  * created 09-Jul-16.
@@ -149,7 +151,7 @@ public class BtPeersAdapter extends RecyclerView.Adapter<BtPeersAdapter.ViewHold
                         }
                         @Override
                         public void onFailure(Throwable t) {
-                            if( Crashlytics.getInstance() != null)
+                            if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
                                 Crashlytics.logException(t);
 
                             Log.e(LOG_TAG, t.getMessage() + " Cause: " + t.getCause());

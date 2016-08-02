@@ -23,10 +23,11 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
-
 /**
- * Created by Oleg Kleiman on 21-Feb-15.
+ * @author Oleg Kleiman
+ * created 21-Feb-15.
  */
+
 public class DrawMan {
 
     private Map<String, Drawable> dMap;

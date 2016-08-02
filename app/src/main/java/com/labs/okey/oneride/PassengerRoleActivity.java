@@ -94,6 +94,8 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 
+import io.fabric.sdk.android.Fabric;
+
 /**
  * @author Oleg Kleiman
  * created 04-Apr-16.
@@ -447,7 +449,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
             @Override
             public void onFailure(@NonNull Throwable t) {
-                if (Crashlytics.getInstance() != null) {
+                if ( Fabric.isInitialized() && Crashlytics.getInstance() != null) {
                     Crashlytics.logException(t);
                 }
             }
@@ -793,7 +795,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             });
 
         } catch (Exception ex) {
-            if (Crashlytics.getInstance() != null)
+            if (Fabric.isInitialized() && Crashlytics.getInstance() != null)
                 Crashlytics.log(ex.getLocalizedMessage());
 
             Log.e(LOG_TAG, ex.getLocalizedMessage());
@@ -876,7 +878,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             mSearchDriverCountDownTimer.start();
 
         } catch (Exception ex) {
-            if (Crashlytics.getInstance() != null)
+            if ( Fabric.isInitialized() && Crashlytics.getInstance() != null)
                 Crashlytics.logException(ex);
 
             Log.e(LOG_TAG, ex.getMessage());
@@ -1108,7 +1110,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                                 break;
                         }
                     } catch (Exception ex) {
-                        if (Crashlytics.getInstance() != null)
+                        if ( Fabric.isInitialized() && Crashlytics.getInstance() != null)
                             Crashlytics.logException(ex);
 
                         if (!ex.getMessage().isEmpty())
@@ -1169,7 +1171,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 } catch (ExecutionException | InterruptedException ex) {
 
                     mEx = ex;
-                    if (Crashlytics.getInstance() != null)
+                    if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
                         Crashlytics.logException(ex);
 
                     Log.e(LOG_TAG, ex.getMessage());
@@ -1236,7 +1238,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 //                                        mDriversAdapter.replaceItem(device);
 //                                        mDriversAdapter.notifyDataSetChanged();
 //                                    } else {
-//                                        if (Crashlytics.getInstance() != null)
+//                                        if ( Fabric.isInitialized() && Crashlytics.getInstance() != null)
 //                                            Crashlytics.log(response.getError().getErrorMessage());
 //
 //                                        Log.e(LOG_TAG, response.getError().getErrorMessage());

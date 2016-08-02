@@ -91,7 +91,7 @@ public class Globals {
     public static final DrawMan drawMan = DManClassFactory.getDrawMan();
 
     public static VolleySingletone volley;
-    public static void InitializeVolley(Context context){
+    public static void initializeVolley(Context context){
         volley = VolleySingletone.getInstance(context);
     }
 
@@ -126,7 +126,7 @@ public class Globals {
             //.withFilter(new wamsUtils.ProgressFilter());
         } catch(MalformedURLException ex) {
 
-            if( Crashlytics.getInstance() != null)
+            if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
                 Crashlytics.logException(ex);
 
             return false;
@@ -254,6 +254,10 @@ public class Globals {
 
     public static final String FB_USERNAME_PREF = "username";
     public static final String FB_LASTNAME_PREF = "lastUsername";
+
+    public static final String NH_REGISTRATION_ID_PREF = "nhRegistrationID";
+    public static final String FCM_TOKEN_PREF = "FCMtoken";
+
     public static final String REG_PROVIDER_PREF = "registrationProvider";
     public static final String UPDATE_MYRIDES_REQUIRED = "myRides_update_required";
 
@@ -272,9 +276,9 @@ public class Globals {
     public static final String MICROSOFT_PROVIDER = "MicrosoftAccount";
     public static final String PLATFORM = "Android" + Build.VERSION.SDK_INT;
 
-    // 'Project number' of project 'OneRide"
-    // See Google Developer Console -> Billing & settings
-    // https://console.developers.google.com/project/oneride-1273/settings
+    // 'Sender ID' of project 'OneRide"
+    // See Firebase Developer Console ->Settings -> Cloud Messaging
+    // https://console.firebase.google.com/project/oneride-1273/settings/cloudmessaging
     public static final String SENDER_ID = "982244912173";
     public static final String AZURE_HUB_NAME = "oneridehub";
     public static final String AZURE_HUB_CONNECTION_STRING = "Endpoint=sb://oneridehub-ns.servicebus.windows.net/;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=VA/kIgB0KzxhenuquHpqbqceD2z9MUwarmN+FdOFTck=";

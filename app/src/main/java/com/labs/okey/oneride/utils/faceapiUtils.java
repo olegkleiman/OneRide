@@ -19,6 +19,8 @@ import net.steamcrafted.loadtoast.LoadToast;
 
 import java.io.IOException;
 
+import io.fabric.sdk.android.Fabric;
+
 /**
  * Created by Oleg Kleiman on 8/24/15.
  */
@@ -107,7 +109,7 @@ public class faceapiUtils extends AsyncTask<Void, Void, Void> {
 
             }
         } catch(IOException | ClientException e) {
-            if(Crashlytics.getInstance() != null )
+            if( Fabric.isInitialized() && Crashlytics.getInstance() != null )
                 Crashlytics.logException(e);
 
             Log.e(LOG_TAG, e.getMessage());

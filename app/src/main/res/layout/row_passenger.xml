@@ -27,13 +27,20 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="4dp">
 
-            <ImageView
+            <!--<ImageView-->
+                <!--android:layout_width="72dp"-->
+                <!--android:layout_height="72dp"-->
+                <!--android:layout_marginStart="2dip"-->
+                <!--android:layout_marginLeft="2dip"-->
+                <!--android:id="@+id/userPicture"-->
+                <!--android:src="@drawable/ic_action_mobile_phone"/>-->
+
+            <com.pkmmte.view.CircularImageView
                 android:layout_width="72dp"
                 android:layout_height="72dp"
                 android:layout_marginStart="2dip"
                 android:layout_marginLeft="2dip"
-                android:id="@+id/userPicture"
-                android:src="@drawable/ic_action_mobile_phone"/>
+                android:id="@+id/userPicture" />
 
             <ImageView
                 android:layout_width="wrap_content"
@@ -45,6 +52,7 @@
                 android:layout_toStartOf="@+id/linearLayout"
                 android:layout_toLeftOf="@+id/linearLayout"
                 android:layout_marginRight="-8dp"
+                android:layout_marginEnd="-8dp"
                 android:layout_marginBottom="-2dp"
                 android:visibility="visible" />
 

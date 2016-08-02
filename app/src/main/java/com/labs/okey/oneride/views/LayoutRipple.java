@@ -13,6 +13,8 @@ import android.view.View;
 
 import com.crashlytics.android.Crashlytics;
 
+import io.fabric.sdk.android.Fabric;
+
 /**
  * Created by Oleg on 22-Aug-15.
  */
@@ -168,7 +170,7 @@ public class LayoutRipple extends CustomView {
             if( !ex.getMessage().isEmpty() )
                 Log.e(LOG_TAG, ex.getMessage());
 
-            if( Crashlytics.getInstance() != null )
+            if( Fabric.isInitialized() && Crashlytics.getInstance() != null )
                 Crashlytics.logException(ex);
 
             return null;

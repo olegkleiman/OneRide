@@ -31,28 +31,44 @@ public class AzureRegistrationIntentService extends IntentService {
 
         String resultString = null;
         String regID = null;
+        String storedToken = null;
 
         try {
 
-            String token = FirebaseInstanceId.getInstance().getToken();
-            Log.i(LOG_TAG, "Got FCM Registration Token: " + token);
+            String FCM_token  = FirebaseInstanceId.getInstance().getToken();
+            Log.d(LOG_TAG, "Got FCM Registration Token: " + FCM_token );
 
-            if (((regID=sharedPreferences.getString("registrationID", null)) == null)){
+            if (((regID=sharedPreferences.getString(Globals.NH_REGISTRATION_ID_PREF, null)) == null)){
 
+                NotificationHub hub = new NotificationHub(Globals.AZURE_HUB_NAME,
+                        Globals.AZURE_HUB_CONNECTION_STRING, this);
+                //regID = hub.register(token).getRegistrationId();
+
+                // If you want to use tags...
+                // Refer to : https://azure.microsoft.com/en-us/documentation/articles/notification-hubs-routing-tag-expressions/
+                User user = User.load(getApplicationContext());
+                String tag = user.getRegistrationId();
+                regID = hub.register(FCM_token, tag).getRegistrationId();
+
+                resultString = "Registered Successfully - RegId : " + regID;
+                Log.d(LOG_TAG, resultString);
+
+                sharedPreferences.edit().putString(Globals.NH_REGISTRATION_ID_PREF, regID).apply();
+                sharedPreferences.edit().putString(Globals.FCM_TOKEN_PREF, FCM_token).apply();
+            }
+            else if ((storedToken=sharedPreferences.getString(Globals.FCM_TOKEN_PREF, "")) != FCM_token) {
+
+                NotificationHub hub = new NotificationHub(Globals.AZURE_HUB_NAME,
+                                                          Globals.AZURE_HUB_CONNECTION_STRING, this);
+                Log.d(LOG_TAG, "NH Registration refreshing with token : " + FCM_token);
+                User user = User.load(getApplicationContext());
+                String tag = user.getRegistrationId();
+                regID = hub.register(FCM_token, tag).getRegistrationId();
+
+                sharedPreferences.edit().putString(Globals.NH_REGISTRATION_ID_PREF, regID ).apply();
+                sharedPreferences.edit().putString(Globals.FCM_TOKEN_PREF, FCM_token ).apply();
             }
 
-            NotificationHub hub = new NotificationHub(Globals.AZURE_HUB_NAME,
-                                                      Globals.AZURE_HUB_CONNECTION_STRING, this);
-            //regID = hub.register(token).getRegistrationId();
-
-            // If you want to use tags...
-            // Refer to : https://azure.microsoft.com/en-us/documentation/articles/notification-hubs-routing-tag-expressions/
-            User user = User.load(getApplicationContext());
-            String tag = user.getRegistrationId();
-            regID = hub.register(token, tag).getRegistrationId();
-
-            resultString = "Registered Successfully - RegId : " + regID;
-            Log.i(LOG_TAG, resultString);
 
         } catch(Exception e) {
             Log.e(LOG_TAG, e.getMessage());

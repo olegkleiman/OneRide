@@ -17,6 +17,7 @@ import com.labs.okey.oneride.model.Ride;
 import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.wamsUtils;
 import com.labs.okey.oneride.views.SlidingTabLayout;
+import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
 
@@ -46,6 +47,10 @@ public class MyRidesActivity extends BaseActivity
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             Globals.userID = sharedPrefs.getString(Globals.USERIDPREF, "");
         }
+
+        MobileServiceClient wamsClient = Globals.getMobileServiceClient();
+        if( wamsClient == null )
+            Globals.initMobileServices(this);
 
         mRidesSyncTable = Globals.getMobileServiceClient().getSyncTable("rides", Ride.class);
 

@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.concurrent.ExecutionException;
 
+import io.fabric.sdk.android.Fabric;
+
 /**
  * Created by Oleg on 09-Jun-15.
  */
@@ -106,7 +108,7 @@ public class wamsUtils {
             }
 
         } catch(MobileServiceLocalStoreException | InterruptedException | ExecutionException ex) {
-            if( Crashlytics.getInstance() != null)
+            if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
                 Crashlytics.logException(ex);
 
             Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
@@ -136,7 +138,7 @@ public class wamsUtils {
 
         } catch(Exception ex) {
 
-            if( Crashlytics.getInstance() != null)
+            if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
                 Crashlytics.logException(ex);
 
             Log.e(LOG_TAG, ex.getMessage());

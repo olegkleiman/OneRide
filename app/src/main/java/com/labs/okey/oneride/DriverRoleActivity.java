@@ -123,6 +123,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.fabric.sdk.android.Fabric;
+
 /**
  * @author Oleg Kleiman
  * created 04-Apr-16
@@ -494,7 +496,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             }
             catch(Exception ex){
 
-                if( Crashlytics.getInstance() != null )
+                if( Fabric.isInitialized() && Crashlytics.getInstance() != null )
                     Crashlytics.logException(ex);
 
                 Log.e(LOG_TAG, ex.getMessage());
@@ -1082,7 +1084,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 case Globals.CAMERA_PERMISSION_REQUEST : {
                     if (grantResults.length > 0
                             && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                        requestCameraPermissions();
+                        takePictureWithIntent();
                     }
                 }
                 break;
@@ -1167,7 +1169,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             @Override
             public void onFailure(Throwable t) {
-                if (Crashlytics.getInstance() != null) {
+                if( Fabric.isInitialized() && Crashlytics.getInstance() != null) {
                     Crashlytics.logException(t);
                 }
             }
@@ -1323,7 +1325,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                             public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                                                 dialog.dismiss();
 
-                                                takePictureWithIntent();
+                                                requestCameraPermissions();
                                             }
                                         })
                                         .show();
@@ -1643,7 +1645,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                         } catch (Exception ex) { // ExecutionException | InterruptedException ex ) {
                             mEx = ex;
-                            if (Crashlytics.getInstance() != null)
+                            if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
                                 Crashlytics.logException(ex);
 
                             Log.e(LOG_TAG, ex.getMessage());
@@ -1894,7 +1896,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         } catch(Exception ex) {
 
-            if( Crashlytics.getInstance() != null )
+            if( Fabric.isInitialized() && Crashlytics.getInstance() != null )
                 Crashlytics.logException(ex);
 
             Log.e(LOG_TAG, ex.getMessage());

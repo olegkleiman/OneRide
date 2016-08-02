@@ -11,6 +11,8 @@ import com.labs.okey.oneride.model.PropertyHolder;
 
 import org.json.JSONObject;
 
+import io.fabric.sdk.android.Fabric;
+
 /**
  * @author Oleg Kleiman
  * created 10-Jul-16.
@@ -61,7 +63,7 @@ public class SCFacebookUser implements SCUser {
                                 callback.property = (String) object.get("name");
                                 callback.call();
                             } else {
-                                if (Crashlytics.getInstance() != null)
+                                if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
                                     Crashlytics.log(response.getError().getErrorMessage());
 
                                 Log.e(LOG_TAG, response.getError().getErrorMessage());

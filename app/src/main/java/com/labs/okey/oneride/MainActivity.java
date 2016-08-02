@@ -38,7 +38,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.gson.JsonObject;
 import com.labs.okey.oneride.adapters.ModesPeersAdapter;
-import com.labs.okey.oneride.gcm.GCMHandler;
 import com.labs.okey.oneride.model.FRMode;
 import com.labs.okey.oneride.model.GeoFence;
 import com.labs.okey.oneride.model.User;
@@ -53,7 +52,6 @@ import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUse
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
-import com.microsoft.windowsazure.notifications.NotificationsManager;
 import com.pkmmte.view.CircularImageView;
 
 import java.security.MessageDigest;
@@ -64,6 +62,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import io.fabric.sdk.android.Fabric;
 
 public class MainActivity extends BaseActivity
         implements WAMSVersionTable.IVersionMismatchListener,
@@ -141,12 +141,9 @@ public class MainActivity extends BaseActivity
                 // TBD: provide UI error for login failure
                 Log.e(LOG_TAG, "WAMS login failed");
             }
-
-            NotificationsManager.handleNotifications(this, Globals.SENDER_ID,
-                                                    GCMHandler.class);
         }
 
-        if( Crashlytics.getInstance() != null)
+        if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
             Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_start));
 
         new AsyncTask<Void, Void, Void>() {
@@ -179,9 +176,11 @@ public class MainActivity extends BaseActivity
                         gFencesSyncTable.purge(query);
                         gFencesSyncTable.pull(query).get();
 
-                        Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_gf_updated));
+                        if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
+                            Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_gf_updated));
                     } else
-                        Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_gf_uptodate));
+                        if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
+                            Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_gf_uptodate));
 
 
                 } catch(ExecutionException | InterruptedException ex) {
@@ -261,7 +260,7 @@ public class MainActivity extends BaseActivity
                     })
                     .show();
         } catch (Exception e) {
-            if( Crashlytics.getInstance() != null)
+            if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
                 Crashlytics.logException(e);
 
             // better that catch the exception here would be use handle to send events the activity
@@ -455,7 +454,7 @@ public class MainActivity extends BaseActivity
             if( !pictureURL.contains("https") )
                 pictureURL = pictureURL.replace("http", "https");
             if( Globals.volley == null )
-                Globals.InitializeVolley(this);
+                Globals.initializeVolley(this);
 
             Cache cache = Globals.volley.getRequestQueue().getCache();
             Cache.Entry entry = cache.get(pictureURL);
@@ -486,7 +485,7 @@ public class MainActivity extends BaseActivity
             }
 
         } catch (Exception e) {
-            if( Crashlytics.getInstance() != null)
+            if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
                 Crashlytics.logException(e);
 
             Log.e(LOG_TAG, e.getMessage());
