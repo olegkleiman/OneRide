@@ -1,6 +1,8 @@
 package com.labs.okey.oneride;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -30,6 +32,16 @@ import com.android.volley.toolbox.ImageLoader;
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.LoginEvent;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStates;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -67,11 +79,12 @@ import io.fabric.sdk.android.Fabric;
 
 public class MainActivity extends BaseActivity
         implements WAMSVersionTable.IVersionMismatchListener,
+        GoogleApiClient.ConnectionCallbacks,
         IRecyclerClickListener {
 
-    static final int            REGISTER_USER_REQUEST = 1;
-    private final String        LOG_TAG = getClass().getSimpleName();
-    private boolean             mWAMSLogedIn = false;
+    private final int       REQUEST_CHECK_SETTINGS = 101;
+    private final String    LOG_TAG = getClass().getSimpleName();
+    private boolean         mWAMSLogedIn = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -88,8 +101,7 @@ public class MainActivity extends BaseActivity
                 String strSignature = new String(Base64.encode(md.digest(), 0));
                 Log.d(LOG_TAG, strSignature);
             }
-        }
-        catch (PackageManager.NameNotFoundException | NoSuchAlgorithmException ex) {
+        } catch (PackageManager.NameNotFoundException | NoSuchAlgorithmException ex) {
             Log.e(LOG_TAG, ex.toString());
         }
 
@@ -136,14 +148,14 @@ public class MainActivity extends BaseActivity
         String authorizationToken = sharedPrefs.getString(Globals.AUTHORIZATION_CODE_PREF, "");
 
         // Don't confuse with BaseActivity.wamsInit();
-        if( !wamsInit() ) {
-            if( !login(accessToken, accessTokenSecret, authorizationToken) ) {
+        if (!wamsInit()) {
+            if (!login(accessToken, accessTokenSecret, authorizationToken)) {
                 // TBD: provide UI error for login failure
                 Log.e(LOG_TAG, "WAMS login failed");
             }
         }
 
-        if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
+        if (Fabric.isInitialized() && Crashlytics.getInstance() != null)
             Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_start));
 
         new AsyncTask<Void, Void, Void>() {
@@ -190,6 +202,79 @@ public class MainActivity extends BaseActivity
                 return null;
             }
         }.execute();
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+
+        Boolean locationEnabled = isLocationEnabled(this);
+        if (!locationEnabled) {
+
+            LocationRequest locRequest = LocationRequest.create();
+            locRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+            locRequest.setFastestInterval(Globals.HIGH_PRIORITY_FAST_INTERVAL);
+            locRequest.setInterval(Globals.HIGH_PRIORITY_UPDATE_INTERVAL);
+            locRequest.setNumUpdates(1);
+
+            LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                                                        .addLocationRequest(locRequest)
+                                                        .setNeedBle(true);
+
+            PendingResult<LocationSettingsResult> result =
+                    LocationServices.SettingsApi.checkLocationSettings(getGoogleApiClient(),
+                            builder.build());
+            result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+                @Override
+                public void onResult(@NonNull LocationSettingsResult result) {
+                    final Status status = result.getStatus();
+                    final LocationSettingsStates states = result.getLocationSettingsStates();
+                    switch( status.getStatusCode() ) {
+                        case LocationSettingsStatusCodes.SUCCESS:
+                            // All location settings are satisfied.
+                            // We can initialize location requests from here
+                            break;
+
+                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                            try {
+                                status.startResolutionForResult(MainActivity.this,
+                                                                REQUEST_CHECK_SETTINGS);
+                            } catch (IntentSender.SendIntentException e) {
+                                Log.e(LOG_TAG, e.getMessage());
+                            }
+                            break;
+
+                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                            // Location settings are not satisfied. Hower, we have no way to fix the
+                            // settings so we won't show the dialog
+                            break;
+                    }
+                }
+            });
+
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        switch( requestCode ) {
+            case REQUEST_CHECK_SETTINGS:
+                switch ( resultCode ) {
+                    case Activity.RESULT_OK:
+                        // All required changes were successfully made
+                    break;
+
+                    case Activity.RESULT_CANCELED:
+                        // The user was asked to change settings, but not to able get them
+                    break;
+                }
+                break;
+
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
     }
 
     @Override
@@ -315,7 +400,7 @@ public class MainActivity extends BaseActivity
         if (tokenProvider == null)
             throw new AssertionError("Token provider cannot be null");
 
-        if( wamsUtils.isJWTTokenExpired(accessToken) )
+        if( !wamsUtils.isJWTTokenValid(accessToken) )
             return false;
 
         final JsonObject body = new JsonObject();
@@ -351,7 +436,7 @@ public class MainActivity extends BaseActivity
                 bundle.putBoolean(FirebaseAnalytics.Param.VALUE, true);
                 firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN, bundle);
 
-                if (Answers.getInstance() != null)
+                if( Fabric.isInitialized() && Answers.getInstance() != null)
                     Answers.getInstance().logLogin(new LoginEvent()
                             .putMethod(tokenProvider.toString())
                             .putSuccess(true));
@@ -493,4 +578,6 @@ public class MainActivity extends BaseActivity
 
 
     }
+
+
 }

@@ -45,6 +45,8 @@ import com.facebook.ProfileTracker;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.credentials.CredentialRequest;
+import com.google.android.gms.auth.api.credentials.IdentityProviders;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
@@ -93,6 +95,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+
+import io.fabric.sdk.android.Fabric;
 
 public class RegisterActivity extends FragmentActivity
         implements ConfirmRegistrationFragment.RegistrationDialogListener,
@@ -203,10 +207,8 @@ public class RegisterActivity extends FragmentActivity
 
         @Override
         protected void onPostExecute(Void result) {
-//            if( progress != null )
-//                progress.dismiss();
 
-            if( materialProgress != null && materialProgress.isShowing() )
+            if( (materialProgress != null) && materialProgress.isShowing() )
                 materialProgress.dismiss();
 
             if (mEx == null) {
@@ -409,18 +411,23 @@ public class RegisterActivity extends FragmentActivity
         // Google+ stuff
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.server_client_id))
-                .requestServerAuthCode(getString(R.string.server_client_id))
+                .requestServerAuthCode(getString(R.string.server_client_id),
+                        true) // force code for refresh token
                 .requestEmail()
+                .build();
+
+        CredentialRequest mCredentialRequest = new CredentialRequest.Builder()
+                .setPasswordLoginSupported(true)
+                .setAccountTypes(IdentityProviders.GOOGLE, IdentityProviders.TWITTER)
                 .build();
 
         Globals.googleApiClient = new GoogleApiClient.Builder(this)
                                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                                //.addApi(Auth.CREDENTIALS_API)
                                 .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
                                 .build();
 
         SignInButton googleSignInButton = (SignInButton)findViewById(R.id.google_login);
-        String str = getString(com.google.android.gms.R.string.common_signin_button_text_long);
-        //setText();
         googleSignInButton.setColorScheme(SignInButton.COLOR_AUTO);
         googleSignInButton.setSize(SignInButton.SIZE_WIDE);
         googleSignInButton.setOnClickListener(new View.OnClickListener() {
@@ -981,14 +988,14 @@ public class RegisterActivity extends FragmentActivity
                 @Override
                 protected void onPostExecute(Void result){
 
-                    if( progressDialog != null ) {
+                    if( progressDialog != null && progressDialog.isShowing()) {
                         progressDialog.dismiss();
                         progressDialog = null;
                     }
 
                     if( mEx == null ) {
 
-                        if( Answers.getInstance() != null ) {
+                        if( Fabric.isInitialized() && Answers.getInstance() != null ) {
                             CustomEvent regEvent = new CustomEvent(getString(R.string.registration_answer_name));
                             regEvent.putCustomAttribute("User", mNewUser.getFullName());
                             Answers.getInstance().logCustom(regEvent);

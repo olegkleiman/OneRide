@@ -35,7 +35,8 @@ import java.util.concurrent.ExecutionException;
 import io.fabric.sdk.android.Fabric;
 
 /**
- * Created by Oleg on 09-Jun-15.
+ * @author Oleg Kleiman
+ * created 09-Jun-15.
  */
 public class wamsUtils {
 
@@ -126,8 +127,7 @@ public class wamsUtils {
             if( jwtToken.isEmpty() )
                 return false;
 
-            // Check if the token was expired
-            if( isJWTTokenExpired(jwtToken) )
+            if( !isJWTTokenValid(jwtToken) )
                 return false;
 
             MobileServiceUser wamsUser = new MobileServiceUser(userID);
@@ -191,7 +191,15 @@ public class wamsUtils {
                             new ResultCallback<Status>() {
                                 @Override
                                 public void onResult(@NonNull Status status) {
-
+                                    Log.i(LOG_TAG, "User signed out");
+                                }
+                            }
+                    );
+                    Auth.GoogleSignInApi.revokeAccess(Globals.googleApiClient).setResultCallback(
+                            new ResultCallback<Status>() {
+                                @Override
+                                public void onResult(@NonNull Status status) {
+                                    Log.i(LOG_TAG, "App Access revoked");
                                 }
                             }
                     );
@@ -237,7 +245,7 @@ public class wamsUtils {
         editor.apply();
     }
 
-    static public boolean isJWTTokenExpired(String jwtToken) {
+    static public boolean isJWTTokenValid(String jwtToken) {
         StringTokenizer jwtTokens = new StringTokenizer(jwtToken, ".");
 
         // JWT (http://self-issued.info/docs/draft-ietf-oauth-json-web-token-25.html) is a concatenation of
@@ -278,10 +286,10 @@ public class wamsUtils {
             Date expiryDate = calendar.getTime();
             if( expiryDate.before(new Date()) ) {
                 Log.d(LOG_TAG, "Token expired");
-                return true;
+                return false;
             } else {
                 Log.d(LOG_TAG, "Token is valid");
-                return false;
+                return true;
             }
             //return !expiryDate.before(new Date());
 

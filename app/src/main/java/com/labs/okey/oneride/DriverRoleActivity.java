@@ -1010,6 +1010,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         try {
 
+            if( !isLocationEnabled(this) )
+                throw new SecurityException();
+
             mCurrentLocation = getCurrentLocation(this);// check Location Permission inside!
 
             // Global flag 'inGeofenceArea' is updated inside getGFenceForLocation()
@@ -1257,7 +1260,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 CustomEvent ce = new CustomEvent(getString(R.string.ride_started_answers_name))
                         .putCustomAttribute("User", getUser().getFullName())
                         .putCustomAttribute("RideCode", mRideCode);
-                Answers.getInstance().logCustom(ce);
+                if( Fabric.isInitialized() )
+                    Answers.getInstance().logCustom(ce);
 
                 FirebaseAnalytics firebaseAnalytics =
                         FirebaseAnalytics.getInstance(getApplicationContext());
@@ -1689,7 +1693,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                             requestEvent.putCustomAttribute("User", getUser().getFullName());
 
                             requestEvent.putCustomAttribute(getString(R.string.answer_approved_attribute), 0);
-                            Answers.getInstance().logCustom(requestEvent);
+                            if( Fabric.isInitialized() )
+                                Answers.getInstance().logCustom(requestEvent);
                         }
                     }.execute();
 
@@ -2022,7 +2027,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             }
 
             requestEvent.putCustomAttribute(getString(R.string.answer_approved_attribute), 1);
-            Answers.getInstance().logCustom(requestEvent);
+            if( Fabric.isInitialized() )
+                Answers.getInstance().logCustom(requestEvent);
         }
     }
 }

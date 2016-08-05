@@ -9,7 +9,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -231,9 +230,6 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
         int holderId;
         IRecyclerClickListener mClickListener;
 
-        // Header views
-        ImageButton btnRefresh;
-
         // Row views
         TextView txtDriverName;
         TextView txtRideCode;
@@ -253,12 +249,7 @@ public class WiFiPeersAdapter2 extends RecyclerView.Adapter<WiFiPeersAdapter2.Vi
             super(itemLayoutView);
             mClickListener = clickListener;
 
-            if(viewType == TYPE_HEADER) {
-
-                btnRefresh = (ImageButton)itemLayoutView.findViewById(R.id.btnRefresh);
-                btnRefresh.setOnClickListener(listener);
-
-            } else if(viewType == TYPE_ITEM){
+            if(viewType == TYPE_ITEM){
 
                 holderId = viewType;
 

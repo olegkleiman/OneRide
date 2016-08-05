@@ -120,8 +120,7 @@ public class Globals {
     private static MobileServiceClient wamsClient;
     public static boolean initMobileServices(Context ctx) {
         try {
-            wamsClient = new MobileServiceClient(Globals.WAMS_URL,
-                                                 ctx);
+            wamsClient = new MobileServiceClient(Globals.WAMS_URL, ctx);
             //.withFilter(new RefreshTokenCacheFilter());
             //.withFilter(new wamsUtils.ProgressFilter());
         } catch(MalformedURLException ex) {
@@ -214,6 +213,9 @@ public class Globals {
     }
 
     public static float MIN_ACCURACY = 50;
+
+    public static int HIGH_PRIORITY_UPDATE_INTERVAL = 1;
+    public static int HIGH_PRIORITY_FAST_INTERVAL = 1;
 
     public static float PICTURE_CORNER_RADIUS = 20;
     public static float PICTURE_BORDER_WIDTH = 4;

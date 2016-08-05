@@ -55,7 +55,9 @@ public class wamsBlobUpload extends AsyncTask<File, Void, Void> {
 
     @Override
     protected void onPostExecute(Void result) {
-        mProgressDialog.dismiss();
+
+        if( (mProgressDialog != null) && mProgressDialog.isShowing() )
+            mProgressDialog.dismiss();
 
         if( mUrlUpdater != null )
             mUrlUpdater.update(publishedUri.toString());

@@ -41,8 +41,6 @@ import android.view.Display;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.ImageButton;
-import android.widget.ProgressBar;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -685,7 +683,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     }
 
     private void btRestore() {
-        unregisterReceiver(mBtReceiver);
+        try {
+            unregisterReceiver(mBtReceiver);
+        } catch(Exception ex) {
+            Log.e(LOG_TAG, ex.getMessage());
+        }
     }
 
     private BtDeviceUser btAnalyzeDevice(BluetoothDevice device){
@@ -737,14 +739,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         _mDrivers.clear();
         _mDriversAdapter.notifyDataSetChanged();
 
-        final ImageButton btnRefresh = (ImageButton) findViewById(R.id.btnRefresh);
-        if (btnRefresh != null) // This may happens because
-            // the button is actually created by adapter
-            btnRefresh.setVisibility(View.GONE);
-        final ProgressBar progress_refresh = (ProgressBar) findViewById(R.id.progress_refresh);
-        if (progress_refresh != null)
-            progress_refresh.setVisibility(View.VISIBLE);
-
         btStartDiscovery();
 
         showCountDownDialog();
@@ -759,15 +753,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         _mDrivers.clear();
         _mDriversAdapter.notifyDataSetChanged();
 
-        final ImageButton btnRefresh = (ImageButton) findViewById(R.id.btnRefresh);
-        if (btnRefresh != null) // This may happens because
-                                // the button is actually created by adapter
-            btnRefresh.setVisibility(View.GONE);
-
-        final ProgressBar progress_refresh = (ProgressBar) findViewById(R.id.progress_refresh);
-        if (progress_refresh != null)
-            progress_refresh.setVisibility(View.VISIBLE);
-
         try {
             stopDiscovery(new Runnable() {
                 @Override
@@ -776,18 +761,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     startDiscovery(PassengerRoleActivity.this,
                             getUser().getRegistrationId(),
                             ""); // empty ride code!
-
-                    getHandler().postDelayed(
-                            new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (btnRefresh != null)
-                                        btnRefresh.setVisibility(View.VISIBLE);
-                                    if (progress_refresh != null)
-                                        progress_refresh.setVisibility(View.GONE);
-                                }
-                            },
-                            Globals.PASSENGER_DISCOVERY_PERIOD * 1000);
 
                     showCountDownDialog();
 
@@ -897,19 +870,12 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .onNegative((new MaterialDialog.SingleButtonCallback() {
                         @Override
                         public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                            refresh();
-                        }
-                    }))
-                    .onNeutral((new MaterialDialog.SingleButtonCallback() {
-                        @Override
-                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-
+                            btRefresh();
                         }
                     }))
                     .title(R.string.ride_code_title)
                     .content(dialogContent)
                     .positiveText(android.R.string.ok)
-                    .neutralText(R.string.code_try_later)
                     .negativeText(R.string.code_retry_action)
                     .contentColor(contentColor)
                     .inputType(InputType.TYPE_NUMBER_VARIATION_NORMAL | InputType.TYPE_CLASS_NUMBER)
@@ -1113,8 +1079,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         if ( Fabric.isInitialized() && Crashlytics.getInstance() != null)
                             Crashlytics.logException(ex);
 
-                        if (!ex.getMessage().isEmpty())
-                            Log.e(LOG_TAG, ex.getMessage());
+                        String msg = ex.getMessage();
+                        if(  msg != null && !msg.isEmpty())
+                            Log.e(LOG_TAG, msg);
                     }
 
                 } else {
@@ -1129,7 +1096,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                 }
 
-                Answers.getInstance().logCustom(confirmEvent);
+                if( Fabric.isInitialized() )
+                    Answers.getInstance().logCustom(confirmEvent);
 
                 FirebaseAnalytics firebaseAnalytics =
                         FirebaseAnalytics.getInstance(getApplicationContext());

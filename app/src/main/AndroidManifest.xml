@@ -22,11 +22,11 @@
     <uses-permission
         android:name="android.permission.ACCESS_WIFI_STATE"
         android:required="true" />
-    <uses-permission
-        android:name="android.permission.CHANGE_WIFI_STATE"
-        android:required="true" />
+    <!--<uses-permission-->
+        <!--android:name="android.permission.CHANGE_WIFI_STATE"-->
+        <!--android:required="true" />-->
     <!-- Receive SMS during registration -->
-    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <!--<uses-permission android:name="android.permission.RECEIVE_SMS" />-->
     <!-- Location -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Required for Geofences -->

@@ -26,6 +26,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.net.URI;
 
+import io.fabric.sdk.android.Fabric;
+
 /**
  * @author eli max
  * created 23/10/2015.
@@ -90,7 +92,8 @@ public class wamsAddApproval extends AsyncTask<File, Void, Void> {
             CustomEvent requestEvent = new CustomEvent(mContext.getString(R.string.approval_answer_name));
             requestEvent.putCustomAttribute("User", mDriverName);
 
-            Answers.getInstance().logCustom(requestEvent);
+            if( Fabric.isInitialized() )
+             Answers.getInstance().logCustom(requestEvent);
 
             new MaterialDialog.Builder(mContext)
                     .title(mContext.getString(R.string.approval_send_title))

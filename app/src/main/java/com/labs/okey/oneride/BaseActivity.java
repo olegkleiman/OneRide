@@ -22,6 +22,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.annotation.UiThread;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
@@ -41,6 +42,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -55,6 +57,8 @@ import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceAut
 import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.util.StringTokenizer;
+
+import io.fabric.sdk.android.Fabric;
 
 /**
  * @author Oleg Kleiman
@@ -238,6 +242,51 @@ public class BaseActivity extends AppCompatActivity
     public void loadBitmap(int resId, ImageView imageView) {
         BitmapWorkerTask task = new BitmapWorkerTask(imageView);
         task.execute(resId);
+    }
+
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    @SuppressWarnings("deprecation")
+    protected boolean isLocationEnabled(Context context){
+
+//        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+//                != PackageManager.PERMISSION_GRANTED
+//                &&
+//                ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)
+//                        != PackageManager.PERMISSION_GRANTED) {
+//
+        int permissions = context.checkCallingOrSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION);
+        if( permissions != PackageManager.PERMISSION_GRANTED )
+            return false;
+
+        int locationMode = 0;
+        String locationProviders;
+
+        if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT ) {
+
+            try {
+                locationMode = Settings.Secure.getInt(context.getContentResolver(),
+                        Settings.Secure.LOCATION_MODE);
+            } catch (Settings.SettingNotFoundException e) {
+                if (Fabric.isInitialized() && Crashlytics.getInstance() != null) {
+                    Crashlytics.logException(e);
+
+                    Log.e(LOG_TAG, e.getMessage());
+                }
+            }
+
+            switch( locationMode ) {
+                case Settings.Secure.LOCATION_MODE_HIGH_ACCURACY:
+                case Settings.Secure.LOCATION_MODE_SENSORS_ONLY:
+                    return true;
+
+                default:
+                    return false;
+            }
+        } else {
+            locationProviders = Settings.Secure.getString(context.getContentResolver(),
+                    Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+            return locationProviders.contains("gps");
+        }
     }
 
     class BitmapWorkerTask extends AsyncTask<Integer, Void, Bitmap>{

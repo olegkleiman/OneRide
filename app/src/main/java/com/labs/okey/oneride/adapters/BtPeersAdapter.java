@@ -10,7 +10,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -241,9 +240,6 @@ public class BtPeersAdapter extends RecyclerView.Adapter<BtPeersAdapter.ViewHold
         int holderId;
         IRecyclerClickListener mClickListener;
 
-        // Header views
-        ImageButton             btnRefresh;
-
         // Row views
         TextView                txtDriverName;
         TextView                txtRideCode;
@@ -265,12 +261,7 @@ public class BtPeersAdapter extends RecyclerView.Adapter<BtPeersAdapter.ViewHold
             super(itemLayoutView);
             mClickListener = clickListener;
 
-            if(viewType == TYPE_HEADER) {
-
-                btnRefresh = (ImageButton)itemLayoutView.findViewById(R.id.btnRefresh);
-                btnRefresh.setOnClickListener(listener);
-
-            } else if(viewType == TYPE_ITEM){
+            if(viewType == TYPE_ITEM){
 
                 holderId = viewType;
 

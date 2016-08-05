@@ -63,7 +63,8 @@ public class wamsPictureURLUpdater extends AsyncTask<String, Void, Void> {
     @Override
     protected void onPostExecute(Void result) {
 
-        mProgressDialog.dismiss();
+        if( (mProgressDialog != null) && mProgressDialog.isShowing() )
+            mProgressDialog.dismiss();
 
         if( error != null ) {
             new MaterialDialog.Builder(mContext)

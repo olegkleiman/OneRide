@@ -8,7 +8,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -182,9 +181,6 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
 
         int holderId;
 
-        // Header views
-        ImageButton         btnRefresh;
-
         // Row views
         TextView            txtDriverName;
         CircularImageView   userPicture;
@@ -200,11 +196,7 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
                           int viewType) {
             super(itemLayoutView);
 
-            if(viewType == TYPE_HEADER) {
-
-                btnRefresh = (ImageButton)itemLayoutView.findViewById(R.id.btnRefresh);
-
-            } else if(viewType == TYPE_ITEM){
+            if(viewType == TYPE_ITEM){
 
                 holderId = viewType;
 
