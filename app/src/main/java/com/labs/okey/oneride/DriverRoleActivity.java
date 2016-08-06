@@ -287,7 +287,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         if (savedInstanceState != null) {
             wamsInit();
-            btInit();
             geoFencesInit();
 
             restoreState(savedInstanceState);
@@ -752,7 +751,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String bluetoothOriginalName = prefs.getString("btOriginalName", "");
 
-        mBluetoothAdapter.setName(bluetoothOriginalName);
+        if( mBluetoothAdapter != null )
+            mBluetoothAdapter.setName(bluetoothOriginalName);
     }
 
     private void btStartAdvertise() {
@@ -840,6 +840,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                     View vEmptyText = findViewById(R.id.empty_view);
                     vEmptyText.setVisibility(View.GONE);
+                    mEmptyTextShown = false;
 
                     if( mPassengers.size() >= Globals.REQUIRED_PASSENGERS_NUMBER ) {
                         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
@@ -1130,7 +1131,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     @CallSuper
     protected void onDestroy() {
 
-        btRestore();
+        if( !isChangingConfigurations() ) // Do not cancel BT transmission
+                                          // when display orientation changed
+            btRestore();
 
         Globals.setDriverActivity(null);
 

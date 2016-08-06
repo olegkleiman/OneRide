@@ -219,6 +219,7 @@ public class MainActivity extends BaseActivity
             LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
                                                         .addLocationRequest(locRequest)
                                                         .setNeedBle(true);
+            builder.setAlwaysShow(true);
 
             PendingResult<LocationSettingsResult> result =
                     LocationServices.SettingsApi.checkLocationSettings(getGoogleApiClient(),
@@ -399,9 +400,6 @@ public class MainActivity extends BaseActivity
         final MobileServiceAuthenticationProvider tokenProvider = getTokenProvider();
         if (tokenProvider == null)
             throw new AssertionError("Token provider cannot be null");
-
-        if( !wamsUtils.isJWTTokenValid(accessToken) )
-            return false;
 
         final JsonObject body = new JsonObject();
         if (tokenProvider == MobileServiceAuthenticationProvider.MicrosoftAccount) {
