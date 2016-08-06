@@ -662,24 +662,31 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         }
     }
 
+//    private void btStartDiscovery() {
+//
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            int permissionCheck = this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+//            permissionCheck += this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
+//
+//            if( permissionCheck != 0 ) {
+//                ActivityCompat.requestPermissions(this,
+//                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+//                                Manifest.permission.ACCESS_COARSE_LOCATION},
+//                                BT_DISCOVERY_PERMISSSION_REQUEST);
+//            } else {
+//                _btStartDiscovery();
+//            }
+//        } else {
+//            _btStartDiscovery();
+//        }
+//    }
+
     private void btStartDiscovery() {
+        if( mBluetoothAdapter == null )
+            mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            int permissionCheck = this.checkSelfPermission("Manifest.permission.ACCESS_FINE_LOCATION");
-            permissionCheck += this.checkSelfPermission("Manifest.permission.ACCESS_COARSE_LOCATION");
-
-            if( permissionCheck != 0 ) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION},
-                                BT_DISCOVERY_PERMISSSION_REQUEST);
-            }
-        } else {
-            if( mBluetoothAdapter == null )
-                mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-            mBluetoothAdapter.startDiscovery();
-        }
+        if( !mBluetoothAdapter.isDiscovering() )
+            mBluetoothAdapter.startDiscovery ();
     }
 
     private void btRestore() {
@@ -1267,9 +1274,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .content(R.string.geofence_outside)
                     .positiveText(R.string.geofence_positive_answer)
                     .negativeText(R.string.geofence_negative_answer)
-                    .callback(new MaterialDialog.ButtonCallback() {
+                    .onPositive(new MaterialDialog.SingleButtonCallback(){
                         @Override
-                        public void onPositive(MaterialDialog dialog) {
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                             Globals.setRemindGeofenceEntrance();
                         }
                     })
@@ -1327,18 +1334,24 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     private Runnable thanksRunnable = new Runnable() {
         @Override
         public void run() {
-            new MaterialDialog.Builder(PassengerRoleActivity.this)
-                    .title(R.string.thanks)
-                    .content(R.string.confirmation_accepted)
-                    .cancelable(false)
-                    .positiveText(android.R.string.ok)
-                    .callback(new MaterialDialog.ButtonCallback() {
-                        @Override
-                        public void onPositive(MaterialDialog dialog) {
-                            //finish();
-                        }
-                    })
-                    .show();
+
+            try {
+
+                new MaterialDialog.Builder(PassengerRoleActivity.this)
+                        .title(R.string.thanks)
+                        .content(R.string.confirmation_accepted)
+                        .cancelable(false)
+                        .positiveText(android.R.string.ok)
+                        .onPositive(new MaterialDialog.SingleButtonCallback(){
+                            @Override
+                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                //finish();
+                            }
+                        })
+                        .show();
+            } catch(Exception ex){
+                Log.e(LOG_TAG, "PassengerActivity was already dismissed: " + ex.getMessage());
+            }
         }
     };
 }

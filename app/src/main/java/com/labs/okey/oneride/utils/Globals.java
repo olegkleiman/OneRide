@@ -18,7 +18,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.firebase.analytics.FirebaseAnalytics;
 import com.labs.okey.oneride.DriverRoleActivity;
 import com.labs.okey.oneride.model.GlobalSettings;
 import com.labs.okey.oneride.model.PassengerFace;
@@ -137,8 +136,6 @@ public class Globals {
         return wamsClient;
     }
 
-    private FirebaseAnalytics mFirebaseAnalytics;
-
     private static Boolean _monitorInitialized = false;
     private static Boolean isMonitorInitialized() {
         return _monitorInitialized;
@@ -211,6 +208,8 @@ public class Globals {
             Log.e("FR", msg);
         }
     }
+
+    public static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
 
     public static float MIN_ACCURACY = 50;
 

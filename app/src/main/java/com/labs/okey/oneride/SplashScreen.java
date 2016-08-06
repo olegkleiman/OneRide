@@ -38,26 +38,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * An example full-screen activity that shows and hides the system UI (i.e.
- * status bar and navigation/system bar) with user interaction.
+ * @author Oleg Kleiman
+ * created 15-Jul-16.
+ */
+/**
+ * Full-screen activity
  */
 public class SplashScreen extends AppCompatActivity {
 
     private final String        LOG_TAG = getClass().getSimpleName();
-
-    /**
-     * Whether or not the system UI should be auto-hidden after
-     * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
-     */
-    private static final boolean AUTO_HIDE = true;
-
-    /**
-     * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
-     * user interaction before hiding the system UI.
-     */
-    private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
-
-    private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
 
     /**
      * Some older devices needs a small delay between UI widget updates
@@ -146,6 +135,12 @@ public class SplashScreen extends AppCompatActivity {
 
                         Intent intent;
                         if (result) {
+
+                            NotificationsManager.handleNotifications(getApplicationContext(),
+                                    Globals.SENDER_ID,
+                                    GCMHandler.class);
+                            registerWithNotificationHubs();
+
                             intent = new Intent(SplashScreen.this, MainActivity.class);
                             Log.d(LOG_TAG, "Validation succeeded");
                         } else {
@@ -166,10 +161,6 @@ public class SplashScreen extends AppCompatActivity {
             }
         });
 
-        NotificationsManager.handleNotifications(getApplicationContext(),
-                                                 Globals.SENDER_ID,
-                                                 GCMHandler.class);
-        registerWithNotificationHubs();
     }
 
     /**
@@ -184,26 +175,21 @@ public class SplashScreen extends AppCompatActivity {
         if (resultCode != ConnectionResult.SUCCESS) {
 
             if (apiAvailability.isUserResolvableError(resultCode)) {
-                apiAvailability.getErrorDialog(this, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST)
+                apiAvailability.getErrorDialog(this, resultCode, Globals.PLAY_SERVICES_RESOLUTION_REQUEST)
                         .show();
             } else {
-                Log.i(LOG_TAG, "This device is not supported by Google Play Services.");
-                //ToastNotify("This device is not supported by Google Play Services.");
-
-                finish();
+                Log.i(LOG_TAG, getString(R.string.no_playservices));
             }
 
             return false;
         } else
             return true;
-
     }
 
     public void registerWithNotificationHubs(){
-        Log.i(LOG_TAG, " Registering with Notification Hubs");
 
         if (checkPlayServices()) {
-            // Start IntentService to register this application with GCM.
+            // Start IntentService to register this application with FCM.
             Intent intent = new Intent(this, AzureRegistrationIntentService.class);
             startService(intent);
         }

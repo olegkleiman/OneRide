@@ -6,7 +6,6 @@ import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -51,6 +50,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Status;
@@ -60,18 +60,18 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonElement;
 import com.labs.okey.oneride.fragments.ConfirmRegistrationFragment;
-import com.labs.okey.oneride.fragments.PhoneConfirmFragment;
 import com.labs.okey.oneride.fragments.RegisterCarsFragment;
+import com.labs.okey.oneride.gcm.GCMHandler;
 import com.labs.okey.oneride.model.GeoFence;
 import com.labs.okey.oneride.model.User;
 import com.labs.okey.oneride.utils.Globals;
-import com.labs.okey.oneride.utils.sms.SMSReceiver;
 import com.labs.okey.oneride.utils.wamsUtils;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.http.HttpConstants;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
+import com.microsoft.windowsazure.notifications.NotificationsManager;
 import com.twitter.sdk.android.Twitter;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
@@ -180,7 +180,6 @@ public class RegisterActivity extends FragmentActivity
     class VerifyAccountTask extends AsyncTask<Void, Void, Void> {
 
         Exception mEx;
-//        ProgressDialog progress;
         MaterialDialog materialProgress = new MaterialDialog.Builder(RegisterActivity.this)
                                             .title(R.string.registration_account_validate)
                                             .content(R.string.registration_add_status_wait)
@@ -197,10 +196,6 @@ public class RegisterActivity extends FragmentActivity
 
         @Override
         protected void onPreExecute() {
-
-//            progress = ProgressDialog.show(RegisterActivity.this,
-//                    getString(R.string.registration_account_validate),
-//                    getString(R.string.registration_add_status_wait));
 
             materialProgress.show();
         }
@@ -780,19 +775,6 @@ public class RegisterActivity extends FragmentActivity
         form.setVisibility(View.VISIBLE);
         View buttonNext = findViewById(R.id.btnRegistrationNext);
         buttonNext.setVisibility(View.VISIBLE);
-
-//        try {
-//            TelephonyManager mngr = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
-//            String phoneNumber = mngr.getLine1Number();
-//            if (!phoneNumber.isEmpty()) {
-//
-//                EditText txtPhoneNumber = (EditText) findViewById(R.id.phone);
-//                txtPhoneNumber.setText(phoneNumber);
-//            }
-//        } catch(Exception ex) {
-//            Log.e(LOG_TAG, ex.getMessage());
-//        }
-
     }
 
     private void hideRegistrationForm() {
@@ -813,7 +795,6 @@ public class RegisterActivity extends FragmentActivity
 
     boolean bCarsFragmentDisplayed = false;
     boolean bConfirmFragmentDisplayed = false;
-    SMSReceiver smsReceiver = new SMSReceiver();
 
     public void onRegisterNext(final View v){
 
@@ -856,18 +837,7 @@ public class RegisterActivity extends FragmentActivity
                             @Override
                             public void onSuccess(JsonElement result) {
 
-                                String RECEIVED = "android.provider.Telephony.SMS_RECEIVED";
-                                IntentFilter _if = new IntentFilter(RECEIVED);
-                                registerReceiver(smsReceiver, _if);
-
                                 hideRegistrationForm();
-
-                                FragmentTransaction transaction = getFragmentManager().beginTransaction();
-
-                                PhoneConfirmFragment confirmFragment = new PhoneConfirmFragment();
-                                transaction.add(R.id.register_wizard_placeholder, confirmFragment);
-                                transaction.commit();
-
                                 bConfirmFragmentDisplayed = true;
                             }
 
@@ -942,13 +912,6 @@ public class RegisterActivity extends FragmentActivity
             }
         } else if( !bCarsFragmentDisplayed ) {
 
-            try {
-                unregisterReceiver(smsReceiver);
-            } catch(Exception ex) {
-                // The receiver may not be registered if processing the existing user
-                Log.e(LOG_TAG, ex.getMessage());
-            }
-
             RegisterCarsFragment fragment = new RegisterCarsFragment();
 
             FragmentTransaction transaction = getFragmentManager().beginTransaction();
@@ -1000,6 +963,19 @@ public class RegisterActivity extends FragmentActivity
                             regEvent.putCustomAttribute("User", mNewUser.getFullName());
                             Answers.getInstance().logCustom(regEvent);
                         }
+
+                        NotificationsManager.handleNotifications(getApplicationContext(),
+                                Globals.SENDER_ID,
+                                GCMHandler.class);
+
+                        // Register with Notification Hubs
+                        if (checkPlayServices()) {
+                            // Start IntentService to register this application with FCM.
+                            Intent intent = new Intent(RegisterActivity.this,
+                                                       AzureRegistrationIntentService.class);
+                            startService(intent);
+                        }
+
 
                         Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
                         startActivity(intent);
@@ -1068,5 +1044,29 @@ public class RegisterActivity extends FragmentActivity
                 }
             }.execute();
         }
+    }
+
+    /**
+     * Check the device to make sure it has the Google Play Services APK. If
+     * it doesn't, display a dialog that allows users to download the APK from
+     * the Google Play Store or enable it in the device's system settings.
+     */
+    private boolean checkPlayServices() {
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        int resultCode = apiAvailability.isGooglePlayServicesAvailable(this);
+
+        if (resultCode != ConnectionResult.SUCCESS) {
+
+            if (apiAvailability.isUserResolvableError(resultCode)) {
+                apiAvailability.getErrorDialog(this, resultCode,
+                                                Globals.PLAY_SERVICES_RESOLUTION_REQUEST)
+                                                .show();
+            } else {
+                Log.i(LOG_TAG, getString(R.string.no_playservices));
+            }
+
+            return false;
+        } else
+            return true;
     }
 }

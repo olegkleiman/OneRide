@@ -279,6 +279,7 @@ limitations under the License.</string>
     <string name="detection_update">Updating your data</string>
 
     <string name="no_extra">No extras was passed to received notification</string>
+    <string name="no_playservices" translatable="false">This device is not supported by Google Play Services</string>
 
     <string name="request_postponed">Your request is postponed</string>
     <string name="geofence_outside">Remind you when getting inside?</string>

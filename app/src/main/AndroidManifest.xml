@@ -2,18 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.labs.okey.oneride">
 
-    <!-- <permission -->
-    <!-- android:name="com.labs.okey.oneride.permission.C2D_MESSAGE" -->
-    <!-- android:protectionLevel="signature" /> -->
-    <!-- <uses-permission android:name="com.labs.okey.freeride.permission.C2D_MESSAGE" /> -->
+    <!-- FCM (GCM) permissions. See https://developers.google.com/cloud-messaging/android/client#manifest -->
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <!-- <uses-permission android:name="android.permission.WAKE_LOCK" /> -->
-    <uses-permission
-        android:name="android.permission.INTERNET"
-        android:required="true" />
+    <uses-permission android:name="android.permission.INTERNET" android:required="true" />
+
     <!-- Needed if camera pictures are stored locally -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <!-- Needed for bluetooth -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -22,11 +18,7 @@
     <uses-permission
         android:name="android.permission.ACCESS_WIFI_STATE"
         android:required="true" />
-    <!--<uses-permission-->
-        <!--android:name="android.permission.CHANGE_WIFI_STATE"-->
-        <!--android:required="true" />-->
-    <!-- Receive SMS during registration -->
-    <!--<uses-permission android:name="android.permission.RECEIVE_SMS" />-->
+
     <!-- Location -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Required for Geofences -->
@@ -154,8 +146,6 @@
             android:name=".AzureInstanceIDService"
             android:exported="false">
             <intent-filter>
-
-                <!-- <action android:name="com.google.android.gms.iid.InstanceID"/> -->
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
