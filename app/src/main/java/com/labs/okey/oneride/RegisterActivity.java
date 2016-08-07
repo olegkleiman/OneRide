@@ -839,13 +839,14 @@ public class RegisterActivity extends FragmentActivity
 
                                 hideRegistrationForm();
                                 bConfirmFragmentDisplayed = true;
+                                onRegisterNext(v);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
 
                                 showError(t.getMessage());
-                              }
+                            }
                         });
                     }
 

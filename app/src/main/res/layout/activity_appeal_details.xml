@@ -7,7 +7,7 @@
     android:background="#fff6f6f6"
     android:orientation="horizontal"
     android:id="@+id/myAppealDetail"
-    tools:context="com.maximum.fastride.AppealDetailsActivity">
+    tools:context="com.labs.okey.oneride.AppealDetailsActivity">
 
 <!--<include-->
 <!--layout="@layout/tool_bar" />-->

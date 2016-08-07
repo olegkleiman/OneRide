@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/material_blue_grey_800"
-    tools:context="com.maximum.fastride.tutorials.ReclaimTutorialFragment">
+    tools:context="com.labs.okey.oneride.tutorials.ReclaimTutorialFragment">
 
     <TextView
         android:layout_width="wrap_content"
