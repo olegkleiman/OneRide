@@ -1,9 +1,12 @@
 package com.labs.okey.oneride;
 
-import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.FirebaseInstanceIdService;
+import com.labs.okey.oneride.utils.Globals;
 
 /**
  * @author Oleg Kleiman
@@ -23,9 +26,11 @@ public class AzureInstanceIDService extends FirebaseInstanceIdService {
     @Override
     public void onTokenRefresh() {
 
-        Log.i(TAG, "Refreshing FCM Registration Token");
+        String fcmToken = FirebaseInstanceId.getInstance().getToken();
+        Log.i(TAG, "Refreshed FCM Registration Token: " + fcmToken);
 
-        Intent intent = new Intent(this, AzureRegistrationIntentService.class);
-        startService(intent);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences.edit().putString(Globals.FCM_TOKEN_PREF, fcmToken).apply();
+
     }
 }
