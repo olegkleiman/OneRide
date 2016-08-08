@@ -702,6 +702,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             return null;
 
         String deviceName = device.getName();
+        if( deviceName == null || deviceName.isEmpty() ) {
+            Log.i(LOG_TAG, "Device name is empty");
+            return null;
+        }
 
         BluetoothClass bluetoothClass = device.getBluetoothClass();
         if( bluetoothClass == null )
