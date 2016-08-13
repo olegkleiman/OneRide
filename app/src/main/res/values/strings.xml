@@ -18,9 +18,9 @@
     <string name="title_activity_login">Sign in</string>
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
-    <string name="prompt_phone">Phone number</string>
+    <string name="prompt_phone">Phone number:</string>
     <string name="prompt_sms_confirm">PIN</string>
-    <string name="phone_hint">050-1234-567</string>
+    <string name="phone_hint" translatable="false">054&#8211;123&#8211;4567</string>
     <string name="prompt_password">Password (optional)</string>
     <string name="action_sign_in">Sign in or register</string>
     <string name="action_sign_in_short">Sign in</string>
@@ -35,13 +35,13 @@
     <string name="registration_account_validate">Verifying your account</string>
     <string name="no_sim">Unable to continue without SIM-card</string>
     <string name="registration_account_validation_failure">Account Validation Failure</string>
-    <string name="registration_exists">It seems that this account was already registered.Replace previous registration?</string>
+    <string name="registration_exists">It seems that this account was already registered. Replace previous registration?</string>
     <string name="registration_add_status_wait">Just few seconds</string>
     <string name="sms_code_sent">We sent you a code via SMS. Just enter it below.</string>
     <string name="sms_resend">Resend</string>
     <string name="default_value">no value</string>
 
-    <string name="no_phone_number">Provide your phone number. You may prefer to not share it with others by switching off the following indicator</string>
+    <string name="no_phone_number">Provide a valid phone number</string>
 
     <string name="facebook_app_id" translatable="false">1554616841424048</string>
     <string name="title_section_user">User Profile</string>

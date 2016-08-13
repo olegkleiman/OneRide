@@ -79,6 +79,11 @@ public class User implements Parcelable {
     public String getDeviceId() { return deviceId; }
     public void setDeviceId(String value) { this.deviceId = value; }
 
+    @com.google.gson.annotations.SerializedName("device_model")
+    private String deviceModel;
+    public String getDeviceModel() { return deviceModel; }
+    public void setDeviceModel(String value) { deviceModel = value; }
+
     // This is not persistent property
     private boolean _wasSelfPictured = false;
     public boolean wasSelfPictured() {
@@ -106,8 +111,7 @@ public class User implements Parcelable {
     }
 
     public boolean compare(User _user) {
-        return this.registration_id.compareTo(_user.registration_id) == 0
-                && this.deviceId.compareTo(_user.deviceId) == 0;
+        return this.registration_id.compareTo(_user.registration_id) == 0;
     }
 
     public User() {

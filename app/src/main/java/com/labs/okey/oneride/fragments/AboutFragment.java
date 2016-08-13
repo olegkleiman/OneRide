@@ -9,7 +9,8 @@ import android.view.ViewGroup;
 import com.labs.okey.oneride.R;
 
 /**
- * Created by eli max on 24/01/2016.
+ * @author eli max
+ * created 24/01/2016.
  */
 public class AboutFragment extends Fragment {
 

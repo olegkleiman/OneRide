@@ -24,8 +24,10 @@ import com.pkmmte.view.CircularImageView;
 import java.util.List;
 
 /**
- * Created by Oleg Kleiman on 26-May-15.
+ * @author Oleg Kleiman
+ * created 26-May-15.
  */
+
 public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.ViewHolder>{
 
     private final String LOG_TAG = getClass().getSimpleName();

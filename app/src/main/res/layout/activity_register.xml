@@ -39,7 +39,8 @@
             android:text="@string/common_signin_button_text_long"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"/>
+            android:layout_marginTop="16dp"
+            android:visibility="gone"/>
 
         <TextView
             android:id="@+id/txtNoSIM"
@@ -50,17 +51,6 @@
             android:visibility="gone"
             android:text="@string/no_sim"
             android:textColor="@color/ColorAccent" />
-
-        <ImageButton
-            android:id="@+id/msa_login"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:background="@color/msa_background"
-            android:src="@drawable/msa_logo"
-            android:layout_marginTop="16dp"
-            android:scaleType="center"
-            android:visibility="gone" />
 
         <com.twitter.sdk.android.core.identity.TwitterLoginButton
             android:id="@+id/twitter_login"
@@ -99,7 +89,7 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="@string/complete_registration"
+            android:text="@string/prompt_phone"
             android:id="@+id/textView" />
 
         <android.support.design.widget.TextInputLayout
@@ -109,7 +99,7 @@
             <EditText android:id="@+id/phone"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:hint="@string/prompt_phone"
+                android:hint="@string/phone_hint"
                 android:inputType="phone"
                 android:ellipsize="end"
                 android:gravity="start"

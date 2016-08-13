@@ -1175,9 +1175,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             @Override
             public void onFailure(Throwable t) {
-                if( Fabric.isInitialized() && Crashlytics.getInstance() != null) {
+                if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
                     Crashlytics.logException(t);
-                }
             }
         }, new UiThreadExecutor());
     }

@@ -59,7 +59,7 @@
     <string name="title_activity_driver_role">Водитель</string>
     <string name="title_activity_passenger_role">Пассажир</string>
     <string name="edit_car_button_title2">Указать</string>
-    <string name="prompt_phone">Номер телефона</string>
+    <string name="prompt_phone">Номер телефона:</string>
     <string name="geofence_transition_entered">Вы пересекли зону контроля</string>
     <string name="passengerTabCaption">Пассажир</string>
     <string name="ride_code_dialog_content">Вы можете увидеть этот код на дисплее телефона водителя</string>
@@ -145,6 +145,7 @@
     <string name="registration_account_validation_failure">Ошибка проверки учетной записи</string>
     <string name="approval_send_success">Фотография поступила на проверку. Мы сообщим вам о результате немедленно после его получения.</string>
     <string name="push_approval_format">Ваша поездка подтверждена. Код поездки: %s</string>
+    <string name="no_phone_number">Укажите правильный номер телефона</string>
 
 
 </resources>

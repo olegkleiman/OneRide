@@ -10,10 +10,11 @@ import android.os.Bundle;
 import com.labs.okey.oneride.R;
 import com.labs.okey.oneride.model.User;
 
-
 /**
- * Created by Oleg Kleiman on 12-Apr-15.
+ * @author Oleg Kleiman
+ * created 12-Apr-15.
  */
+
 public class ConfirmRegistrationFragment extends DialogFragment {
 
     User user;
