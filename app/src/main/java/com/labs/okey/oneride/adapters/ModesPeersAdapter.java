@@ -5,13 +5,13 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.labs.okey.oneride.R;
 import com.labs.okey.oneride.model.FRMode;
 import com.labs.okey.oneride.utils.IRecyclerClickListener;
 import com.labs.okey.oneride.views.LayoutRipple;
+import com.pkmmte.view.CircularImageView;
 
 import java.util.List;
 
@@ -99,7 +99,7 @@ public class ModesPeersAdapter extends RecyclerView.Adapter<ModesPeersAdapter.Vi
 
         // Row views
         TextView modeName;
-        ImageView modeImage;
+        CircularImageView modeImage;
         LayoutRipple rowLayout;
         //LinearLayout rowLayout;
 
@@ -113,7 +113,7 @@ public class ModesPeersAdapter extends RecyclerView.Adapter<ModesPeersAdapter.Vi
 
             if(viewType == TYPE_ITEM){
                 modeName = (TextView) itemLayoutView.findViewById(R.id.mode_name);
-                modeImage = (ImageView) itemLayoutView.findViewById(R.id.mode_image);
+                modeImage = (CircularImageView) itemLayoutView.findViewById(R.id.mode_image);
                 rowLayout = (LayoutRipple) itemLayoutView.findViewById(R.id.mode_row);
                 //rowLayout = (LinearLayout) itemLayoutView.findViewById(R.id.mode_row);
                 rowLayout.setOnClickListener(this);

@@ -2,12 +2,12 @@ package com.labs.okey.oneride;
 
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -31,6 +31,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.annotation.UiThread;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -38,6 +39,8 @@ import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
 import android.util.Log;
 import android.view.Display;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -45,7 +48,6 @@ import android.widget.TextSwitcher;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.afollestad.materialdialogs.AlertDialogWrapper;
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.crashlytics.android.Crashlytics;
@@ -76,6 +78,7 @@ import com.labs.okey.oneride.utils.UiThreadExecutor;
 import com.labs.okey.oneride.utils.wifip2p.P2pConversator;
 import com.labs.okey.oneride.utils.wifip2p.P2pPreparer;
 import com.microsoft.windowsazure.mobileservices.MobileServiceException;
+import com.microsoft.windowsazure.mobileservices.http.ServiceFilterResponse;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import junit.framework.Assert;
@@ -214,6 +217,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     _mDriversAdapter.notifyDataSetChanged();
                 }
             }
+
+            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_DRVER_NAME) )
+                mDriverName = savedInstanceState.getString(Globals.PARCELABLE_KEY_DRVER_NAME);
+
         } else {
 
             btInit();
@@ -227,6 +234,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     public void onSaveInstanceState(Bundle outState) {
 
         outState.putParcelableArrayList(Globals.PARCELABLE_KEY_DRIVERS, _mDrivers);
+        outState.putString(Globals.PARCELABLE_KEY_DRVER_NAME, mDriverName);
+        outState.putString(Globals.PARCELABLE_KEY_RIDE_CODE, mRideCode);
 
         super.onSaveInstanceState(outState);
     }
@@ -251,6 +260,47 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                                                 R.layout.row_devices,
                                                 _mDrivers);
             driversRecycler.setAdapter(_mDriversAdapter);
+
+            final GestureDetector mGestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
+
+                @Override public boolean onSingleTapUp(MotionEvent e) {
+                    return true;
+                }
+
+            });
+
+            driversRecycler.addOnItemTouchListener(new RecyclerView.OnItemTouchListener(){
+               @Override
+               public boolean onInterceptTouchEvent(RecyclerView recyclerView, MotionEvent motionEvent) {
+                   View child = recyclerView.findChildViewUnder(motionEvent.getX(),motionEvent.getY());
+                   if( child == null )
+                       return false;
+
+                   if( mGestureDetector.onTouchEvent(motionEvent)){
+
+                       child.setEnabled(false);
+                       child.setClickable(true);
+
+                       int position = recyclerView.getChildAdapterPosition(child);
+                       clicked(null, position - 1); // Count header as item
+
+                       return true;
+                   }
+
+                   return false;
+               }
+
+                @Override
+                public void onTouchEvent(RecyclerView recyclerView, MotionEvent motionEvent) {
+
+                }
+
+                @Override
+                public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+
+                }
+            });
+
 
 //            mDriversAdapter = new WiFiPeersAdapter2(this,
 //                    R.layout.drivers_header,
@@ -992,6 +1042,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             @Override
             protected void onPreExecute() {
 
+//                RecyclerView driversRecycler = (RecyclerView) findViewById(R.id.recyclerViewDrivers);
+//                driversRecycler.setClickable(true);
+
                 lt = new LoadToast(PassengerRoleActivity.this);
                 lt.setText(getString(R.string.processing));
                 Display display = getWindow().getWindowManager().getDefaultDisplay();
@@ -1004,6 +1057,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
             @Override
             protected void onPostExecute(Void result) {
+
+//                RecyclerView driversRecycler = (RecyclerView) findViewById(R.id.recyclerViewDrivers);
+//                driversRecycler.setClickable(true);
 
                 cancelNotification();
 
@@ -1033,7 +1089,13 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                             // To this extent, we mean 'Connection lost'
                         } else {
 
-                            responseCode = mse.getResponse().getStatus().code;
+                            ServiceFilterResponse response = mse.getResponse();
+                            if( response == null ) {
+                                responseCode = 503; // No better solution for now.
+                                                    // Just interpret this code as 'Connection lost'
+                            } else {
+                                responseCode = response.getStatus().code;
+                            }
                         }
 
                         switch (responseCode) {
@@ -1249,20 +1311,19 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     @Override
     public void alert(String message, final String actionIntent) {
-        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
 
-            @Override
-            public void onClick(DialogInterface dialogInterface, int which) {
-                if (which == DialogInterface.BUTTON_POSITIVE) {
-                    startActivity(new Intent(actionIntent));
-                }
-            }
-        };
-
-        new AlertDialogWrapper.Builder(this)
-                .setTitle(message)
-                .setNegativeButton(android.R.string.no, dialogClickListener)
-                .setPositiveButton(android.R.string.yes, dialogClickListener)
+        new MaterialDialog.Builder(this)
+                .title(message)
+                .negativeText(android.R.string.no) // dialogClickListener)
+                .positiveText(android.R.string.yes) //, dialogClickListener)
+                .onAny(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        if (which == DialogAction.POSITIVE) {
+                            startActivity(new Intent(actionIntent));
+                        }
+                    }
+                })
                 .show();
     }
 
@@ -1301,36 +1362,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 mDriverName = driverDevice.get_UserName();
             }
 
-            DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-
-                @Override
-                public void onClick(DialogInterface dialogInterface, int which) {
-                    if (which == DialogInterface.BUTTON_POSITIVE) {
-
-//                        FloatingActionButton passengerPicture = (FloatingActionButton) findViewById(R.id.join_ride_button);
-//                        passengerPicture.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.ColorAccent)));
-//                        Drawable drawable = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_action_camera, null);
-//                        passengerPicture.setImageDrawable(drawable);
-
-                        onSubmitCode();
-                    }
-                }
-            };
-
-            StringBuilder sb = new StringBuilder(getString(R.string.passenger_confirm));
-            if (mDriverName != null) {
-                sb.append(" ");
-                sb.append(getString(R.string.with));
-                sb.append(" ");
-                sb.append(mDriverName);
-            }
-            sb.append("?");
-
-            new AlertDialogWrapper.Builder(this)
-                    .setTitle(sb.toString())
-                    .setNegativeButton(android.R.string.no, dialogClickListener)
-                    .setPositiveButton(android.R.string.yes, dialogClickListener)
-                    .show();
+            DialogFragment joinConfirmDialog = JoinConfirmDialogFragment.newInstance(mDriverName);
+            joinConfirmDialog.show(getSupportFragmentManager(), "dialog");
         }
 
     }
@@ -1338,24 +1371,93 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     private Runnable thanksRunnable = new Runnable() {
         @Override
         public void run() {
-
             try {
 
-                new MaterialDialog.Builder(PassengerRoleActivity.this)
-                        .title(R.string.thanks)
-                        .content(R.string.confirmation_accepted)
-                        .cancelable(false)
-                        .positiveText(android.R.string.ok)
-                        .onPositive(new MaterialDialog.SingleButtonCallback(){
-                            @Override
-                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                //finish();
-                            }
-                        })
-                        .show();
+                DialogFragment f = new ThanksDialogFragment();
+                f.show(getSupportFragmentManager(), "dialog");
+
             } catch(Exception ex){
-                Log.e(LOG_TAG, "PassengerActivity was already dismissed: " + ex.getMessage());
+                Log.e(LOG_TAG, "PassengerActivity was dismissed before showing dialog: " + ex.getMessage());
             }
         }
     };
+
+    // DialogFragments
+
+    public static class JoinConfirmDialogFragment extends DialogFragment {
+
+        private static final String DRIVER_NAME_TAG = "driverName";
+        private static String mDriverName;
+
+        public static JoinConfirmDialogFragment newInstance(String driverName) {
+            JoinConfirmDialogFragment f = new JoinConfirmDialogFragment();
+            Bundle args = new Bundle();
+            args.putString(DRIVER_NAME_TAG, driverName);
+            f.setArguments(args);
+            return f;
+        }
+
+        @Override
+        public void onSaveInstanceState(Bundle outState) {
+            super.onSaveInstanceState(outState);
+            outState.putString(Globals.PARCELABLE_KEY_DRVER_NAME, mDriverName);
+        }
+
+        @Override
+        @NonNull
+        public Dialog onCreateDialog(Bundle savedInstanceState){
+
+            StringBuilder sb = new StringBuilder(getString(R.string.passenger_confirm));
+
+            if( savedInstanceState != null ) {
+                mDriverName = savedInstanceState.getString(Globals.PARCELABLE_KEY_DRVER_NAME);
+            }
+            else {
+                mDriverName = getArguments().getString(DRIVER_NAME_TAG);
+            }
+
+            if (mDriverName != null) {
+                sb.append(" ");
+                sb.append(getString(R.string.with));
+                sb.append(" ");
+                sb.append(mDriverName);
+            }
+
+            sb.append("?");
+
+            return new MaterialDialog.Builder(getContext())
+                    .title(sb.toString())
+                    .negativeText(android.R.string.no) //, dialogClickListener)
+                    .positiveText(android.R.string.yes) // dialogClickListener)
+                    .onAny(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            if (which == DialogAction.POSITIVE) {
+                                ((PassengerRoleActivity)getActivity()).onSubmitCode();
+                            }
+                        }
+                    })
+                    .show();
+
+        }
+    }
+
+    public static class ThanksDialogFragment extends DialogFragment {
+        @Override
+        @NonNull
+        public Dialog onCreateDialog(Bundle savedInstanceState){
+            return  new MaterialDialog.Builder(getContext())
+                    .title(R.string.thanks)
+                    .content(R.string.confirmation_accepted)
+                    .cancelable(false)
+                    .positiveText(android.R.string.ok)
+                    .onPositive(new MaterialDialog.SingleButtonCallback(){
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            //finish();
+                        }
+                    })
+                    .show();
+        }
+    }
 }

@@ -61,7 +61,7 @@ public class MyRidesActivity extends BaseActivity
         mViewPager = (ViewPager) findViewById(R.id.viewpager);
         slidingTabLayout = (SlidingTabLayout) findViewById(R.id.sliding_tabs);
 
-        mTabAdapter= new MyRideTabAdapter(getSupportFragmentManager(),
+        mTabAdapter = new MyRideTabAdapter(getSupportFragmentManager(),
                                           titles, mRides);
         mViewPager.setAdapter(mTabAdapter);
 
@@ -117,12 +117,11 @@ public class MyRidesActivity extends BaseActivity
                             .where().field("driverid").eq(Globals.userID);
                     wamsUtils.sync(Globals.getMobileServiceClient(), "rides");
 
-                    if( Globals.myRides_update_required ) {
+                    //if( Globals.myRides_update_required ) {
 
                         mRidesSyncTable.pull(pullQueryRides).get();
                         Globals.myRides_update_required = false;
-
-                    }
+                   //}
 
                     mRides = mRidesSyncTable.read(pullQueryRides).get();
 

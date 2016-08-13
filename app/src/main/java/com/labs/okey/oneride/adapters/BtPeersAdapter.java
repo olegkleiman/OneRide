@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -116,7 +117,6 @@ public class BtPeersAdapter extends RecyclerView.Adapter<BtPeersAdapter.ViewHold
                 String txt = String.format(Locale.US, " %d dBm", device.get_Rssi());
                 holder.txtRssi.setText(txt);
             }
-            holder.setImageStatus(device.getStatus());
 
             final MobileServiceTable<User> usersTable = Globals.getMobileServiceClient()
                     .getTable("users", User.class);
@@ -130,6 +130,9 @@ public class BtPeersAdapter extends RecyclerView.Adapter<BtPeersAdapter.ViewHold
                                 User passenger = users.get(0);
                                 holder.txtDriverName.setText(passenger.getFullName());
 
+                                if (device.get_UserName() == null || device.get_UserName().isEmpty())
+                                    device.set_UserName(passenger.getFullName());
+
                                 String pictureURL  = passenger.getPictureURL();
                                 ImageLoader imageLoader = Globals.volley.getImageLoader();
                                 imageLoader.get(pictureURL,
@@ -137,8 +140,15 @@ public class BtPeersAdapter extends RecyclerView.Adapter<BtPeersAdapter.ViewHold
                                             @Override
                                             public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
                                                 Bitmap bitmap = response.getBitmap();
-                                                if (bitmap != null)
+                                                if (bitmap != null) {
+
+                                                    holder.progressBar.setVisibility(View.GONE);
+
                                                     holder.userPicture.setImageBitmap(bitmap);
+                                                    holder.setImageStatus(device.getStatus());
+                                                    holder.imageStatus.setVisibility(View.VISIBLE);
+
+                                                }
                                             }
 
                                             @Override
@@ -244,10 +254,10 @@ public class BtPeersAdapter extends RecyclerView.Adapter<BtPeersAdapter.ViewHold
         TextView                txtDriverName;
         TextView                txtRideCode;
         TextView                txtRssi;
-        TextView                deviceStatus;
         ImageView               userPicture;
         RelativeLayout          rowLayout;
         ImageView               imageStatus;
+        ProgressBar             progressBar;
 
         Drawable                drawableAvailable;
         Drawable                drawableConnected;
@@ -271,7 +281,8 @@ public class BtPeersAdapter extends RecyclerView.Adapter<BtPeersAdapter.ViewHold
                 userPicture = (ImageView) itemLayoutView.findViewById(R.id.userPicture);
                 rowLayout = (RelativeLayout)itemLayoutView.findViewById(R.id.device_row);
                 imageStatus = (ImageView) itemLayoutView.findViewById(R.id.imgStatus);
-                rowLayout.setOnClickListener(this);
+                progressBar = (ProgressBar) itemLayoutView.findViewById(R.id.status_progress);
+                //rowLayout.setOnClickListener(this);
 
                 drawableAvailable = ResourcesCompat.getDrawable(context.getResources(),
                                                     R.drawable.ic_action_disconnected, null);

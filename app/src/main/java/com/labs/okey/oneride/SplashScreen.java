@@ -120,7 +120,8 @@ public class SplashScreen extends AppCompatActivity {
         Callable<Boolean> validationTask = new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
-                return isSimPresent() && isRegistrationValid();
+                //return isSimPresent() && isRegistrationValid();
+                return isRegistrationValid();
             }
         };
 

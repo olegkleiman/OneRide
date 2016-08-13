@@ -32,25 +32,35 @@
                 android:layout_width="72dp"
                 android:layout_height="72dp"
                 android:layout_marginStart="2dip"
-                android:layout_marginLeft="2dip"
                 app:border="true"
                 app:border_color="#FFFFFFFF"
                 app:border_width="4dp"
                 android:id="@+id/userPicture"
-                android:src="@mipmap/ic_launcher2"/>
+                android:src="@drawable/driver_office"/>
 
             <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
                 android:id="@+id/imgStatus"
-                android:src="@drawable/ic_action_disconnected"
+                android:src="@drawable/load"
                 android:layout_gravity="center_vertical"
                 android:layout_alignBottom="@+id/userPicture"
                 android:layout_toStartOf="@+id/linearLayout"
-                android:layout_toLeftOf="@+id/linearLayout"
-                android:layout_marginRight="-8dp"
                 android:layout_marginEnd="-8dp"
-                android:layout_marginBottom="-2dp" />
+                android:layout_marginBottom="-2dp"
+                android:visibility="gone" />
+
+            <ProgressBar
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:id="@+id/status_progress"
+                android:indeterminate="true"
+                android:layout_gravity="center_vertical"
+                android:layout_alignBottom="@+id/userPicture"
+                android:layout_toStartOf="@+id/linearLayout"
+                android:layout_marginEnd="-8dp"
+                android:layout_marginBottom="-2dp"
+                android:progressDrawable="@drawable/circular_progress"/>
 
             <LinearLayout
                 android:orientation="vertical"
@@ -59,10 +69,8 @@
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="4dp"
                 android:layout_marginStart="18dp"
-                android:layout_marginLeft="18dp"
                 android:gravity="center_vertical|start"
                 android:layout_toEndOf="@+id/userPicture"
-                android:layout_toRightOf="@+id/userPicture"
                 android:id="@+id/linearLayout">
 
                 <TextView

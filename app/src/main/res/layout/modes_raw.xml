@@ -14,14 +14,14 @@
     android:layout_width="fill_parent"
     android:layout_height="64dp">
 
-    <ImageView
+    <com.pkmmte.view.CircularImageView
         android:layout_width="@dimen/mode_image_width"
         android:layout_height="@dimen/mode_image_height"
         android:layout_centerVertical="true"
         android:layout_marginStart="16dp"
         android:layout_marginLeft="16dp"
         android:id="@+id/mode_image"
-        android:src="@drawable/driver64"/>
+        android:src="@drawable/driver_office"/>
 
     <TextView
         android:layout_width="wrap_content"

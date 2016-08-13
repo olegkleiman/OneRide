@@ -347,7 +347,7 @@ public class Globals {
     public static final int GEOFENCE_LOITERING_DELAY = 60000; // 1 min
     public static final int GEOFENCE_RESPONSIVENESS = 5000; // 5 sec
 
-    public static Boolean DEBUG_WITHOUT_GEOFENCES = false;
+    public static Boolean DEBUG_WITHOUT_GEOFENCES = true;
 
     private static final Object lock = new Object();
     private static boolean inGeofenceArea;
@@ -450,7 +450,7 @@ public class Globals {
     public static String PARCELABLE_KEY_RIDE_CODE_UPLOADED = "ride_code_uploaded_key";
     public static String PARCELABLE_KEY_PASSENGERS = "passengers_key";
     public static String PARCELABLE_KEY_DRIVERS = "drivers_key";
-    public static String PARCELABLE_KEY_DRIVER = "driver_key";
+    public static String PARCELABLE_KEY_DRVER_NAME = "driver_name";
     public static String PARCELABLE_KEY_CURRENT_RIDE = "current_ride";
     public static String PARCELABLE_KEY_CABIN_PICTURES_BUTTON_SHOWN = "cabin_button_shown";
     public static String PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS = "captured_passengers_ids";
@@ -463,6 +463,7 @@ public class Globals {
     public static String PARCELABLE_KEY_PASSENGER_PREFIX = "thumb_";
     public static String PARCELABLE_KEY_APPEAL_DIALOG_SHOWN = "appeak_shown";
     public static String PARCELABLE_KEY_RIDES_HISTORY = "rides_history";
+    public static String PARCELABLE_KEY_DIALOG_MESSAGE = "dialog_Message";
 
     // Check out http://go.microsoft.com/fwlink/p/?LinkId=193157 to get your own client id
     public static final String MICROSOFT_CLIENT_ID = "0000000048137798";

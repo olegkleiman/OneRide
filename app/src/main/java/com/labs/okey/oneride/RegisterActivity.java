@@ -1,5 +1,6 @@
 package com.labs.okey.oneride;
 
+import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
@@ -30,6 +31,7 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.facebook.AccessToken;
@@ -307,14 +309,14 @@ public class RegisterActivity extends FragmentActivity
         toolbar.setTitleTextColor(getResources().getColor(R.color.white));
         toolbar.setTitle(getString(R.string.title_activity_register));
 
-        if( !isSimPresent() ) {
-            findViewById(R.id.fb_login).setEnabled(false);
-            findViewById(R.id.google_login).setEnabled(false);
-
-            findViewById(R.id.txtNoSIM).setVisibility(View.VISIBLE);
-
-            return;
-        }
+//        if( !isSimPresent() ) {
+//            findViewById(R.id.fb_login).setEnabled(false);
+//            findViewById(R.id.google_login).setEnabled(false);
+//
+//            findViewById(R.id.txtNoSIM).setVisibility(View.VISIBLE);
+//
+//            return;
+//        }
 
 //        mDigitsAuthCallback = new AuthCallback() {
 //            @Override
@@ -938,21 +940,25 @@ public class RegisterActivity extends FragmentActivity
 
                 Exception mEx;
 
-                ProgressDialog progressDialog;
+                ProgressDialogFragment progressDialog;
                 @Override
                 protected void onPreExecute() {
 
                     super.onPreExecute();
 
-                    progressDialog = ProgressDialog.show(RegisterActivity.this,
-                            getString(R.string.download_data),
-                            getString(R.string.download_geofences_desc));
+                    progressDialog = ProgressDialogFragment.newInstance(
+                                            getString(R.string.download_geofences_desc));
+                    progressDialog.show(RegisterActivity.this.getFragmentManager(), "dialog");
+
+//                    progressDialog = ProgressDialog.show(RegisterActivity.this,
+//                            getString(R.string.download_data),
+//                            getString(R.string.download_geofences_desc));
                 }
 
                 @Override
                 protected void onPostExecute(Void result){
 
-                    if( progressDialog != null && progressDialog.isShowing()) {
+                    if( progressDialog != null && progressDialog.isVisible() ) {
                         progressDialog.dismiss();
                         progressDialog = null;
                     }
@@ -993,6 +999,7 @@ public class RegisterActivity extends FragmentActivity
 
                 @Override
                 protected void onProgressUpdate(String... progress) {
+                    RegisterActivity.this.getSupportFragmentManager().executePendingTransactions();
                     progressDialog.setMessage(progress[0]);
                 }
 
@@ -1039,6 +1046,9 @@ public class RegisterActivity extends FragmentActivity
                     } catch(InterruptedException | ExecutionException | IOException ex ) {
                         mEx = ex;
                         Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
+
+                        if ( Fabric.isInitialized() && Crashlytics.getInstance() != null)
+                            Crashlytics.logException(ex);
                     }
 
                     return null;
@@ -1069,5 +1079,53 @@ public class RegisterActivity extends FragmentActivity
             return false;
         } else
             return true;
+    }
+
+    // Dialogs
+
+    public static class ProgressDialogFragment extends DialogFragment {
+
+        private static final String MESSAGE_TAG = "message";
+        private static String mMessage;
+
+        public static ProgressDialogFragment newInstance(String message) {
+            ProgressDialogFragment fragment = new ProgressDialogFragment();
+
+            Bundle args = new Bundle();
+            args.putString(MESSAGE_TAG, message);
+            fragment.setArguments(args);
+
+            return fragment;
+        }
+
+        @Override
+        public void onSaveInstanceState(Bundle outState) {
+            super.onSaveInstanceState(outState);
+            outState.putString(Globals.PARCELABLE_KEY_DIALOG_MESSAGE, mMessage);
+        }
+
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+
+            if( savedInstanceState != null ) {
+                mMessage = savedInstanceState.getString(Globals.PARCELABLE_KEY_DIALOG_MESSAGE);
+            }
+            else {
+                mMessage = getArguments().getString(MESSAGE_TAG);
+            }
+
+            final ProgressDialog progressDialog = new ProgressDialog(getActivity());
+            progressDialog.setTitle(getString(R.string.download_data));
+            progressDialog.setMessage(mMessage);
+
+            return progressDialog;
+        }
+
+        public void setMessage(String message) {
+            ProgressDialog dialog = (ProgressDialog)getDialog();
+            if( dialog != null )
+                dialog.setMessage(message);
+        }
     }
 }

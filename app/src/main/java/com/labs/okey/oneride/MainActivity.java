@@ -511,11 +511,11 @@ public class MainActivity extends BaseActivity
             List<FRMode> modes = new ArrayList<>();
             FRMode mode1 = new FRMode();
             mode1.setName(getString(R.string.mode_name_driver));
-            mode1.setImageId(R.drawable.driver64);
+            mode1.setImageId(R.drawable.driver_office);
             modes.add(mode1);
             FRMode mode2 = new FRMode();
             mode2.setName(getString(R.string.mode_name_passenger));
-            mode2.setImageId(R.drawable.passenger64);
+            mode2.setImageId(R.drawable.passenger_office);
             modes.add(mode2);
 
             ModesPeersAdapter adapter = new ModesPeersAdapter(this, modes);

@@ -1,10 +1,14 @@
 package com.labs.okey.oneride.fragments;
 
+import android.annotation.TargetApi;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -42,12 +46,21 @@ public class TermsFragment extends Fragment {
 
         WebView webView = (WebView) rootView.findViewById(R.id.webViewTerms);
 
-
-        webView.getSettings().setJavaScriptEnabled(true);
-        webView.getSettings().setLoadWithOverviewMode(true);
-        webView.getSettings().setUseWideViewPort(true);
+//        webView.getSettings().setJavaScriptEnabled(true);
+//        webView.getSettings().setLoadWithOverviewMode(true);
+//        webView.getSettings().setUseWideViewPort(true);
         webView.setWebViewClient(new WebViewClient(){
 
+            @TargetApi(Build.VERSION_CODES.N)
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                final Uri uri = request.getUrl();
+                view.loadUrl(uri.toString());
+
+                return true;
+            }
+
+            @SuppressWarnings("deprecation")
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
 
@@ -55,12 +68,12 @@ public class TermsFragment extends Fragment {
 
                 return true;
             }
+
             @Override
             public void onPageFinished(WebView view, final String url) {
 
             }
         });
-
 
         webView.loadUrl("https://oneride.azurewebsites.net/terms_of_service.html");
         return  rootView;
