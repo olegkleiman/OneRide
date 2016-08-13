@@ -289,7 +289,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             wamsInit();
             geoFencesInit();
 
-            restoreState(savedInstanceState);
+            restoreInstanceState(savedInstanceState);
         } else {
             if( isConnectedToNetwork() ) {
 
@@ -306,7 +306,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     }
 
-    private void restoreState(Bundle savedInstanceState) {
+    private void restoreInstanceState(Bundle savedInstanceState) {
         boolean bInitializedBeforeRotation = false;
 
 

@@ -126,7 +126,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     private Location                    mCurrentLocation;
 
-    private MaterialDialog              mSearchDriverDialog;
+    private SearchDialogFragment        mSearchDriverDialogFragment;
     private CountDownTimer              mSearchDriverCountDownTimer;
     private Integer                     mCountDiscoveryFailures = 0;
     private Integer                     mCountDiscoveryTrials = 1;
@@ -204,40 +204,62 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         joinsTable = Globals.getMobileServiceClient().getTable("joins", Join.class);
 
         if( savedInstanceState != null ) {
+            restoreInstanceState(savedInstanceState);
 
-            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_RIDE_CODE) ) {
-                mRideCode = savedInstanceState.getString(Globals.PARCELABLE_KEY_RIDE_CODE);
+            if( mSearchDriverDialogFragment != null ) { // re-created in the middle of search
+                btInit();
+                btRefresh();
             }
-
-            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_DRIVERS) ) {
-                ArrayList<BtDeviceUser> drivers = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_DRIVERS);
-                if( drivers != null ) {
-
-                    _mDrivers.addAll(drivers);
-                    _mDriversAdapter.notifyDataSetChanged();
-                }
-            }
-
-            if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_DRVER_NAME) )
-                mDriverName = savedInstanceState.getString(Globals.PARCELABLE_KEY_DRVER_NAME);
 
         } else {
 
             btInit();
-
             btRefresh();
-            //refresh();
         }
     }
 
     @Override
+    @CallSuper
     public void onSaveInstanceState(Bundle outState) {
 
         outState.putParcelableArrayList(Globals.PARCELABLE_KEY_DRIVERS, _mDrivers);
         outState.putString(Globals.PARCELABLE_KEY_DRVER_NAME, mDriverName);
         outState.putString(Globals.PARCELABLE_KEY_RIDE_CODE, mRideCode);
 
+        try {
+            getSupportFragmentManager().putFragment(outState, "searchDialog", mSearchDriverDialogFragment);
+        } catch(Exception ex) {
+            // Dismiss the situation when SearchDialog is not currently in FragmentManager
+        }
+
         super.onSaveInstanceState(outState);
+    }
+
+    private void restoreInstanceState(Bundle savedInstanceState) {
+
+        try {
+            mSearchDriverDialogFragment = (SearchDialogFragment)
+                    getSupportFragmentManager().getFragment(savedInstanceState, "searchDialog");
+        } catch(Exception ex) {
+            // Dismiss the situation when SearchDialog is not currently in FragmentManager
+        }
+
+        if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_RIDE_CODE) ) {
+            mRideCode = savedInstanceState.getString(Globals.PARCELABLE_KEY_RIDE_CODE);
+        }
+
+        if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_DRIVERS) ) {
+            ArrayList<BtDeviceUser> drivers = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_DRIVERS);
+            if( drivers != null ) {
+
+                _mDrivers.addAll(drivers);
+                _mDriversAdapter.notifyDataSetChanged();
+            }
+        }
+
+        if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_DRVER_NAME) )
+            mDriverName = savedInstanceState.getString(Globals.PARCELABLE_KEY_DRVER_NAME);
+
     }
 
     @Override
@@ -336,7 +358,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .radius(gfCircle.getRadius())
                     .strokeColor(Color.CYAN)
                     .fillColor(Color.TRANSPARENT);
-            mGoogleMap.addCircle(circleOpt);
+
+            if( mGoogleMap != null )
+                mGoogleMap.addCircle(circleOpt);
         }
     }
 
@@ -348,7 +372,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .radius(gfCircle.getRadius())
                     .strokeColor(Color.CYAN)
                     .fillColor(Color.TRANSPARENT);
-            mGoogleMap.addCircle(circleOpt);
+
+            if( mGoogleMap != null )
+                mGoogleMap.addCircle(circleOpt);
         }
     }
 
@@ -671,12 +697,13 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 break;
 
             case Globals.MESSAGE_DISCOVERY_FAILED:
-                if (mSearchDriverDialog != null && mSearchDriverDialog.isShowing()) {
-                    mSearchDriverDialog.dismiss();
+                if (mSearchDriverDialogFragment != null
+                        && mSearchDriverDialogFragment.getDialog() != null ) {
+                    mSearchDriverDialogFragment.dismiss();
                     mSearchDriverCountDownTimer.cancel();
 
                     if (mCountDiscoveryFailures++ < Globals.MAX_ALLOWED_DISCOVERY_FAILURES) {
-                        mSearchDriverDialog = null;
+                        mSearchDriverDialogFragment = null;
                         refresh();
                     } else {
                         mCountDiscoveryFailures = 0;
@@ -840,24 +867,29 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     private void showCountDownDialog() {
         try {
 
-            mSearchDriverDialog = new MaterialDialog.Builder(this)
-                    .title(R.string.passenger_progress_dialog)
-                    .content(R.string.please_wait)
-                    .iconRes(R.drawable.ic_wait)
-                    .cancelable(false)
-                    .autoDismiss(false)
-                    //.progress(false, Globals.PASSENGER_DISCOVERY_PERIOD, true)
-                    .progress(true, 0)
-                    .negativeText(android.R.string.cancel)
-                    .onNegative(new MaterialDialog.SingleButtonCallback() {
-                        @Override
-                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                            dialog.dismiss();
-                            showRideCodePane(R.string.ride_code_dialog_content,
-                                    Color.BLACK);
-                        }
-                    })
-                    .show();
+            if( mSearchDriverDialogFragment == null ) {
+                mSearchDriverDialogFragment = new SearchDialogFragment();
+                mSearchDriverDialogFragment.show(getSupportFragmentManager(), "searchDialog");
+            }
+
+//            mSearchDriverDialog = new MaterialDialog.Builder(this)
+//                    .title(R.string.passenger_progress_dialog)
+//                    .content(R.string.please_wait)
+//                    .iconRes(R.drawable.ic_wait)
+//                    .cancelable(false)
+//                    .autoDismiss(false)
+//                    //.progress(false, Globals.PASSENGER_DISCOVERY_PERIOD, true)
+//                    .progress(true, 0)
+//                    .negativeText(android.R.string.cancel)
+//                    .onNegative(new MaterialDialog.SingleButtonCallback() {
+//                        @Override
+//                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+//                            dialog.dismiss();
+//                            showRideCodePane(R.string.ride_code_dialog_content,
+//                                    Color.BLACK);
+//                        }
+//                    })
+//                    .show();
 
             if (mSearchDriverCountDownTimer == null) {
 
@@ -871,21 +903,33 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                         if (_mDrivers.size() != 0) {
                             this.cancel();
-                            //waitView.setVisibility(View.GONE);
-                            mSearchDriverDialog.dismiss();
+
+                            if( mSearchDriverDialogFragment != null ) {
+
+                                mCountDiscoveryTrials = 1;
+
+                                Dialog dialog = mSearchDriverDialogFragment.getDialog();
+                                if( dialog != null ) {
+                                    dialog.dismiss();
+                                }
+                            }
 
                             Log.d(LOG_TAG, "Cancelling timer");
                         } else {
-                            if (!mSearchDriverDialog.isIndeterminateProgress())
-                                mSearchDriverDialog.incrementProgress(1);
+//                            if (!mSearchDriverDialog.isIndeterminateProgress())
+//                                mSearchDriverDialog.incrementProgress(1);
                         }
                     }
 
                     public void onFinish() {
 
                         try {
-                            mSearchDriverDialog.dismiss();
-                            //waitView.setVisibility(View.GONE);
+                            if( mSearchDriverDialogFragment != null
+                                    && mSearchDriverDialogFragment.getDialog() != null )
+                                mSearchDriverDialogFragment.dismiss();
+
+                            mCountDiscoveryTrials = 1;
+
                         } catch (IllegalArgumentException ex) {
                             // Safely dismiss when called due to
                             // 'Not attached to window manager'.
@@ -1383,6 +1427,34 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     };
 
     // DialogFragments
+
+    public static class SearchDialogFragment extends DialogFragment {
+
+        @Override
+        @NonNull
+        public Dialog onCreateDialog(Bundle savedInstanceState){
+            return new MaterialDialog.Builder(getContext())
+                    .title(R.string.passenger_progress_dialog)
+                    .content(R.string.please_wait)
+                    .iconRes(R.drawable.ic_wait)
+                    .cancelable(false)
+                    .autoDismiss(false)
+                    //.progress(false, Globals.PASSENGER_DISCOVERY_PERIOD, true)
+                    .progress(true, 0)
+                    .negativeText(android.R.string.cancel)
+                    .onNegative(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            dialog.dismiss();
+                            ((PassengerRoleActivity)getActivity())
+                            .showRideCodePane(R.string.ride_code_dialog_content,
+                                              Color.BLACK);
+                        }
+                    })
+                    .show();
+        }
+
+    }
 
     public static class JoinConfirmDialogFragment extends DialogFragment {
 
