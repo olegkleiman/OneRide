@@ -27,14 +27,6 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="4dp">
 
-            <!--<ImageView-->
-                <!--android:layout_width="72dp"-->
-                <!--android:layout_height="72dp"-->
-                <!--android:layout_marginStart="2dip"-->
-                <!--android:layout_marginLeft="2dip"-->
-                <!--android:id="@+id/userPicture"-->
-                <!--android:src="@drawable/ic_action_mobile_phone"/>-->
-
             <com.pkmmte.view.CircularImageView
                 android:layout_width="72dp"
                 android:layout_height="72dp"

@@ -231,6 +231,14 @@ public class BtPeersAdapter extends RecyclerView.Adapter<BtPeersAdapter.ViewHold
             mItems.add(device);
     }
 
+    public void addAll(List<BtDeviceUser> devices) {
+
+        for (BtDeviceUser device :  devices) {
+            add(device);
+        }
+
+    }
+
     public void replaceItem(BtDeviceUser device) {
         mItems.remove(device);
         mItems.add(device);

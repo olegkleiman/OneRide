@@ -179,6 +179,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                         _mDriversAdapter.add(btDeviceUser);
                         _mDriversAdapter.notifyDataSetChanged();
+
                     } else {
                         Log.i(LOG_TAG, "Skipping device due to poor RSSI");
                     }
@@ -204,17 +205,17 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         joinsTable = Globals.getMobileServiceClient().getTable("joins", Join.class);
 
         if( savedInstanceState != null ) {
-            restoreInstanceState(savedInstanceState);
 
-            if( mSearchDriverDialogFragment != null ) { // re-created in the middle of search
-                btInit();
-                btRefresh();
-            }
+            btInit();
+            btRefresh();
+
+            restoreInstanceState(savedInstanceState);
 
         } else {
 
             btInit();
             btRefresh();
+            showCountDownDialog();
         }
     }
 
@@ -252,8 +253,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             ArrayList<BtDeviceUser> drivers = savedInstanceState.getParcelableArrayList(Globals.PARCELABLE_KEY_DRIVERS);
             if( drivers != null ) {
 
-                _mDrivers.addAll(drivers);
+                _mDriversAdapter.addAll(drivers);
                 _mDriversAdapter.notifyDataSetChanged();
+                Log.d(LOG_TAG, "CountDown: drivers re-loaded. Count: " + _mDrivers.size());
             }
         }
 
@@ -500,10 +502,62 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     @Override
     @CallSuper
+    protected void onStart() {
+
+        mSearchDriverCountDownTimer = new CountDownTimer(Globals.PASSENGER_DISCOVERY_PERIOD * 1000, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+                int driversCount = _mDriversAdapter.getItemCount() - 1; // count header
+
+                Log.d(LOG_TAG,
+                        String.format("CountDown: Tick. Remains %d sec. Drivers size: %d",
+                                millisUntilFinished, driversCount));
+
+                if( driversCount > 0 ) {
+
+                    this.cancel();
+                    Log.d(LOG_TAG, "CountDown: Cancelling timer");
+
+                    if( mSearchDriverDialogFragment != null )
+                        mSearchDriverDialogFragment.dismiss();
+                }
+            }
+
+            public void onFinish() {
+                Log.d(LOG_TAG, "CountDown: Finish");
+
+                int driversCount = _mDriversAdapter.getItemCount() - 1; // count header
+
+                if( driversCount == 0) {
+
+                    if (mCountDiscoveryTrials++ >= Globals.MAX_DISCOVERY_TRIALS) {
+                        Log.d(LOG_TAG, "CountDown: Exceeded");
+                        mCountDiscoveryTrials = 1;
+                        this.cancel();
+                    } else {
+                        Log.d(LOG_TAG, "CountDown: Restarting for " + mCountDiscoveryTrials);
+                        btRefresh();
+                        this.start();
+                    }
+                } else {
+                    // Nothing to do
+                }
+            }
+        };
+        mSearchDriverCountDownTimer.start();
+
+        super.onStart();
+    }
+
+    @Override
+    @CallSuper
     protected void onStop() {
 
         // Ride Code will be re-newed on next activity's launch
         mRideCode = null;
+
+        mSearchDriverCountDownTimer.cancel();
+        mSearchDriverCountDownTimer = null;
 
         super.onStop();
     }
@@ -824,12 +878,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
     public void btRefresh() {
 
-        _mDrivers.clear();
-        _mDriversAdapter.notifyDataSetChanged();
+//        _mDrivers.clear();
+//        _mDriversAdapter.notifyDataSetChanged();
 
         btStartDiscovery();
-
-        showCountDownDialog();
     }
 
     //
@@ -867,93 +919,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     private void showCountDownDialog() {
         try {
 
-            if( mSearchDriverDialogFragment == null ) {
-                mSearchDriverDialogFragment = new SearchDialogFragment();
-                mSearchDriverDialogFragment.show(getSupportFragmentManager(), "searchDialog");
-            }
-
-//            mSearchDriverDialog = new MaterialDialog.Builder(this)
-//                    .title(R.string.passenger_progress_dialog)
-//                    .content(R.string.please_wait)
-//                    .iconRes(R.drawable.ic_wait)
-//                    .cancelable(false)
-//                    .autoDismiss(false)
-//                    //.progress(false, Globals.PASSENGER_DISCOVERY_PERIOD, true)
-//                    .progress(true, 0)
-//                    .negativeText(android.R.string.cancel)
-//                    .onNegative(new MaterialDialog.SingleButtonCallback() {
-//                        @Override
-//                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-//                            dialog.dismiss();
-//                            showRideCodePane(R.string.ride_code_dialog_content,
-//                                    Color.BLACK);
-//                        }
-//                    })
-//                    .show();
-
-            if (mSearchDriverCountDownTimer == null) {
-
-                mSearchDriverCountDownTimer = new CountDownTimer(Globals.PASSENGER_DISCOVERY_PERIOD * 1000, 1000) {
-
-                    public void onTick(long millisUntilFinished) {
-
-                        Log.d(LOG_TAG,
-                                String.format("CountDown tick. Remains %d sec. Drivers size: %d",
-                                        millisUntilFinished, _mDrivers.size()));
-
-                        if (_mDrivers.size() != 0) {
-                            this.cancel();
-
-                            if( mSearchDriverDialogFragment != null ) {
-
-                                mCountDiscoveryTrials = 1;
-
-                                Dialog dialog = mSearchDriverDialogFragment.getDialog();
-                                if( dialog != null ) {
-                                    dialog.dismiss();
-                                }
-                            }
-
-                            Log.d(LOG_TAG, "Cancelling timer");
-                        } else {
-//                            if (!mSearchDriverDialog.isIndeterminateProgress())
-//                                mSearchDriverDialog.incrementProgress(1);
-                        }
-                    }
-
-                    public void onFinish() {
-
-                        try {
-                            if( mSearchDriverDialogFragment != null
-                                    && mSearchDriverDialogFragment.getDialog() != null )
-                                mSearchDriverDialogFragment.dismiss();
-
-                            mCountDiscoveryTrials = 1;
-
-                        } catch (IllegalArgumentException ex) {
-                            // Safely dismiss when called due to
-                            // 'Not attached to window manager'.
-                            // In this case the activity just was passed by
-                            // to some other activity
-                        }
-
-                        if( _mDrivers.size() == 0) {
-
-                            if (mCountDiscoveryTrials++ > Globals.MAX_DISCOVERY_TRIALS) {
-                                showRideCodePane(R.string.ride_code_dialog_content,
-                                        Color.BLACK);
-                                mCountDiscoveryTrials = 1;
-                            } else {
-                                //refresh();
-                                btRefresh();
-                            }
-                        }
-
-                    }
-                };
-            }
-
-            mSearchDriverCountDownTimer.start();
+            mSearchDriverDialogFragment = new SearchDialogFragment();
+            mSearchDriverDialogFragment.show(getSupportFragmentManager(), "searchDialog");
 
         } catch (Exception ex) {
             if ( Fabric.isInitialized() && Crashlytics.getInstance() != null)
@@ -1446,9 +1413,16 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         @Override
                         public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                             dialog.dismiss();
-                            ((PassengerRoleActivity)getActivity())
-                            .showRideCodePane(R.string.ride_code_dialog_content,
-                                              Color.BLACK);
+
+                            PassengerRoleActivity activity = ((PassengerRoleActivity)getActivity());
+                            if( activity != null ) {
+
+                                if( activity.mSearchDriverCountDownTimer != null )
+                                    activity.mSearchDriverCountDownTimer.cancel();
+
+                                activity.showRideCodePane(R.string.ride_code_dialog_content,
+                                                        Color.BLACK);
+                            }
                         }
                     })
                     .show();
