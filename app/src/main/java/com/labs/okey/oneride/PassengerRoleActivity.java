@@ -54,6 +54,9 @@ import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -107,7 +110,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     Handler.Callback,
                     IRefreshable,
                     P2pConversator.IPeersChangedListener,
-                    android.location.LocationListener,
+                    LocationListener,
                     OnMapReadyCallback,
                     GoogleApiClient.ConnectionCallbacks{
 
@@ -215,7 +218,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
             btInit();
             btRefresh();
-            showCountDownDialog();
+            showSearchDialog();
         }
     }
 
@@ -353,6 +356,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         mGoogleMap.getUiSettings().setZoomControlsEnabled(true);
         mGoogleMap.getUiSettings().setMyLocationButtonEnabled(true);
 
+        //mGoogleMap.setMyLocationEnabled(true);
+
         for (GFCircle gfCircle : mGFCircles) {
 
             CircleOptions circleOpt = new CircleOptions()
@@ -413,13 +418,9 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         super.onResume();
 
         try {
-            mCurrentLocation = getCurrentLocation(this);// check Location Permission inside!
-
             // Global flag 'inGeofenceArea' is updated inside getGFenceForLocation()
             String msg = getGFenceForLocation(mCurrentLocation);
             mTextSwitcher.setCurrentText(msg);
-
-            startLocationUpdates(this, this);
 
         } catch (SecurityException ex) {
 
@@ -462,8 +463,18 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     if (grantResults.length > 0
                             && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-                        mCurrentLocation = getCurrentLocation(this);
-                        startLocationUpdates(this, this);
+                        mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(
+                                getGoogleApiClient());
+
+                        LocationRequest locRequest = LocationRequest.create();
+                        locRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+                        locRequest.setFastestInterval(Globals.HIGH_PRIORITY_FAST_INTERVAL);
+                        locRequest.setInterval(Globals.HIGH_PRIORITY_UPDATE_INTERVAL);
+
+                        LocationServices.FusedLocationApi.requestLocationUpdates(
+                                getGoogleApiClient(), locRequest, this);
+
+
                     }
                 }
                 break;
@@ -491,12 +502,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     @Override
     @CallSuper
     public void onPause() {
-        try {
-            stopLocationUpdates(this);
-        } catch (SecurityException sex) {
-            Log.e(LOG_TAG, "n/a");
-        }
-
         super.onPause();
     }
 
@@ -591,65 +596,48 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     @Override
     public void onLocationChanged(Location location) {
 
-        if (!Globals.DEBUG_WITHOUT_GEOFENCES) {
-
-            if (!isAccurate(location)) {
-                Log.d(LOG_TAG, getString(R.string.location_inaccurate));
-                return;
-            }
-
-            mCurrentLocation = location;
-
-            LatLng latLng = new LatLng(location.getLatitude(),
-                    location.getLongitude());
-
-            showMeOnMap(latLng);
-
-            // Global flag 'inGeofenceArea' is updated inside getGFenceForLocation()
-            String msg = getGFenceForLocation(location);
-
-            TextView textView = (TextView) mTextSwitcher.getCurrentView();
-            String msgRepeat = textView.getText().toString();
-
-            if (Globals.isInGeofenceArea()) {
-                mLastLocationUpdateTime = System.currentTimeMillis();
-
-                // Send notification and log the transition details.
-                if (Globals.getRemindGeofenceEntrance()) {
-
-                    Globals.clearRemindGeofenceEntrance();
-
-                    sendNotification(msg, PassengerRoleActivity.class);
-                }
-
-            } else {
-                long elapsed = System.currentTimeMillis() - mLastLocationUpdateTime;
-                if (mLastLocationUpdateTime != 0 // for the first-time
-                        && elapsed < Globals.GF_OUT_TOLERANCE) {
-
-                    Globals.setInGeofenceArea(true);
-
-                    msg = msgRepeat;
-                }
-
-            }
-
-            mTextSwitcher.setCurrentText(msg);
+        if (!isAccurate(location)) {
+            Log.d(LOG_TAG, getString(R.string.location_inaccurate));
+            return;
         }
-    }
 
-    @Override
-    public void onStatusChanged(String s, int i, Bundle bundle) {
+        mCurrentLocation = location;
 
-    }
+        LatLng latLng = new LatLng(location.getLatitude(),
+                location.getLongitude());
 
-    @Override
-    public void onProviderEnabled(String s) {
+        showMeOnMap(latLng);
 
-    }
+        // Global flag 'inGeofenceArea' is updated inside getGFenceForLocation()
+        String msg = getGFenceForLocation(location);
 
-    @Override
-    public void onProviderDisabled(String s) {
+        TextView textView = (TextView) mTextSwitcher.getCurrentView();
+        String msgRepeat = textView.getText().toString();
+
+        if (Globals.isInGeofenceArea()) {
+            mLastLocationUpdateTime = System.currentTimeMillis();
+
+            // Send notification and log the transition details.
+            if (Globals.getRemindGeofenceEntrance()) {
+
+                Globals.clearRemindGeofenceEntrance();
+
+                sendNotification(msg, PassengerRoleActivity.class);
+            }
+
+        } else {
+            long elapsed = System.currentTimeMillis() - mLastLocationUpdateTime;
+            if (mLastLocationUpdateTime != 0 // for the first-time
+                    && elapsed < Globals.GF_OUT_TOLERANCE) {
+
+                Globals.setInGeofenceArea(true);
+
+                msg = msgRepeat;
+            }
+
+        }
+
+        mTextSwitcher.setCurrentText(msg);
 
     }
 
@@ -902,7 +890,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                             getUser().getRegistrationId(),
                             ""); // empty ride code!
 
-                    showCountDownDialog();
+                    showSearchDialog();
 
                 }
             });
@@ -916,7 +904,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     }
 
     @UiThread
-    private void showCountDownDialog() {
+    private void showSearchDialog() {
         try {
 
             mSearchDriverDialogFragment = new SearchDialogFragment();
@@ -1207,7 +1195,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     _join.setDeviceId(android_id);
 
                     try {
-                        Location loc = getCurrentLocation(PassengerRoleActivity.this);
+                        Location loc = mCurrentLocation;
                         if (loc != null) {
                             _join.setLat((float) loc.getLatitude());
                             _join.setLon((float) loc.getLongitude());

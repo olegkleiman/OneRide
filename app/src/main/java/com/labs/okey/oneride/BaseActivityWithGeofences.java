@@ -1,30 +1,25 @@
 package com.labs.okey.oneride;
 
-import android.annotation.TargetApi;
-import android.app.Activity;
+import android.Manifest;
 import android.app.PendingIntent;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
-import android.support.annotation.RequiresPermission;
-import android.support.v4.content.ContextCompat;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -42,7 +37,6 @@ import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
 
 import java.math.BigDecimal;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -65,7 +59,7 @@ public class BaseActivityWithGeofences extends BaseActivity
     private Boolean                                 isGeoFencesInitialized = false;
     protected Boolean isGeoFencesInitialized() { return isGeoFencesInitialized; }
 
-    private android.location.LocationListener       mLocationListener;
+    protected Location                              mCurrentLocation;
     protected CopyOnWriteArrayList<GFCircle>        mGFCircles = new CopyOnWriteArrayList<GFCircle>();
 
 
@@ -80,92 +74,120 @@ public class BaseActivityWithGeofences extends BaseActivity
 
     @Override
     public void onConnected(Bundle bundle) {
-        //initGeofencesAPI();
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    Globals.LOCATION_PERMISSION_REQUEST);
+        } else {
+
+            mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(
+                    getGoogleApiClient());
+
+            LocationRequest locRequest = LocationRequest.create();
+            locRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+            locRequest.setFastestInterval(Globals.HIGH_PRIORITY_FAST_INTERVAL);
+            locRequest.setInterval(Globals.HIGH_PRIORITY_UPDATE_INTERVAL);
+
+            if( this instanceof LocationListener) {
+
+                LocationListener locationListener = (LocationListener)this;
+                LocationServices.FusedLocationApi.requestLocationUpdates(
+                        getGoogleApiClient(), locRequest, locationListener);
+            }
+        }
+
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-
     }
 
-    @TargetApi(Build.VERSION_CODES.M)
-    @RequiresPermission(anyOf = {
-            android.Manifest.permission.ACCESS_COARSE_LOCATION,
-            android.Manifest.permission.ACCESS_FINE_LOCATION})
-    protected Location getCurrentLocation(Activity permissionsHandler) throws SecurityException {
+//    @TargetApi(Build.VERSION_CODES.M)
+//    @RequiresPermission(anyOf = {
+//            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+//            android.Manifest.permission.ACCESS_FINE_LOCATION})
+//    protected Location getCurrentLocation(Activity permissionsHandler) throws SecurityException {
+//
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
+//                    != PackageManager.PERMISSION_GRANTED )
+//                // Permission android.permission.ACCESS_FINE_LOCATION includes
+//                // permission for both NETWORK_PROVIDER and GPS_PROVIDER
+//
+//                    throw new SecurityException();
+//
+//        } else {
+//
+//            try {
+//                LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+//                return locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+//            } catch (Exception ex) {
+//                Log.e(LOG_TAG, ex.getMessage());
+//
+//                if( Fabric.isInitialized() && Crashlytics.getInstance() != null )
+//                    Crashlytics.logException(ex);
+//
+//            }
+//        }
+//
+//        return null;
+//    }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
-                    != PackageManager.PERMISSION_GRANTED )
-                // Permission android.permission.ACCESS_FINE_LOCATION includes
-                // permission for both NETWORK_PROVIDER and GPS_PROVIDER
-
-                    throw new SecurityException();
-
-        } else {
-
-            try {
-                LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                return locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            } catch (Exception ex) {
-                Log.e(LOG_TAG, ex.getMessage());
-
-                if( Fabric.isInitialized() && Crashlytics.getInstance() != null )
-                    Crashlytics.logException(ex);
-
-            }
-        }
-
-        return null;
-    }
-
-    protected void startLocationUpdates(Activity permissionsHandler,
-                                        android.location.LocationListener locationListener) {
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
-                    != PackageManager.PERMISSION_GRANTED )
-                // Permission android.permission.ACCESS_FINE_LOCATION includes
-                // permission for both NETWORK_PROVIDER and GPS_PROVIDER
-
-                throw new SecurityException();
-        }
-
-        try {
-            mLocationListener = locationListener;
-            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-            if( locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) )
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                        Globals.LOCATION_UPDATE_MIN_FEQUENCY, 0, locationListener);
-        } catch (Exception ex) {
-            Log.e(LOG_TAG, ex.getMessage());
-
-            if( Fabric.isInitialized() && Crashlytics.getInstance() != null )
-                Crashlytics.logException(ex);
-        }
-
-    }
-
-    protected void stopLocationUpdates(android.location.LocationListener locationListener) {
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
-                    != PackageManager.PERMISSION_GRANTED)
-                throw new SecurityException();
-        }
-
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        locationManager.removeUpdates(locationListener);
-    }
+//    protected void startLocationUpdates(Activity permissionsHandler,
+//                                        android.location.LocationListener locationListener) {
+//
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
+//                    != PackageManager.PERMISSION_GRANTED )
+//                // Permission android.permission.ACCESS_FINE_LOCATION includes
+//                // permission for both NETWORK_PROVIDER and GPS_PROVIDER
+//
+//                throw new SecurityException();
+//        }
+//
+//        try {
+//            mLocationListener = locationListener;
+//            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+//
+//            if( locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) )
+//                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+//                        Globals.LOCATION_UPDATE_MIN_FEQUENCY, 0, locationListener);
+//        } catch (Exception ex) {
+//            Log.e(LOG_TAG, ex.getMessage());
+//
+//            if( Fabric.isInitialized() && Crashlytics.getInstance() != null )
+//                Crashlytics.logException(ex);
+//        }
+//
+//    }
+//
+//    protected void stopLocationUpdates(android.location.LocationListener locationListener) {
+//
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
+//                    != PackageManager.PERMISSION_GRANTED)
+//                throw new SecurityException();
+//        }
+//
+//        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+//        locationManager.removeUpdates(locationListener);
+//    }
 
     @Override
     protected void onPause(){
 
-        if( mLocationListener != null )
-            stopLocationUpdates(mLocationListener);
-
         super.onPause();
+
+        if( this instanceof LocationListener ) {
+
+            LocationListener locationListener = (LocationListener)this;
+            LocationServices.FusedLocationApi.removeLocationUpdates(
+                    getGoogleApiClient(), locationListener);
+        }
+
     }
 
     protected ListenableFuture<CopyOnWriteArrayList<GFCircle>> _initGeofences() {
@@ -314,123 +336,123 @@ public class BaseActivityWithGeofences extends BaseActivity
 
     }
 
-    protected void initGeofencesAPI() {
-
-        final ResultCallback<Status> resultCallback = this;
-
-        if( mGFencesSyncTable == null )
-            mGFencesSyncTable = Globals.getMobileServiceClient().getSyncTable("geofences", GeoFence.class);
-
-        new AsyncTask<Object, Void, Void>() {
-
-            @Override
-            protected void onPostExecute(Void result){
-
-                Globals.GEOFENCES.clear();
-
-                for (Map.Entry<String, LatLng> entry : Globals.FWY_AREA_LANDMARKS.entrySet()) {
-
-                    Globals.GEOFENCES.add(new Geofence.Builder()
-                            .setRequestId(entry.getKey())
-
-                             // Set the circular region of this geofence.
-                            .setCircularRegion(
-                                    entry.getValue().latitude,
-                                    entry.getValue().longitude,
-                                    Globals.GEOFENCE_RADIUS_IN_METERS
-                            )
-                            .setLoiteringDelay(Globals.GEOFENCE_LOITERING_DELAY)
-                             //.setNotificationResponsiveness(Globals.GEOFENCE_RESPONSIVENESS)
-                             // Set the expiration duration of the geofence. This geofence gets automatically
-                             // removed after this period of time.
-                            .setExpirationDuration(Globals.GEOFENCE_EXPIRATION_IN_MILLISECONDS)
-                             // Set the transition types of interest. Alerts are only generated for these
-                             // transition. We track entry and exit transitions here.
-                            .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
-                                    Geofence.GEOFENCE_TRANSITION_EXIT |
-                                    Geofence.GEOFENCE_TRANSITION_DWELL)
-                            .build());
-                }
-
-                GeofencingRequest geoFencingRequest = getGeofencingRequest();
-                GoogleApiClient googleApiClient = getGoogleApiClient();
-
-                if( geoFencingRequest != null
-                        && googleApiClient != null ) {
-
-                    if (googleApiClient.isConnected()) {
-
-                        LocationServices.GeofencingApi.addGeofences(
-                                getGoogleApiClient(), // from base activity
-                                // The GeofenceRequest object.
-                                geoFencingRequest,
-                                // A pending intent that that is reused when calling removeGeofences(). This
-                                // pending intent is used to generate an intent when a matched geofence
-                                // transition is observed.
-                                getGeofencePendingIntent()
-                        ).setResultCallback(resultCallback); // Result processed in onResult().
-                    } else {
-                        Log.e(LOG_TAG, "Google API is not connected yet");
-                    }
-                }
-
-            }
-
-            @Override
-            protected Void doInBackground(Object... params) {
-
-                MobileServiceList<GeoFence> gFences = null;
-                try {
-
-                    //wamsUtils.sync(getMobileServiceClient(), "gfences");
-                    wamsUtils.sync(Globals.getMobileServiceClient(), "geofences");
-
-                    Query pullQuery = Globals.getMobileServiceClient().getTable(GeoFence.class).where();
-                    gFences = mGFencesSyncTable.read(pullQuery).get();
-
-                } catch (Exception ex) {
-                    Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
-                }
-
-                if( gFences == null )
-                    return null;
-
-                try {
-                    // After getting landmark coordinates from WAMS,
-                    // the steps for dealing with geofences are following:
-                    // 1. populate FWY_AREA_LANDMARKS hashmap in Globals
-                    // 2. (from this step on, performed in onPostExecute) based on this hashmap, populate GEOFENCES in Globals
-                    // 3. create GeofencingRequest request based on GEOFENCES list
-                    // 4. define pending intent for geofences transitions
-                    // 5. add geofences to Google API service
-
-                    for (GeoFence _gFence : gFences) {
-
-                        if( _gFence.isActive() ) {
-
-                            // About the issues of converting float to double
-                            // see here: http://programmingjungle.blogspot.co.il/2013/03/float-to-double-conversion-in-java.html
-                            double lat = new BigDecimal(String.valueOf(_gFence.getLat())).doubleValue();
-                            double lon = new BigDecimal(String.valueOf(_gFence.getLon())).doubleValue();
-                            //int radius = _gFence.getRaius();
-
-                            LatLng latLng = new LatLng(lat, lon);
-
-                            Globals.FWY_AREA_LANDMARKS.put(_gFence.getLabel(), latLng);
-                        }
-                    }
-
-
-                } catch (Exception ex) {
-                    Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
-                }
-
-                return null;
-            }
-        }.execute();
-
-
-    }
+//    protected void initGeofencesAPI() {
+//
+//        final ResultCallback<Status> resultCallback = this;
+//
+//        if( mGFencesSyncTable == null )
+//            mGFencesSyncTable = Globals.getMobileServiceClient().getSyncTable("geofences", GeoFence.class);
+//
+//        new AsyncTask<Object, Void, Void>() {
+//
+//            @Override
+//            protected void onPostExecute(Void result){
+//
+//                Globals.GEOFENCES.clear();
+//
+//                for (Map.Entry<String, LatLng> entry : Globals.FWY_AREA_LANDMARKS.entrySet()) {
+//
+//                    Globals.GEOFENCES.add(new Geofence.Builder()
+//                            .setRequestId(entry.getKey())
+//
+//                             // Set the circular region of this geofence.
+//                            .setCircularRegion(
+//                                    entry.getValue().latitude,
+//                                    entry.getValue().longitude,
+//                                    Globals.GEOFENCE_RADIUS_IN_METERS
+//                            )
+//                            .setLoiteringDelay(Globals.GEOFENCE_LOITERING_DELAY)
+//                             //.setNotificationResponsiveness(Globals.GEOFENCE_RESPONSIVENESS)
+//                             // Set the expiration duration of the geofence. This geofence gets automatically
+//                             // removed after this period of time.
+//                            .setExpirationDuration(Globals.GEOFENCE_EXPIRATION_IN_MILLISECONDS)
+//                             // Set the transition types of interest. Alerts are only generated for these
+//                             // transition. We track entry and exit transitions here.
+//                            .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
+//                                    Geofence.GEOFENCE_TRANSITION_EXIT |
+//                                    Geofence.GEOFENCE_TRANSITION_DWELL)
+//                            .build());
+//                }
+//
+//                GeofencingRequest geoFencingRequest = getGeofencingRequest();
+//                GoogleApiClient googleApiClient = getGoogleApiClient();
+//
+//                if( geoFencingRequest != null
+//                        && googleApiClient != null ) {
+//
+//                    if (googleApiClient.isConnected()) {
+//
+//                        LocationServices.GeofencingApi.addGeofences(
+//                                getGoogleApiClient(), // from base activity
+//                                // The GeofenceRequest object.
+//                                geoFencingRequest,
+//                                // A pending intent that that is reused when calling removeGeofences(). This
+//                                // pending intent is used to generate an intent when a matched geofence
+//                                // transition is observed.
+//                                getGeofencePendingIntent()
+//                        ).setResultCallback(resultCallback); // Result processed in onResult().
+//                    } else {
+//                        Log.e(LOG_TAG, "Google API is not connected yet");
+//                    }
+//                }
+//
+//            }
+//
+//            @Override
+//            protected Void doInBackground(Object... params) {
+//
+//                MobileServiceList<GeoFence> gFences = null;
+//                try {
+//
+//                    //wamsUtils.sync(getMobileServiceClient(), "gfences");
+//                    wamsUtils.sync(Globals.getMobileServiceClient(), "geofences");
+//
+//                    Query pullQuery = Globals.getMobileServiceClient().getTable(GeoFence.class).where();
+//                    gFences = mGFencesSyncTable.read(pullQuery).get();
+//
+//                } catch (Exception ex) {
+//                    Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
+//                }
+//
+//                if( gFences == null )
+//                    return null;
+//
+//                try {
+//                    // After getting landmark coordinates from WAMS,
+//                    // the steps for dealing with geofences are following:
+//                    // 1. populate FWY_AREA_LANDMARKS hashmap in Globals
+//                    // 2. (from this step on, performed in onPostExecute) based on this hashmap, populate GEOFENCES in Globals
+//                    // 3. create GeofencingRequest request based on GEOFENCES list
+//                    // 4. define pending intent for geofences transitions
+//                    // 5. add geofences to Google API service
+//
+//                    for (GeoFence _gFence : gFences) {
+//
+//                        if( _gFence.isActive() ) {
+//
+//                            // About the issues of converting float to double
+//                            // see here: http://programmingjungle.blogspot.co.il/2013/03/float-to-double-conversion-in-java.html
+//                            double lat = new BigDecimal(String.valueOf(_gFence.getLat())).doubleValue();
+//                            double lon = new BigDecimal(String.valueOf(_gFence.getLon())).doubleValue();
+//                            //int radius = _gFence.getRaius();
+//
+//                            LatLng latLng = new LatLng(lat, lon);
+//
+//                            Globals.FWY_AREA_LANDMARKS.put(_gFence.getLabel(), latLng);
+//                        }
+//                    }
+//
+//
+//                } catch (Exception ex) {
+//                    Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
+//                }
+//
+//                return null;
+//            }
+//        }.execute();
+//
+//
+//    }
 
 
     @Override

@@ -311,9 +311,12 @@ public class wamsUtils {
         // this should be JWT token, so use WAMS_TOKEN
         wamsUser.setAuthenticationToken(token);
 
-        Globals.getMobileServiceClient().setCurrentUser(wamsUser);
+        MobileServiceClient wamsClient = Globals.getMobileServiceClient();
+        if( wamsClient == null ) {
+            Globals.initMobileServices(context);
+        }
 
-        return;
+        Globals.getMobileServiceClient().setCurrentUser(wamsUser);
 
     }
 

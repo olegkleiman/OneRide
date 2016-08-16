@@ -65,6 +65,9 @@ import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.github.brnunes.swipeablerecyclerview.SwipeableRecyclerViewTouchListener;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -133,7 +136,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         implements P2pConversator.IPeersChangedListener,
                 ITrace,
                 Handler.Callback,
-                android.location.LocationListener,
+                LocationListener,
                 IUploader,
                 // Added for Google Map support within sliding panel
                 OnMapReadyCallback,
@@ -161,7 +164,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private TextSwitcher                        mTextSwitcher;
     private RecyclerView                        mPeersRecyclerView;
 
-    private Location                            mCurrentLocation;
     private long                                mLastLocationUpdateTime;
 
     Ride                                        mCurrentRide;
@@ -344,6 +346,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                 if (passengers.size() >= Globals.REQUIRED_PASSENGERS_NUMBER) {
                     FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
+                    fab.setVisibility(View.VISIBLE);
                     Context ctx = getApplicationContext();
                     fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
                     fab.setTag(getString(R.string.submit_tag));
@@ -405,7 +408,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mSubmitButtonShown = savedInstanceState.getBoolean(Globals.PARCELABLE_KEY_SUBMIT_BUTTON_SHOWN);
 
             if (mSubmitButtonShown)
-                showSubmitPicsButton();
+                showSubmitButton();
 
         }
 
@@ -844,10 +847,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                     if( mPassengers.size() >= Globals.REQUIRED_PASSENGERS_NUMBER ) {
                         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
-                        if( fab != null )
+                        if( fab != null ) {
                             fab.setVisibility(View.VISIBLE);
+                            mSubmitButtonShown = true;
+                        }
                     }
-
                 }
             });
         }
@@ -946,10 +950,27 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     }
 
+    @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
     @Override
     public void onMapReady(GoogleMap googleMap) {
 
         mGoogleMap = googleMap;
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+            } else {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        Globals.LOCATION_PERMISSION_REQUEST);
+            }
+
+        } else {
+            mGoogleMap.setMyLocationEnabled(true);
+        }
+
         mGoogleMap.getUiSettings().setZoomControlsEnabled(true);
         mGoogleMap.getUiSettings().setMyLocationButtonEnabled(true);
 
@@ -1014,13 +1035,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             if( !isLocationEnabled(this) )
                 throw new SecurityException();
 
-            mCurrentLocation = getCurrentLocation(this);// check Location Permission inside!
-
             // Global flag 'inGeofenceArea' is updated inside getGFenceForLocation()
             String msg = getGFenceForLocation(mCurrentLocation);
             mTextSwitcher.setCurrentText(msg);
-
-            startLocationUpdates(this, this);
 
         } catch (SecurityException ex) {
 
@@ -1079,8 +1096,20 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     if(  grantResults.length > 0
                             && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-                        mCurrentLocation = getCurrentLocation(this);
-                        startLocationUpdates(this, this);
+                        if( mGoogleMap != null )
+                            mGoogleMap.setMyLocationEnabled(true);
+
+                        mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(
+                                getGoogleApiClient());
+
+                        LocationRequest locRequest = LocationRequest.create();
+                        locRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+                        locRequest.setFastestInterval(Globals.HIGH_PRIORITY_FAST_INTERVAL);
+                        locRequest.setInterval(Globals.HIGH_PRIORITY_UPDATE_INTERVAL);
+
+                        LocationServices.FusedLocationApi.requestLocationUpdates(
+                                getGoogleApiClient(), locRequest, this);
+
                     }
                 }
                 break;
@@ -1115,12 +1144,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         mP2pConversator.stopConversation();
                 }
             });
-        }
-
-        try {
-            stopLocationUpdates(this);
-        } catch (SecurityException sex) {
-            Log.e(LOG_TAG, "n/a");
         }
 
         super.onPause();
@@ -1187,60 +1210,50 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     @Override
     public void onLocationChanged(Location location) {
 
-        if( !Globals.DEBUG_WITHOUT_GEOFENCES ) {
+        mCurrentLocation = location;
 
-            mCurrentLocation = location;
+        LatLng latLng = new LatLng(location.getLatitude(),
+                location.getLongitude());
+        showMeOnMap(latLng);
 
-            LatLng latLng = new LatLng(location.getLatitude(),
-                                       location.getLongitude());
-            showMeOnMap(latLng);
+        // Global flag 'inGeofenceArea' is updated inside getGFenceForLocation()
+        String msg = getGFenceForLocation(location);
 
-            // Global flag 'inGeofenceArea' is updated inside getGFenceForLocation()
-            String msg = getGFenceForLocation(location);
+        TextView textView = (TextView) mTextSwitcher.getCurrentView();
+        String msgRepeat = textView.getText().toString();
 
-            TextView textView = (TextView) mTextSwitcher.getCurrentView();
-            String msgRepeat = textView.getText().toString();
+        if (Globals.isInGeofenceArea()) {
 
-            if (Globals.isInGeofenceArea()) {
+            mLastLocationUpdateTime = System.currentTimeMillis();
 
-                mLastLocationUpdateTime = System.currentTimeMillis();
+            // Send notification and log the transition details.
+            if( Globals.getRemindGeofenceEntrance() ) {
 
-                // Send notification and log the transition details.
-                if( Globals.getRemindGeofenceEntrance() ) {
+                Globals.clearRemindGeofenceEntrance();
 
-                    Globals.clearRemindGeofenceEntrance();
-
-                    sendNotification(msg, DriverRoleActivity.class);
-                }
-
-            } else {
-                long elapsed = System.currentTimeMillis() - mLastLocationUpdateTime;
-                if (mLastLocationUpdateTime != 0 // for the first-time
-                        && elapsed < Globals.GF_OUT_TOLERANCE) {
-
-                    Globals.setInGeofenceArea(true);
-
-                    msg = msgRepeat;
-                }
-            }
-
-            mTextSwitcher.setCurrentText(msg);
-
-            // Upload generated ride-code (within whole ride) once if geo-fences were initialized
-            if ( isGeoFencesInitialized()
-                    && mRideCode != null
-                    && mRideCodeUploaded.compareAndSet(false, true) ) {
-
-                final Ride ride = createRideForUpload();
-                uploadRideControl(ride);
+                sendNotification(msg, DriverRoleActivity.class);
             }
 
         } else {
-            if ( mRideCode != null && mRideCodeUploaded.compareAndSet(false, true) ) {
+            long elapsed = System.currentTimeMillis() - mLastLocationUpdateTime;
+            if (mLastLocationUpdateTime != 0 // for the first-time
+                    && elapsed < Globals.GF_OUT_TOLERANCE) {
 
-                final Ride ride = createRideForUpload();
-                uploadRideControl(ride);
+                Globals.setInGeofenceArea(true);
+
+                msg = msgRepeat;
             }
+        }
+
+        mTextSwitcher.setCurrentText(msg);
+
+        // Upload generated ride-code (within whole ride) once if geo-fences were initialized
+        if ( isGeoFencesInitialized()
+                && mRideCode != null
+                && mRideCodeUploaded.compareAndSet(false, true) ) {
+
+            final Ride ride = createRideForUpload();
+            uploadRideControl(ride);
         }
 
     }
@@ -1391,15 +1404,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         return ride;
     }
 
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-        String msg = String.format("%s location provider %s",
-                provider,
-                getLocationProviderStatus(status));
-        Log.i(LOG_TAG, msg);
-    }
-
-    private String getLocationProviderStatus(int status) {
+     private String getLocationProviderStatus(int status) {
 
         String strStatus = "undefined";
 
@@ -1419,16 +1424,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
 
         return strStatus;
-    }
-
-    @Override
-    public void onProviderEnabled(String s) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String s) {
-
     }
 
     private void startAdvertise(final P2pConversator.IPeersChangedListener peersListener,
@@ -1634,7 +1629,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                 //_join.setDeviceId(android_id);
 
                                 try {
-                                    Location loc = getCurrentLocation(DriverRoleActivity.this);
+                                    Location loc = mCurrentLocation;
                                     if (loc != null) {
                                         _join.setLat((float) loc.getLatitude());
                                         _join.setLon((float) loc.getLongitude());
@@ -1895,7 +1890,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 getHandler().post(new Runnable() {
                     @Override
                     public void run() {
-                        showSubmitPicsButton();
+                        showSubmitButton();
                     }
                 });
             }
@@ -1911,7 +1906,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     @UiThread
-    private void showSubmitPicsButton() {
+    private void showSubmitButton() {
 
         FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.submit_ride_button_pics);
         Context ctx =  getApplicationContext();

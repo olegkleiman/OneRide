@@ -104,9 +104,9 @@ public class SettingsActivity extends BaseActivity
 
         try {
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            sharedPrefs.getBoolean(Globals.PREF_DEBUG_WITHOUT_GEOFENCES, Globals.DEBUG_WITHOUT_GEOFENCES);
-            MenuItem menuItem = menu.findItem(R.id.action_debug_without_geofences);
-            menuItem.setChecked(Globals.DEBUG_WITHOUT_GEOFENCES);
+            sharedPrefs.getBoolean(Globals.PREF_DEBUG_WITHOUT_GEOFENCES, Globals.IGNORE_GEOFENCES);
+            MenuItem menuItem = menu.findItem(R.id.ignore_geofences);
+            menuItem.setChecked(Globals.IGNORE_GEOFENCES);
         } catch(Exception ex) {
             Log.e(LOG_TAG, ex.getMessage());
         }
@@ -124,14 +124,16 @@ public class SettingsActivity extends BaseActivity
             return true;
         } else if( id == R.id.action_refresh_classifiers) {
             onRefreshClassifiers();
-        } else if( id == R.id.action_debug_without_geofences) {
-            Globals.DEBUG_WITHOUT_GEOFENCES = !Globals.DEBUG_WITHOUT_GEOFENCES;
-            item.setChecked(Globals.DEBUG_WITHOUT_GEOFENCES);
+        } else if( id == R.id.ignore_geofences) {
+            Globals.IGNORE_GEOFENCES = !Globals.IGNORE_GEOFENCES;
+            item.setChecked(Globals.IGNORE_GEOFENCES);
+
+            //LocationServices.FusedLocationApi.setMockMode(getGoogleApiClient(), Globals.IGNORE_GEOFENCES);
 
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             SharedPreferences.Editor editor = sharedPrefs.edit();
 
-            editor.putBoolean(Globals.PREF_DEBUG_WITHOUT_GEOFENCES, Globals.DEBUG_WITHOUT_GEOFENCES);
+            editor.putBoolean(Globals.PREF_DEBUG_WITHOUT_GEOFENCES, Globals.IGNORE_GEOFENCES);
             editor.apply();
         } else if( id == R.id.action_advanced ) {
             Intent intent = new Intent(this, AdvSettingsActivity.class);

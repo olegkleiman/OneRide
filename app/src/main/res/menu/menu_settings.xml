@@ -12,8 +12,8 @@
         app:showAsAction="never" />
 
     <group>
-        <item android:id="@+id/action_debug_without_geofences"
-            android:title="Run without GeoFences"
+        <item android:id="@+id/ignore_geofences"
+            android:title="Ignore GeoFences"
             android:orderInCategory="300"
             android:checkable="true"
             android:checked="false"

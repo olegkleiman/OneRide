@@ -347,13 +347,13 @@ public class Globals {
     public static final int GEOFENCE_LOITERING_DELAY = 60000; // 1 min
     public static final int GEOFENCE_RESPONSIVENESS = 5000; // 5 sec
 
-    public static Boolean DEBUG_WITHOUT_GEOFENCES = true;
+    public static Boolean IGNORE_GEOFENCES = false;
 
     private static final Object lock = new Object();
     private static boolean inGeofenceArea;
     public static boolean isInGeofenceArea() {
         synchronized (lock) {
-            if( Globals.DEBUG_WITHOUT_GEOFENCES )
+            if( Globals.IGNORE_GEOFENCES )
                 return true;
             else
                 return inGeofenceArea;
@@ -366,7 +366,6 @@ public class Globals {
     }
 
     public static long GF_OUT_TOLERANCE = 7000; // Globals.LOCATION_UPDATE_MIN_FEQUENCY * 2;
-    public static long LOCATION_UPDATE_MIN_FEQUENCY = 3000;
 
     private static final Object lock3 = new Object();
     private static boolean _REMIND_GEOFENCE_ENTRANCE;
