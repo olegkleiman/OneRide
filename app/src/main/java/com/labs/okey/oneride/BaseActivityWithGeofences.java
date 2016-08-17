@@ -12,7 +12,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
-import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
@@ -41,8 +40,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import io.fabric.sdk.android.Fabric;
 
 /**
  * @author Oleg Kleiman
@@ -105,85 +102,18 @@ public class BaseActivityWithGeofences extends BaseActivity
     public void onConnectionSuspended(int i) {
     }
 
-//    @TargetApi(Build.VERSION_CODES.M)
-//    @RequiresPermission(anyOf = {
-//            android.Manifest.permission.ACCESS_COARSE_LOCATION,
-//            android.Manifest.permission.ACCESS_FINE_LOCATION})
-//    protected Location getCurrentLocation(Activity permissionsHandler) throws SecurityException {
-//
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
-//                    != PackageManager.PERMISSION_GRANTED )
-//                // Permission android.permission.ACCESS_FINE_LOCATION includes
-//                // permission for both NETWORK_PROVIDER and GPS_PROVIDER
-//
-//                    throw new SecurityException();
-//
-//        } else {
-//
-//            try {
-//                LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-//                return locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-//            } catch (Exception ex) {
-//                Log.e(LOG_TAG, ex.getMessage());
-//
-//                if( Fabric.isInitialized() && Crashlytics.getInstance() != null )
-//                    Crashlytics.logException(ex);
-//
-//            }
-//        }
-//
-//        return null;
-//    }
-
-//    protected void startLocationUpdates(Activity permissionsHandler,
-//                                        android.location.LocationListener locationListener) {
-//
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
-//                    != PackageManager.PERMISSION_GRANTED )
-//                // Permission android.permission.ACCESS_FINE_LOCATION includes
-//                // permission for both NETWORK_PROVIDER and GPS_PROVIDER
-//
-//                throw new SecurityException();
-//        }
-//
-//        try {
-//            mLocationListener = locationListener;
-//            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-//
-//            if( locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) )
-//                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-//                        Globals.LOCATION_UPDATE_MIN_FEQUENCY, 0, locationListener);
-//        } catch (Exception ex) {
-//            Log.e(LOG_TAG, ex.getMessage());
-//
-//            if( Fabric.isInitialized() && Crashlytics.getInstance() != null )
-//                Crashlytics.logException(ex);
-//        }
-//
-//    }
-//
-//    protected void stopLocationUpdates(android.location.LocationListener locationListener) {
-//
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            if (ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION")
-//                    != PackageManager.PERMISSION_GRANTED)
-//                throw new SecurityException();
-//        }
-//
-//        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-//        locationManager.removeUpdates(locationListener);
-//    }
-
     @Override
     protected void onPause(){
 
         super.onPause();
 
-        if( this instanceof LocationListener ) {
+        if( getGoogleApiClient() == null )
+            return;
 
-            LocationListener locationListener = (LocationListener)this;
+        if( this instanceof LocationListener
+                && getGoogleApiClient().isConnected() ) {
+
+            LocationListener locationListener = (LocationListener) this;
             LocationServices.FusedLocationApi.removeLocationUpdates(
                     getGoogleApiClient(), locationListener);
         }
@@ -474,10 +404,7 @@ public class BaseActivityWithGeofences extends BaseActivity
 
         } catch(IllegalStateException ex) { // Nothing special here :
             // it may happen if GoogleApiClient was not connected yet
-            if( Fabric.isInitialized() && Crashlytics.getInstance() != null )
-                Crashlytics.logException(ex);
-
-            Log.e(LOG_TAG, ex.getMessage());
+            Globals.__logException(ex);
         }
         super.onDestroy();
     }
@@ -499,11 +426,7 @@ public class BaseActivityWithGeofences extends BaseActivity
             // Return a GeofencingRequest.
             return builder.build();
         } catch (Exception ex) {
-            if( Fabric.isInitialized() && Crashlytics.getInstance() != null ) {
-                Crashlytics.logException(ex);
-            }
-
-            Log.e(LOG_TAG, ex.getMessage());
+            Globals.__logException(ex);
             return null;
         }
     }

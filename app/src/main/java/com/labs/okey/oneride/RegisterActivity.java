@@ -33,7 +33,6 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.facebook.AccessToken;
@@ -156,7 +155,7 @@ public class RegisterActivity extends FragmentActivity
                 try {
                     usersTable.delete(user).get();
                 } catch (InterruptedException | ExecutionException ex) {
-                    Log.e(LOG_TAG, ex.getMessage());
+                    Globals.__logException(ex);
                 }
 
                 return null;
@@ -227,7 +226,6 @@ public class RegisterActivity extends FragmentActivity
         // See list of supported devices here:
         // https://support.google.com/googleplay/answer/1727131
         mDeviceModel = Build.BRAND + ";" + Build.MODEL;
-        Log.d(LOG_TAG, "Device model: " + mDeviceModel);
 
         // Twitter stuff
         mTwitterloginButton = (TwitterLoginButton) findViewById(R.id.twitter_login);
@@ -482,11 +480,9 @@ public class RegisterActivity extends FragmentActivity
 
                                             @Override
                                             public void onFailure(Throwable t) {
-                                                if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
-                                                    Crashlytics.logException(t);
 
-                                                Log.e(LOG_TAG, t.getMessage());
-                                            }
+                                                Globals.__logException(t);
+                                             }
                                         });
 
                                     }
@@ -510,12 +506,10 @@ public class RegisterActivity extends FragmentActivity
             @Override
             public void onFailure(Throwable t) {
 
-                if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
-                    Crashlytics.logException(t);
+                Globals.__logException(t);
 
                 Toast.makeText(RegisterActivity.this, t.getMessage(), Toast.LENGTH_LONG).show();
 
-                Log.e(LOG_TAG, t.getMessage());
             }
         });
     }
@@ -540,7 +534,7 @@ public class RegisterActivity extends FragmentActivity
                             verifyAccount(regID);
 
                         } catch (JSONException ex) {
-                            Log.e(LOG_TAG, ex.getLocalizedMessage());
+                            Globals.__logException(ex);
                         }
 
                     }
@@ -936,10 +930,7 @@ public class RegisterActivity extends FragmentActivity
 
                     } catch(InterruptedException | ExecutionException | IOException ex ) {
                         mEx = ex;
-                        Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
-
-                        if ( Fabric.isInitialized() && Crashlytics.getInstance() != null)
-                            Crashlytics.logException(ex);
+                        Globals.__logException(ex);
                     }
 
                     return null;
@@ -964,7 +955,7 @@ public class RegisterActivity extends FragmentActivity
                                                 Globals.PLAY_SERVICES_RESOLUTION_REQUEST)
                                                 .show();
             } else {
-                Log.i(LOG_TAG, getString(R.string.no_playservices));
+                Globals.__log(LOG_TAG, getString(R.string.no_playservices));
             }
 
             return false;

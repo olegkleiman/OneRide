@@ -108,7 +108,7 @@ public class SettingsActivity extends BaseActivity
             MenuItem menuItem = menu.findItem(R.id.ignore_geofences);
             menuItem.setChecked(Globals.IGNORE_GEOFENCES);
         } catch(Exception ex) {
-            Log.e(LOG_TAG, ex.getMessage());
+            Globals.__logException(ex);
         }
 
         return super.onCreateOptionsMenu(menu);

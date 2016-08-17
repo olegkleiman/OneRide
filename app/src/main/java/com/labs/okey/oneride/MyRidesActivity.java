@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -126,7 +125,7 @@ public class MyRidesActivity extends BaseActivity
                     mRides = mRidesSyncTable.read(pullQueryRides).get();
 
                 } catch (Exception ex) {
-                    Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
+                    Globals.__logException(ex);
                 }
 
                 return null;

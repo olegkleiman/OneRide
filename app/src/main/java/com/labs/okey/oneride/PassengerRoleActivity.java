@@ -50,7 +50,6 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -236,6 +235,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             // Dismiss the situation when SearchDialog is not currently in FragmentManager
         }
 
+        Globals.__log(LOG_TAG, getString(R.string.log_state_saved));
+
         super.onSaveInstanceState(outState);
     }
 
@@ -264,6 +265,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         if( savedInstanceState.containsKey(Globals.PARCELABLE_KEY_DRVER_NAME) )
             mDriverName = savedInstanceState.getString(Globals.PARCELABLE_KEY_DRVER_NAME);
+
+        Globals.__log(LOG_TAG, getString(R.string.log_state_restored));
 
     }
 
@@ -582,9 +585,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
             @Override
             public void onFailure(@NonNull Throwable t) {
-                if ( Fabric.isInitialized() && Crashlytics.getInstance() != null) {
-                    Crashlytics.logException(t);
-                }
+                Globals.__logException(t);
             }
         }, new UiThreadExecutor());
     }
@@ -896,10 +897,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             });
 
         } catch (Exception ex) {
-            if (Fabric.isInitialized() && Crashlytics.getInstance() != null)
-                Crashlytics.log(ex.getLocalizedMessage());
-
-            Log.e(LOG_TAG, ex.getLocalizedMessage());
+            Globals.__logException(ex);
         }
     }
 
@@ -911,10 +909,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             mSearchDriverDialogFragment.show(getSupportFragmentManager(), "searchDialog");
 
         } catch (Exception ex) {
-            if ( Fabric.isInitialized() && Crashlytics.getInstance() != null)
-                Crashlytics.logException(ex);
-
-            Log.e(LOG_TAG, ex.getMessage());
+            Globals.__logException(ex);
         }
 
     }
@@ -1148,12 +1143,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                                 break;
                         }
                     } catch (Exception ex) {
-                        if ( Fabric.isInitialized() && Crashlytics.getInstance() != null)
-                            Crashlytics.logException(ex);
-
-                        String msg = ex.getMessage();
-                        if(  msg != null && !msg.isEmpty())
-                            Log.e(LOG_TAG, msg);
+                        Globals.__logException(ex);
                     }
 
                 } else {
@@ -1209,12 +1199,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     joinsTable.insert(_join).get();
 
                 } catch (ExecutionException | InterruptedException ex) {
-
                     mEx = ex;
-                    if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
-                        Crashlytics.logException(ex);
-
-                    Log.e(LOG_TAG, ex.getMessage());
+                    Globals.__logException(ex);
                 }
 
                 return null;
@@ -1256,47 +1242,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 }
             });
 
-            // Uncomment the following code
-            // if decided to NOT transmit user name thru Wi-Fi Direct
-
-//            if ( tokens[0].equalsIgnoreCase(Globals.FB_PROVIDER) ) {
-//                AccessToken fbAccessToken = AccessToken.getCurrentAccessToken();
-//                GraphRequest request = GraphRequest.newGraphPathRequest(
-//                        fbAccessToken,
-//                        tokens[1],
-//                        new GraphRequest.Callback() {
-//                            @Override
-//                            public void onCompleted(GraphResponse response) {
-//
-//                                try {
-//
-//                                    JSONObject object = response.getJSONObject();
-//                                    if (response.getError() == null) {
-//                                        String userName = (String) object.get("name");
-//                                        device.setUserName(userName);
-//
-//                                        mDriversAdapter.replaceItem(device);
-//                                        mDriversAdapter.notifyDataSetChanged();
-//                                    } else {
-//                                        if ( Fabric.isInitialized() && Crashlytics.getInstance() != null)
-//                                            Crashlytics.log(response.getError().getErrorMessage());
-//
-//                                        Log.e(LOG_TAG, response.getError().getErrorMessage());
-//                                    }
-//
-//                                } catch (JSONException e) {
-//                                    Log.e(LOG_TAG, e.getLocalizedMessage());
-//                                }
-//                            }
-//                        });
-//
-//                Bundle parameters = new Bundle();
-//                parameters.putString("fields", "id,name");
-//                request.setParameters(parameters);
-//                request.executeAsync();
-//            } else if( tokens[0].equalsIgnoreCase(Globals.MICROSOFT_PROVIDER) ) {
-//
-//            }
         }
     }
 

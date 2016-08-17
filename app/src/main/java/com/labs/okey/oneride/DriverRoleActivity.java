@@ -60,7 +60,6 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.github.brnunes.swipeablerecyclerview.SwipeableRecyclerViewTouchListener;
@@ -311,6 +310,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private void restoreInstanceState(Bundle savedInstanceState) {
         boolean bInitializedBeforeRotation = false;
 
+        if( savedInstanceState.containsKey(Globals.PARCELABLE_LOCATION) )
+            mCurrentLocation = savedInstanceState.getParcelable(Globals.PARCELABLE_LOCATION);
 
         if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_RIDE_CODE)) {
             bInitializedBeforeRotation = true;
@@ -422,7 +423,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 vEmptyText.setVisibility(View.GONE);
         }
 
-
         if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_DIALOG_SHOWN)) {
             bInitializedBeforeRotation = true;
 
@@ -434,10 +434,15 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             }
             mApprovalDialog.show();
         }
+
+        Globals.__log(LOG_TAG, getString(R.string.log_state_restored));
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
+
+        if( mCurrentLocation != null )
+            outState.putParcelable(Globals.PARCELABLE_LOCATION, mCurrentLocation);
 
         TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
         if( txtRideCode == null )
@@ -497,17 +502,15 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 }
             }
             catch(Exception ex){
-
-                if( Fabric.isInitialized() && Crashlytics.getInstance() != null )
-                    Crashlytics.logException(ex);
-
-                Log.e(LOG_TAG, ex.getMessage());
+                Globals.__logException(ex);
             }
 
             if( mApprovalDialog.isShowing() ) {
                 outState.putBoolean(Globals.PARCELABLE_KEY_APPEAL_DIALOG_SHOWN, true);
             }
         }
+
+        Globals.__log(LOG_TAG, getString(R.string.log_state_saved));
 
         super.onSaveInstanceState(outState);
     }
@@ -1198,9 +1201,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             @Override
             public void onFailure(Throwable t) {
-                if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
-                    Crashlytics.logException(t);
+                Globals.__logException(t);
             }
+
         }, new UiThreadExecutor());
     }
 
@@ -1546,8 +1549,15 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 return;
             }
 
-            mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());
-            new UpdateCurrentRide().execute();
+            if( mCurrentRide == null ) {
+                View v = findViewById(R.id.passenger_snackbar);
+                if( v != null )
+                    Snackbar.make(v, R.string.ride_upload_failed, Snackbar.LENGTH_LONG)
+                            .show();
+            } else {
+                mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());
+                new UpdateCurrentRide().execute();
+            }
         }
     }
 
@@ -1646,10 +1656,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                         } catch (Exception ex) { // ExecutionException | InterruptedException ex ) {
                             mEx = ex;
-                            if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
-                                Crashlytics.logException(ex);
 
-                            Log.e(LOG_TAG, ex.getMessage());
+                            Globals.__logException(ex);
                         }
 
                         return null;
@@ -1897,18 +1905,14 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
 
         } catch(Exception ex) {
-
-            if( Fabric.isInitialized() && Crashlytics.getInstance() != null )
-                Crashlytics.logException(ex);
-
-            Log.e(LOG_TAG, ex.getMessage());
+            Globals.__logException(ex);
         }
     }
 
     @UiThread
     private void showSubmitButton() {
 
-        FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.submit_ride_button_pics);
+        FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.submit_ride_button);
         Context ctx =  getApplicationContext();
         if( fab != null) {
             fab.setVisibility(View.VISIBLE);
@@ -1958,19 +1962,27 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private Runnable thanksRunnable = new Runnable() {
         @Override
         public void run() {
-            new MaterialDialog.Builder(DriverRoleActivity.this)
-                    .title(R.string.thanks)
-                    .content(R.string.nofee_request_accepted)
-                    .iconRes(R.drawable.ic_info)
-                    .cancelable(false)
-                    .positiveText(android.R.string.ok)
-                    .callback(new MaterialDialog.ButtonCallback() {
-                        @Override
-                        public void onPositive(MaterialDialog dialog) {
-                            finish();
-                        }
-                    })
-                    .show();
+
+            try {
+
+                new MaterialDialog.Builder(DriverRoleActivity.this)
+                        .title(R.string.thanks)
+                        .content(R.string.nofee_request_accepted)
+                        .iconRes(R.drawable.ic_info)
+                        .cancelable(false)
+                        .positiveText(android.R.string.ok)
+                        .onPositive(new MaterialDialog.SingleButtonCallback() {
+                            @Override
+                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                finish();
+                            }
+                        })
+                        .show();
+            } catch(MaterialDialog.DialogException ex) {
+                // Safely dismiss the situation when
+                // an Activity is not yet created or it's hidden
+                Log.e(LOG_TAG, ex.getMessage());
+            }
         }
     };
 

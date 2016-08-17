@@ -21,7 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Oleg Kleiman on 31-May-15.
+ * @author Oleg Kleiman
+ * created 31-May-15.
  */
 public class GeofenceTransitionsIntentService extends IntentService {
 

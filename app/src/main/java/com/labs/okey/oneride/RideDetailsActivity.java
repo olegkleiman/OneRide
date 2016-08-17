@@ -103,10 +103,8 @@ public class RideDetailsActivity extends BaseActivity
                 DriverImage.setImageDrawable(drawable);
 
             } catch (Exception e) {
-
-                Log.e(LOG_TAG, e.getMessage());
+                Globals.__logException(e);
             }
-
 
             int status = 0;
             if(ride.getApproved() != null){
@@ -122,8 +120,6 @@ public class RideDetailsActivity extends BaseActivity
                 titleDetails.setVisibility(View.GONE);
                 findViewById(R.id.passengers_or_Image_card).setVisibility(View.GONE);
                 findViewById(R.id.lineView).setVisibility(View.GONE);
-
-
 
                 break;
             case 1:  //APPROVED

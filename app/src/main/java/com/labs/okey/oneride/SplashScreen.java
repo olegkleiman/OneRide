@@ -143,10 +143,10 @@ public class SplashScreen extends AppCompatActivity {
                             registerWithNotificationHubs();
 
                             intent = new Intent(SplashScreen.this, MainActivity.class);
-                            Log.d(LOG_TAG, "Validation succeeded");
+                            Globals.__log(LOG_TAG, getString(R.string.log_validation_succeeded));
                         } else {
                             intent = new Intent(SplashScreen.this, RegisterActivity.class);
-                            Log.d(LOG_TAG, "Validation failed");
+                            Globals.__log(LOG_TAG, getString(R.string.log_validation_failed));
                         }
 
                         startActivity(intent);
@@ -158,7 +158,7 @@ public class SplashScreen extends AppCompatActivity {
 
             @Override
             public void onFailure(Throwable t) {
-                Log.d(LOG_TAG, "Validation exception thrown");
+                Globals.__logException(t);
             }
         });
 
@@ -179,7 +179,7 @@ public class SplashScreen extends AppCompatActivity {
                 apiAvailability.getErrorDialog(this, resultCode, Globals.PLAY_SERVICES_RESOLUTION_REQUEST)
                         .show();
             } else {
-                Log.i(LOG_TAG, getString(R.string.no_playservices));
+                Globals.__log(LOG_TAG, getString(R.string.no_playservices));
             }
 
             return false;
@@ -251,7 +251,7 @@ public class SplashScreen extends AppCompatActivity {
                             try {
                                 refreshLatch.await();
                             } catch (InterruptedException ex) {
-                                Log.e(LOG_TAG, ex.getLocalizedMessage());
+                                Globals.__logException(ex);
                             }
 
                         } else {
@@ -265,7 +265,7 @@ public class SplashScreen extends AppCompatActivity {
                         @Override
                         protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken,
                                                                    AccessToken currentAccessToken) {
-                            Log.d(LOG_TAG, "Current access token was changed");
+                            Globals.__log(LOG_TAG, getString(R.string.log_token_changed));
                             AccessToken.setCurrentAccessToken(currentAccessToken);
                         }
                     };
@@ -291,7 +291,7 @@ public class SplashScreen extends AppCompatActivity {
                 Boolean _bRes = wamsUtils.isJWTTokenValid(token);
                 bRes[0] = _bRes;
             } catch( Exception ex) {
-                Log.e(LOG_TAG, ex.getMessage());
+                Globals.__logException(ex);
             }
 
             latch.countDown();
@@ -305,7 +305,7 @@ public class SplashScreen extends AppCompatActivity {
             latch.await();
 
         } catch (InterruptedException ex) {
-            Log.e(LOG_TAG, ex.getLocalizedMessage());
+            Globals.__logException(ex);
             return false;
         }
 

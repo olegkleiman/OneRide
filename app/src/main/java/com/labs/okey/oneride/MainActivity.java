@@ -29,7 +29,6 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.android.volley.Cache;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
-import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.LoginEvent;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -155,8 +154,7 @@ public class MainActivity extends BaseActivity
             }
         }
 
-        if (Fabric.isInitialized() && Crashlytics.getInstance() != null)
-            Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_start));
+        Globals.__log(LOG_TAG, getString(R.string.log_start));
 
         new AsyncTask<Void, Void, Void>() {
 
@@ -188,15 +186,12 @@ public class MainActivity extends BaseActivity
                         gFencesSyncTable.purge(query);
                         gFencesSyncTable.pull(query).get();
 
-                        if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
-                            Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_gf_updated));
+                        Globals.__log(LOG_TAG, getString(R.string.log_gf_updated));
                     } else
-                        if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
-                            Crashlytics.log(Log.VERBOSE, LOG_TAG, getString(R.string.log_gf_uptodate));
-
+                        Globals.__log(LOG_TAG, getString(R.string.log_gf_uptodate));
 
                 } catch(ExecutionException | InterruptedException ex) {
-                    Log.e(LOG_TAG, ex.getMessage());
+                    Globals.__logException(ex);
                 }
 
                 return null;
@@ -346,11 +341,9 @@ public class MainActivity extends BaseActivity
                     })
                     .show();
         } catch (Exception e) {
-            if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
-                Crashlytics.logException(e);
 
             // better that catch the exception here would be use handle to send events the activity
-            Log.e(LOG_TAG, e.getMessage());
+            Globals.__logException(e);
         }
     }
 
@@ -568,10 +561,7 @@ public class MainActivity extends BaseActivity
             }
 
         } catch (Exception e) {
-            if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
-                Crashlytics.logException(e);
-
-            Log.e(LOG_TAG, e.getMessage());
+            Globals.__logException(e);
         }
 
 

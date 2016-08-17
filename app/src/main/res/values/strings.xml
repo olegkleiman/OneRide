@@ -284,9 +284,14 @@ limitations under the License.</string>
     <string name="request_postponed">Your request is postponed</string>
     <string name="geofence_outside">Remind you when getting inside?</string>
 
-    <string name="log_start">Application started</string>
-    <string name="log_gf_updated">Geofences updated</string>
-    <string name="log_gf_uptodate">Geofences are up to date</string>
+    <string name="log_start" translatable="false">Application started</string>
+    <string name="log_validation_succeeded" translatable="false">User validation succeeded"</string>
+    <string name="log_validation_failed" translatable="false">User validation failed</string>
+    <string name="log_token_changed" translatable="false">Current access token was changed</string>
+    <string name="log_gf_updated" translatable="false">Geofences updated</string>
+    <string name="log_gf_uptodate" translatable="false">Geofences are up to date</string>
+    <string name="log_state_saved" translatable="false">Instance state saved</string>
+    <string name="log_state_restored" translatable="false">Instance state restored</string>
     <string name="camera_directive_1">Look straight into camera lens</string>
 
     <string name="ride_started_answers_name" translatable="false">Ride Started</string>
@@ -320,6 +325,7 @@ limitations under the License.</string>
     <string name="instruction_can_submit_no_fee">Now you can submit no-fee request</string>
     <string name="instruction_advanced_mode">Each passenger should make a self-picture</string>
 
+    <string name="ride_upload_failed">Something goes wrong. The ride was terminated unexpectedly</string>
     <string name="ride_uploaded">Your ride is uploaded</string>
     <string name="ride_not_uploaded">The ride has not been uploaded</string>
     <string name="location_inaccurate">Location is inaccurate. Considered as out of Gfs</string>

@@ -202,11 +202,25 @@ public class Globals {
             _monitorInitialized = true;
 
         } catch(Exception e) {
-            String msg = e.getMessage();
-            if( msg == null )
-                msg = "Could not instantiate Crashlytics";
-            Log.e("FR", msg);
+
+            Globals.__logException(e);
         }
+    }
+
+    public static void __log(String tag, String message) {
+        if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
+            Crashlytics.log(Log.VERBOSE, tag, message);
+
+        Log.d(tag, message);
+    }
+
+    public static void __logException(Throwable e) {
+        if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
+            Crashlytics.logException(e);
+
+        String message = e.getMessage();
+        if( message != null && !message.isEmpty() )
+            Log.e(LOG_TAG, e.getMessage());
     }
 
     public static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
@@ -463,6 +477,7 @@ public class Globals {
     public static String PARCELABLE_KEY_APPEAL_DIALOG_SHOWN = "appeak_shown";
     public static String PARCELABLE_KEY_RIDES_HISTORY = "rides_history";
     public static String PARCELABLE_KEY_DIALOG_MESSAGE = "dialog_Message";
+    public static String PARCELABLE_LOCATION = "currentLocation";
 
     // Check out http://go.microsoft.com/fwlink/p/?LinkId=193157 to get your own client id
     public static final String MICROSOFT_CLIENT_ID = "0000000048137798";

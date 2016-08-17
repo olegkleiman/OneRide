@@ -458,6 +458,8 @@ public class BaseActivity extends AppCompatActivity
         }
     }
 
+
+
     @TargetApi(Build.VERSION_CODES.M)
     public void checkCameraAndStoragePermissions() throws SecurityException {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
