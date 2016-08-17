@@ -21,6 +21,9 @@ import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
 import android.location.Location;
 import android.location.LocationProvider;
 import android.net.Uri;
@@ -1290,7 +1293,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                 boolean bPictureRequired = mCurrentRide.isPictureRequired();
                 if( bPictureRequired ) {
-                    Log.i(LOG_TAG, "Picture required");
+                    Globals.__log(LOG_TAG, "Picture required");
 
                     if( Globals.APPLY_CHALLENGE ) {
                         runOnUiThread(new Runnable() {
@@ -1316,7 +1319,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                             public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                                                 dialog.dismiss();
 
-                                                takePictureWithIntent();
+                                                if( !requestCameraPermissions() )
+                                                    takePictureWithIntent();
                                             }
                                         })
                                         .show();
@@ -1347,7 +1351,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                             public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                                                 dialog.dismiss();
 
-                                                requestCameraPermissions();
+                                                if( !requestCameraPermissions() )
+                                                    takePictureWithIntent();
                                             }
                                         })
                                         .show();
@@ -1497,21 +1502,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     @Override
     public void alert(String message, final String actionIntent) {
-//        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-//
-//            @Override
-//            public void onClick(DialogInterface dialogInterface, int which) {
-//                if (which == DialogInterface.BUTTON_POSITIVE) {
-//                    startActivityForResult(new Intent(actionIntent), WIFI_CONNECT_REQUEST);
-//                }
-//            }
-//        };
-//
-//        new AlertDialogWrapper.Builder(this)
-//                .setTitle(message)
-//                .setNegativeButton(R.string.no, dialogClickListener)
-//                .setPositiveButton(R.string.yes, dialogClickListener)
-//                .show();
 
         AnimationDrawable animationDrawable = (AnimationDrawable) mImageTransmit.getDrawable();
         if( actionIntent.isEmpty() ) {
@@ -1810,43 +1800,97 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     }
 
-    private void requestCameraPermissions() {
+    /**
+     * Returns true if permission was requested.
+     * Otherwise = false
+     */
+    private boolean requestCameraPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                    != PackageManager.PERMISSION_GRANTED)
+            if( ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                                    != PackageManager.PERMISSION_GRANTED ) {
 
-                // Should we show an explanation?
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                        Manifest.permission.CAMERA)) {
-                } else {
-                    ActivityCompat.requestPermissions(this,
-                            new String[]{Manifest.permission.CAMERA},
-                            Globals.CAMERA_PERMISSION_REQUEST);
-                }
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.CAMERA},
+                        Globals.CAMERA_PERMISSION_REQUEST);
+                return true;
+            }
         }
+
+        return false;
     }
 
     @RequiresPermission(Manifest.permission.CAMERA)
     public void takePictureWithIntent(){
 
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+        boolean bFrontCameraFound = false;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 
             try {
-                mUriPhotoApproval = createImageFile();
-            } catch (IOException e) {
-                Log.e(LOG_TAG, e.getMessage());
-            }
 
-            if (mUriPhotoApproval != null) {
+                    CameraManager cameraManager = (CameraManager) this.getSystemService(Context.CAMERA_SERVICE);
+                    for (String cameraId :  cameraManager.getCameraIdList() ) {
+                        CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraId);
 
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mUriPhotoApproval);
-                takePictureIntent.putExtra("android.intent.extras.CAMERA_FACING",
-                                           Camera.CameraInfo.CAMERA_FACING_FRONT);
-                takePictureIntent.putExtra(MediaStore.EXTRA_SCREEN_ORIENTATION,
-                                            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                        if (characteristics.get(CameraCharacteristics.LENS_FACING)
+                                == CameraCharacteristics.LENS_FACING_FRONT) {
+                            bFrontCameraFound = true;
+                        }
+                    }
+
+            } catch(CameraAccessException ex) {
+
             }
+        } else {
+            int nCameras = Camera.getNumberOfCameras();
+
+            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+
+            for(int camIndex =0; camIndex < nCameras; camIndex++) {
+                Camera.getCameraInfo(camIndex, cameraInfo);
+                if( cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT ) {
+                    bFrontCameraFound = true;
+                    break;
+                }
+            }
+        }
+
+        if( !bFrontCameraFound ) {
+            new MaterialDialog.Builder(this)
+                    .positiveText(getString(R.string.no_front_camera))
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            finish();
+                        }
+                    })
+                    .show();
+        }
+
+
+        try {
+
+            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+
+                try {
+                    mUriPhotoApproval = createImageFile();
+                } catch (IOException e) {
+                    Log.e(LOG_TAG, e.getMessage());
+                }
+
+                if (mUriPhotoApproval != null) {
+
+                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mUriPhotoApproval);
+                    takePictureIntent.putExtra("android.intent.extras.CAMERA_FACING",
+                            Camera.CameraInfo.CAMERA_FACING_FRONT);
+                    takePictureIntent.putExtra(MediaStore.EXTRA_SCREEN_ORIENTATION,
+                            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                }
+            }
+        } catch(Exception ex) {
+            Globals.__logException(ex);
         }
     }
 

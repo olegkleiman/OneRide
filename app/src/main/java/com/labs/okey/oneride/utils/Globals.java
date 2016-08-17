@@ -41,7 +41,7 @@ import io.fabric.sdk.android.Fabric;
  */
 public class Globals {
 
-    private static final String LOG_TAG = "FR.Globals";
+    private static final String LOG_TAG = "OneRide";
 
     public static long REQUIRED_PASSENGERS_NUMBER = 3;
     public static boolean APPLY_CHALLENGE = false;

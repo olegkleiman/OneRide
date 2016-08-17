@@ -146,6 +146,7 @@
     <string name="approval_send_success">Фотография поступила на проверку. Мы сообщим вам о результате немедленно после его получения.</string>
     <string name="push_approval_format">Ваша поездка подтверждена. Код поездки: %s</string>
     <string name="no_phone_number">Укажите правильный номер телефона</string>
+    <string name="no_front_camera">Ваш телефон не имеет фронтальной камеры. К сожалению, мы не можем выполнить необходимые действия.</string>
 
 
 </resources>

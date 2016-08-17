@@ -1,7 +1,6 @@
 package com.labs.okey.oneride;
 
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.view.ViewPager;
@@ -11,6 +10,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.labs.okey.oneride.adapters.MyRideTabAdapter;
 import com.labs.okey.oneride.model.Ride;
 import com.labs.okey.oneride.utils.Globals;
@@ -51,6 +53,7 @@ public class MyRidesActivity extends BaseActivity
         if( wamsClient == null )
             Globals.initMobileServices(this);
 
+        wamsUtils.sync(Globals.getMobileServiceClient(), "rides");
         mRidesSyncTable = Globals.getMobileServiceClient().getSyncTable("rides", Ride.class);
 
         setupUI(getString(R.string.subtitle_activity_my_rides), "");
@@ -79,58 +82,49 @@ public class MyRidesActivity extends BaseActivity
 
     public void updateHistory(){
 
-        final ProgressBar myRidesProgressRefresh =  (ProgressBar)findViewById(R.id.myrides_progress_refresh);
+        final ProgressBar progressBar =  (ProgressBar)findViewById(R.id.myrides_progress_refresh);
+            progressBar.setVisibility(View.VISIBLE);
 
-        new AsyncTask<Object, Void, Void>() {
+        final Query pullQueryRides = Globals.getMobileServiceClient()
+                                            .getTable(Ride.class)
+                                            .where()
+                                            .field("driverid")
+                                            .eq(Globals.userID);
 
-            // Runs on UI thread
+        ListenableFuture pullFuture = mRidesSyncTable.pull(pullQueryRides);
+        Futures.addCallback(pullFuture, new FutureCallback<Object>() {
             @Override
-            protected void onPostExecute(Void res) {
+            public void onSuccess(Object result) {
 
+                Globals.myRides_update_required = false;
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                 SharedPreferences.Editor editor = sharedPrefs.edit();
                 editor.putBoolean(Globals.UPDATE_MYRIDES_REQUIRED, Globals.myRides_update_required);
                 editor.apply();
 
-                if (myRidesProgressRefresh.getVisibility() == View.VISIBLE) {
-                    myRidesProgressRefresh.setVisibility(View.GONE);
-                }
-                mTabAdapter.updateRides(mRides);
-            }
-
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-
-                if (myRidesProgressRefresh.getVisibility() == View.GONE) {
-                    myRidesProgressRefresh.setVisibility(View.VISIBLE);
-                }
-            }
-
-            @Override
-            protected Void doInBackground(Object... objects) {
-
                 try {
-
-                    Query pullQueryRides = Globals.getMobileServiceClient().getTable(Ride.class)
-                            .where().field("driverid").eq(Globals.userID);
-                    wamsUtils.sync(Globals.getMobileServiceClient(), "rides");
-
-                    //if( Globals.myRides_update_required ) {
-
-                        mRidesSyncTable.pull(pullQueryRides).get();
-                        Globals.myRides_update_required = false;
-                   //}
-
                     mRides = mRidesSyncTable.read(pullQueryRides).get();
-
-                } catch (Exception ex) {
-                    Globals.__logException(ex);
+                } catch (Exception  e) {
+                    Globals.__logException(e);
                 }
 
-                return null;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        progressBar.setVisibility(View.GONE);
+                        mTabAdapter.updateRides(mRides);
+                    }
+                });
             }
-        }.execute();
+
+            @Override
+            public void onFailure(Throwable t) {
+
+                Globals.__logException(t);
+
+                progressBar.setVisibility(View.GONE);
+            }
+        });
 
     }
 

@@ -175,7 +175,7 @@ public class MainActivity extends BaseActivity
 
                 try {
 
-                    wamsUtils.sync(Globals.getMobileServiceClient(), "geofences");
+                    wamsUtils.sync(Globals.getMobileServiceClient(), "geofences", "rides");
 
                     Query query = Globals.getMobileServiceClient().getTable(GeoFence.class).where();
 

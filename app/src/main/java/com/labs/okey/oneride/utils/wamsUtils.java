@@ -5,10 +5,8 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.util.Base64;
-import android.util.Log;
 import android.widget.Toast;
 
-import com.crashlytics.android.Crashlytics;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
@@ -32,15 +30,13 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.concurrent.ExecutionException;
 
-import io.fabric.sdk.android.Fabric;
-
 /**
  * @author Oleg Kleiman
  * created 09-Jun-15.
  */
 public class wamsUtils {
 
-    private static final String LOG_TAG = "FR.WAMS";
+    private static final String LOG_TAG = "OneRide.WAMS";
 
     static public void sync(MobileServiceClient wamsClient, String... tables) {
 
@@ -48,13 +44,14 @@ public class wamsUtils {
 
             MobileServiceSyncContext syncContext = wamsClient.getSyncContext();
 
-            if (!syncContext.isInitialized()) {
+            if( !syncContext.isInitialized()  ) {
 
-               for(String table : tables) {
+                SQLiteLocalStore localStore  = new SQLiteLocalStore(wamsClient.getContext(),
+                                                                    "oneridestore", null, 1);
+
+                for(String table : tables) {
 
                    Map<String, ColumnDataType> tableDefinition = new HashMap<>();
-                   SQLiteLocalStore localStore  = new SQLiteLocalStore(wamsClient.getContext(),
-                                                                        table, null, 1);
 
                    switch( table ) {
                        case "rides": {
@@ -103,16 +100,17 @@ public class wamsUtils {
                    }
 
                    localStore.defineTable(table, tableDefinition);
-                   syncContext.initialize(localStore, null).get();
-                }
+
+               }
+
+                syncContext.initialize(localStore, null).get();
 
             }
 
         } catch(MobileServiceLocalStoreException | InterruptedException | ExecutionException ex) {
-            if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
-                Crashlytics.logException(ex);
 
-            Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
+            Globals.__logException(ex);
+
         }
     }
 
@@ -138,10 +136,7 @@ public class wamsUtils {
 
         } catch(Exception ex) {
 
-            if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
-                Crashlytics.logException(ex);
-
-            Log.e(LOG_TAG, ex.getMessage());
+            Globals.__logException(ex);
 
             return false;
         }
@@ -191,7 +186,7 @@ public class wamsUtils {
                             new ResultCallback<Status>() {
                                 @Override
                                 public void onResult(@NonNull Status status) {
-                                    Log.i(LOG_TAG, "User signed out");
+                                    Globals.__log(LOG_TAG, "User signed out");
                                 }
                             }
                     );
@@ -199,12 +194,12 @@ public class wamsUtils {
                             new ResultCallback<Status>() {
                                 @Override
                                 public void onResult(@NonNull Status status) {
-                                    Log.i(LOG_TAG, "App Access revoked");
+                                    Globals.__log(LOG_TAG, "App Access revoked");
                                 }
                             }
                     );
             } catch(Exception ex) {
-                Log.e(LOG_TAG, ex.getMessage());
+                Globals.__logException(ex);
                 Toast.makeText(context, ex.getMessage(), Toast.LENGTH_LONG).show();
             }
         } else if( tokenProvider == MobileServiceAuthenticationProvider.MicrosoftAccount ) {
@@ -263,7 +258,7 @@ public class wamsUtils {
 
         jwtClaims = undoUrlEncoding(jwtClaims);
         if( jwtClaims.isEmpty() ) {
-            Log.e(LOG_TAG, "JWT token is invalid");
+            Globals.__log(LOG_TAG, "JWT token is invalid");
             return false;
         }
 
@@ -274,10 +269,10 @@ public class wamsUtils {
             JsonObject jsonObj = (new JsonParser()).parse(jsonString).getAsJsonObject();
 
             String audience = jsonObj.get("aud").getAsString();
-            Log.d(LOG_TAG, "aud claim: " + audience);
+            Globals.__log(LOG_TAG, "aud claim: " + audience);
 
             String issuer = jsonObj.get("iss").getAsString();
-            Log.d(LOG_TAG, "JWT issuer: " + issuer);
+            Globals.__log(LOG_TAG, "JWT issuer: " + issuer);
 
             String exp = jsonObj.get("exp").getAsString();
             // 'exp' in JWT represents the number of seconds since Jan 1, 1970 UTC
@@ -285,16 +280,16 @@ public class wamsUtils {
             calendar.setTimeInMillis(Long.parseLong(exp) * 1000);
             Date expiryDate = calendar.getTime();
             if( expiryDate.before(new Date()) ) {
-                Log.d(LOG_TAG, "Token expired");
+                Globals.__log(LOG_TAG, "Token expired");
                 return false;
             } else {
-                Log.d(LOG_TAG, "Token is valid");
+                Globals.__log(LOG_TAG, "Token is valid");
                 return true;
             }
             //return !expiryDate.before(new Date());
 
         } catch(UnsupportedEncodingException ex) {
-            Log.e(LOG_TAG, ex.getMessage());
+            Globals.__logException(ex);
             return false;
         }
 

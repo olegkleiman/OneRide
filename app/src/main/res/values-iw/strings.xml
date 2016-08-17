@@ -147,8 +147,9 @@
     <string name="driver_no_name">ללא שם</string>
     <string name="registration_account_validation_failure">שגיאה באימות הנתונים</string>
     <string name="approval_send_success">תמונתך התקבלה. נודיעך על בדיקתה.</string>
-    <string name="approval_send_title">בקשתך נשלחה</string>
+    <string name="approval_send_title">תמונה שנשלחה לבדיקה</string>
     <string name="push_approval_format">נסיעתך אושרה. קוד הנסיעה : %s</string>
+    <string name="no_front_camera">לא ניתן לבצע את הפעולה הנדרשת על המכשיר הזה כי לא זוהתה מצלמה קדמית. השתמש מכשיר אחר.</string>
 
 
 </resources>
