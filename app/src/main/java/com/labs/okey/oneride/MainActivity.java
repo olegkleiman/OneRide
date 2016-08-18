@@ -20,7 +20,6 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
-import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -98,10 +97,10 @@ public class MainActivity extends BaseActivity
                 md = MessageDigest.getInstance("SHA");
                 md.update(signature.toByteArray());
                 String strSignature = new String(Base64.encode(md.digest(), 0));
-                Log.d(LOG_TAG, strSignature);
+                Globals.__log(LOG_TAG, strSignature);
             }
-        } catch (PackageManager.NameNotFoundException | NoSuchAlgorithmException ex) {
-            Log.e(LOG_TAG, ex.toString());
+        } catch (PackageManager.NameNotFoundException | NoSuchAlgorithmException e) {
+            Globals.__logException(e);
         }
 
 //        PassengerFace pf1 = new PassengerFace("1");
@@ -150,7 +149,7 @@ public class MainActivity extends BaseActivity
         if (!wamsInit()) {
             if (!login(accessToken, accessTokenSecret, authorizationToken)) {
                 // TBD: provide UI error for login failure
-                Log.e(LOG_TAG, "WAMS login failed");
+                Globals.__log(LOG_TAG, "WAMS login failed");
             }
         }
 
@@ -165,8 +164,8 @@ public class MainActivity extends BaseActivity
                 try {
                     gFencesSyncTable = Globals.getMobileServiceClient().getSyncTable("geofences", GeoFence.class);
                 }
-                catch(Exception ex){
-                    Log.e(LOG_TAG, ex.getMessage());
+                catch(Exception e){
+                    Globals.__logException(e);
                 }
             }
 
@@ -235,7 +234,7 @@ public class MainActivity extends BaseActivity
                                 status.startResolutionForResult(MainActivity.this,
                                                                 REQUEST_CHECK_SETTINGS);
                             } catch (IntentSender.SendIntentException e) {
-                                Log.e(LOG_TAG, e.getMessage());
+                                Globals.__logException(e);
                             }
                             break;
 
@@ -296,7 +295,6 @@ public class MainActivity extends BaseActivity
     @Override
     protected void onDestroy(){
         super.onDestroy();
-        Log.d(LOG_TAG, "onDestroy");
 
         //NotificationsManager.stopHandlingNotifications(this);
     }
@@ -555,7 +553,7 @@ public class MainActivity extends BaseActivity
                             @Override
                             public void onErrorResponse(VolleyError error) {
                                 //NetworkResponse response = error.networkResponse;
-                                Log.e(LOG_TAG, error.toString());
+                                Globals.__log(LOG_TAG, error.toString());
                             }
                         });
             }

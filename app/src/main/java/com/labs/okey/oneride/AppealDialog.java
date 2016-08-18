@@ -9,8 +9,10 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 
 /**
- * Created by eli max on 15/10/2015.
+ * @author Oleg Kleiman
+ * created 15/10/2015
  */
+
 public class AppealDialog extends DialogFragment {
 
     public interface NoticeDialogListener {

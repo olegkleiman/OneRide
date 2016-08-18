@@ -11,8 +11,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- * Created by Oleg Kleiman on 13-Apr-15.
+ * @author Oleg Kleiman
+ * created 13-Apr-15
  */
+
 public class Ride implements Serializable, Parcelable {
 
     public Ride(){
@@ -102,7 +104,6 @@ public class Ride implements Serializable, Parcelable {
     private String stage2rules;
     public String getStage2AppliedRules(){ return stage2rules; }
     public void setStage2AppliedRules(String value) { stage2rules = value; }
-
 
     //
     // Implementation of Parcelable

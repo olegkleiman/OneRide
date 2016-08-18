@@ -37,7 +37,6 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
-import android.util.Log;
 import android.view.Display;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -92,6 +91,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -172,18 +172,19 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE);
                     btDeviceUser.set_Rssi(rssi);
 
-                    Log.i(LOG_TAG, String.format("Got device with RSSI: %d. Current level: %d",
+                    Globals.__log(LOG_TAG, String.format(Locale.getDefault(),
+                                                "Got device with RSSI: %d. Current level: %d",
                                                 rssi, currentRssiLevel));
 
                     if( rssi >= -(currentRssiLevel) ) { // these are negative values
 
-                        Log.i(LOG_TAG, "Adding device");
+                        Globals.__log(LOG_TAG, "Adding device");
 
                         _mDriversAdapter.add(btDeviceUser);
                         _mDriversAdapter.notifyDataSetChanged();
 
                     } else {
-                        Log.i(LOG_TAG, "Skipping device due to poor RSSI");
+                        Globals.__log(LOG_TAG, "Skipping device due to poor RSSI");
                     }
                 }
             }
@@ -259,7 +260,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                 _mDriversAdapter.addAll(drivers);
                 _mDriversAdapter.notifyDataSetChanged();
-                Log.d(LOG_TAG, "CountDown: drivers re-loaded. Count: " + _mDrivers.size());
+                Globals.__log(LOG_TAG, "CountDown: drivers re-loaded. Count: " + _mDrivers.size());
             }
         }
 
@@ -433,7 +434,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     Manifest.permission.ACCESS_FINE_LOCATION)) {
 
                 mTextSwitcher.setCurrentText(getString(R.string.permission_location_denied));
-                Log.d(LOG_TAG, getString(R.string.permission_location_denied));
+                Globals.__log(LOG_TAG, getString(R.string.permission_location_denied));
 
             } else {
 
@@ -488,15 +489,15 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         onCameraCVInternal();
                     } else {
                         mTextSwitcher.setCurrentText(getString(R.string.permission_camera_denied));
-                        Log.d(LOG_TAG, getString(R.string.permission_camera_denied));
+                        Globals.__log(LOG_TAG, getString(R.string.permission_camera_denied));
                     }
                 }
                 break;
 
             }
 
-        } catch (Exception ex) {
-            Log.e(LOG_TAG, ex.getMessage());
+        } catch (Exception e) {
+            Globals.__logException(e);
 
         }
 
@@ -517,14 +518,15 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             public void onTick(long millisUntilFinished) {
                 int driversCount = _mDriversAdapter.getItemCount() - 1; // count header
 
-                Log.d(LOG_TAG,
-                        String.format("CountDown: Tick. Remains %d sec. Drivers size: %d",
+                Globals.__log(LOG_TAG,
+                        String.format(Locale.getDefault(),
+                                "CountDown: Tick. Remains %d sec. Drivers size: %d",
                                 millisUntilFinished, driversCount));
 
                 if( driversCount > 0 ) {
 
                     this.cancel();
-                    Log.d(LOG_TAG, "CountDown: Cancelling timer");
+                    Globals.__log(LOG_TAG, "CountDown: Cancelling timer");
 
                     if( mSearchDriverDialogFragment != null )
                         mSearchDriverDialogFragment.dismiss();
@@ -532,18 +534,18 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             }
 
             public void onFinish() {
-                Log.d(LOG_TAG, "CountDown: Finish");
+                Globals.__log(LOG_TAG, "CountDown: Finish");
 
                 int driversCount = _mDriversAdapter.getItemCount() - 1; // count header
 
                 if( driversCount == 0) {
 
                     if (mCountDiscoveryTrials++ >= Globals.MAX_DISCOVERY_TRIALS) {
-                        Log.d(LOG_TAG, "CountDown: Exceeded");
+                        Globals.__log(LOG_TAG, "CountDown: Exceeded");
                         mCountDiscoveryTrials = 1;
                         this.cancel();
                     } else {
-                        Log.d(LOG_TAG, "CountDown: Restarting for " + mCountDiscoveryTrials);
+                        Globals.__log(LOG_TAG, "CountDown: Restarting for " + mCountDiscoveryTrials);
                         btRefresh();
                         this.start();
                     }
@@ -598,7 +600,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     public void onLocationChanged(Location location) {
 
         if (!isAccurate(location)) {
-            Log.d(LOG_TAG, getString(R.string.location_inaccurate));
+            Globals.__log(LOG_TAG, getString(R.string.location_inaccurate));
             return;
         }
 
@@ -692,11 +694,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.CAMERA)) {
 
                 Toast.makeText(this, getString(R.string.permission_camera_denied), Toast.LENGTH_LONG).show();
-                Log.d(LOG_TAG, getString(R.string.permission_camera_denied));
+                Globals.__log(LOG_TAG, getString(R.string.permission_camera_denied));
 
             } else if (ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                 Toast.makeText(this, getString(R.string.permission_storage_denied), Toast.LENGTH_LONG).show();
-                Log.d(LOG_TAG, getString(R.string.permission_storage_denied));
+                Globals.__log(LOG_TAG, getString(R.string.permission_storage_denied));
             } else {
                 ActivityCompat.requestPermissions(this,
                         new String[]{android.Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE},
@@ -764,7 +766,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     private void btInit() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
-            Log.e(LOG_TAG, "Device does not support Bluetooth");
+            Globals.__log(LOG_TAG, "Device does not support Bluetooth");
         }
 
         try {
@@ -812,8 +814,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     private void btRestore() {
         try {
             unregisterReceiver(mBtReceiver);
-        } catch(Exception ex) {
-            Log.e(LOG_TAG, ex.getMessage());
+        } catch(Exception e) {
+            Globals.__logException(e);
         }
     }
 
@@ -823,7 +825,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         String deviceName = device.getName();
         if( deviceName == null || deviceName.isEmpty() ) {
-            Log.i(LOG_TAG, "Device name is empty");
+            Globals.__log(LOG_TAG, "Device name is empty");
             return null;
         }
 
@@ -835,7 +837,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
         if( deviceClass != BluetoothClass.Device.Major.PHONE
                 && deviceClass != BluetoothClass.Device.Major.COMPUTER) {
-            Log.d(LOG_TAG, "Device " + deviceName + "is not PHONE nor COMPUTER");
+            Globals.__log(LOG_TAG, "Device " + deviceName + "is not PHONE nor COMPUTER");
             return null;
         }
 
@@ -846,16 +848,16 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         String authProvider = tokens[0];
         if( !Globals.GOOGLE_PROVIDER.equalsIgnoreCase(authProvider) &&
            !Globals.FB_PROVIDER.equalsIgnoreCase(authProvider)){
-            Log.i(LOG_TAG, "Unrecognized provider: " + authProvider);
+            Globals.__log(LOG_TAG, "Unrecognized provider: " + authProvider);
             return null;
         } else
-            Log.d(LOG_TAG, "Provider: " + authProvider);
+            Globals.__log(LOG_TAG, "Provider: " + authProvider);
 
         String userId = tokens[1];
-        Log.d(LOG_TAG, "User registration id: " + userId);
+        Globals.__log(LOG_TAG, "User registration id: " + userId);
 
         String rideCode = tokens[2];
-        Log.d(LOG_TAG, "Ride code: " + rideCode);
+        Globals.__log(LOG_TAG, "Ride code: " + rideCode);
 
         BtDeviceUser btDeviceUser = new BtDeviceUser(device);
         btDeviceUser.set_authProvider(authProvider);
@@ -946,9 +948,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                             }
 
                     ).show();
-        } catch (Exception ex) {
-
-            Log.e(LOG_TAG, ex.getMessage());
+        } catch (Exception e) {
+            Globals.__logException(e);
         }
     }
 
@@ -997,8 +998,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     if (r != null)
                         r.run();
 
-                } catch (Exception ex) {
-                    Log.e(LOG_TAG, ex.getLocalizedMessage());
+                } catch (Exception e) {
+                    Globals.__logException(e);
                 }
             }
         });
@@ -1191,11 +1192,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                             _join.setLon((float) loc.getLongitude());
                         }
                     } catch (Exception e) {
-                        Log.e(LOG_TAG, e.getMessage());
+                        Globals.__logException(e);
                     }
                     // The rest of params are set within WAMS insert script
                     String userId = Globals.getMobileServiceClient().getCurrentUser().getUserId();
-                    Log.d(LOG_TAG, userId);
+                    Globals.__log(LOG_TAG, userId);
                     joinsTable.insert(_join).get();
 
                 } catch (ExecutionException | InterruptedException ex) {
@@ -1321,7 +1322,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 f.show(getSupportFragmentManager(), "dialog");
 
             } catch(Exception ex){
-                Log.e(LOG_TAG, "PassengerActivity was dismissed before showing dialog: " + ex.getMessage());
+                Globals.__log(LOG_TAG, "PassengerActivity was dismissed before showing dialog: " + ex.getMessage());
             }
         }
     };

@@ -42,6 +42,7 @@ public class wamsAddApproval extends AsyncTask<File, Void, Void> {
     String                              mRideID;
     String                              mDriverID;
     String                              mDriverName;
+    int                                 mEmojiId;
     Context                             mContext;
     String                              mContainerName;
     IUploader                           mUploader;
@@ -55,14 +56,16 @@ public class wamsAddApproval extends AsyncTask<File, Void, Void> {
 
     public wamsAddApproval(Context ctx,
                            String driverName,
-                         String containerName,
-                         String rideID,
-                         String driverID){
+                           String containerName,
+                           String rideID,
+                           String driverID,
+                           int emojiId){
 
         mContainerName = containerName;
         mRideID = rideID;
         mDriverID = driverID;
         mDriverName = driverName;
+        mEmojiId = emojiId;
 
         mContext = ctx;
         if( ctx instanceof IUploader )
@@ -115,8 +118,16 @@ public class wamsAddApproval extends AsyncTask<File, Void, Void> {
             if( ((Activity)mContext).hasWindowFocus() ) { // User may leave parent window for a meanwhile
 
                 new MaterialDialog.Builder(mContext)
-                        .title(mContext.getString(R.string.approval_send_title))
+                        .title(mContext.getString(R.string.approval_nosend_title))
                         .content(error.getMessage())
+                        .positiveText(mContext.getString(R.string.approval_another_picture))
+                        .onPositive(new MaterialDialog.SingleButtonCallback(){
+                            @Override
+                            public void onClick(@NonNull MaterialDialog dialog,
+                                                @NonNull DialogAction which) {
+                                // TODO
+                            }
+                        })
                         .iconRes(R.drawable.ic_exclamation)
                         .show();
             }
@@ -145,6 +156,8 @@ public class wamsAddApproval extends AsyncTask<File, Void, Void> {
             approval.setRideId(mRideID);
             approval.setPictureUrl(publishedUri.toString());
             approval.setDriverId(mDriverID);
+            if( mEmojiId != 0 )
+                approval.setEmojiId(mEmojiId);
 
             MobileServiceTable<Approval> wamsApprovalsTable = Globals.getMobileServiceClient().getTable("approvals", Approval.class);
             mCurrentApproval = wamsApprovalsTable.insert(approval).get();

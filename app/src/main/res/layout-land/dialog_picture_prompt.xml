@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/activity_horizontal_margin">
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_weight="7"
+        android:layout_height="wrap_content"
+        android:id="@+id/picture_prompt"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/prompt_take_challenge_picture"
+        android:layout_gravity="center_vertical" />
+
+    <ImageView
+        android:id="@+id/appeal_emoji"
+        android:src="@drawable/emoji_2"
+        android:layout_width="0dp"
+        android:layout_weight="3"
+        android:layout_height="wrap_content"
+        android:scaleType="center"
+        android:contentDescription="@string/app_name"
+        android:layout_gravity="center_vertical" />
+
+</LinearLayout>

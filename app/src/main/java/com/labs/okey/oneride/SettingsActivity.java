@@ -18,7 +18,6 @@ import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -205,13 +204,13 @@ public class SettingsActivity extends BaseActivity
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String provider = sharedPrefs.getString(Globals.REG_PROVIDER_PREF, "");
         int drawableLogoId = 0;
-        if( provider.equals(Globals.FB_PROVIDER)) {
+        if( provider.equalsIgnoreCase(Globals.FB_PROVIDER)) {
             drawableLogoId = R.drawable.facebook_logo;
-        } else if( provider.equals(Globals.MICROSOFT_PROVIDER)) {
+        } else if( provider.equalsIgnoreCase(Globals.MICROSOFT_PROVIDER)) {
             drawableLogoId = R.drawable.microsoft_logo;
-        } else if( provider.equals(Globals.GOOGLE_PROVIDER)) {
+        } else if( provider.equalsIgnoreCase(Globals.GOOGLE_PROVIDER)) {
             drawableLogoId = R.drawable.googleplus_logo;
-        } else if( provider.equals(Globals.TWITTER_PROVIDER)) {
+        } else if( provider.equalsIgnoreCase(Globals.TWITTER_PROVIDER)) {
             drawableLogoId = R.drawable.twitter_logo;
         }
 
@@ -270,7 +269,7 @@ public class SettingsActivity extends BaseActivity
 
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.e(LOG_TAG, error.toString());
+                        Globals.__log(LOG_TAG, error.toString());
                     }
             });
         }
@@ -480,9 +479,9 @@ public class SettingsActivity extends BaseActivity
 
                     Globals.setCascadePath(file.getAbsolutePath());
 
-                } catch (IOException ex) {
-                    Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
-                    mEx = ex;
+                } catch (IOException e) {
+                    Globals.__logException(e);
+                    mEx = e;
                 }
 
                 return null;
@@ -544,13 +543,13 @@ public class SettingsActivity extends BaseActivity
                         String label = _gFence.getLabel();
                         String[] tokens = label.split(":");
                         if( tokens.length > 1 )
-                            Log.i(LOG_TAG, "GFence: " + tokens[0] + " " + tokens[1]);
-                        Log.i(LOG_TAG, "GFence: " + lat + " " + lon);
+                            Globals.__log(LOG_TAG, "GFence: " + tokens[0] + " " + tokens[1]);
+                        Globals.__log(LOG_TAG, "GFence: " + lat + " " + lon);
                     }
 
-                } catch(InterruptedException | ExecutionException ex ) {
-                    Log.e(LOG_TAG, ex.getMessage() + " Cause: " + ex.getCause());
-                    mEx = ex;
+                } catch(InterruptedException | ExecutionException e ) {
+                    Globals.__logException(e);
+                    mEx = e;
                 }
 
                 return null;
