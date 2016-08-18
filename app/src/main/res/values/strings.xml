@@ -156,7 +156,7 @@
     <string name="done">Done</string>
     <string name="discover_devices">Discovering devices</string>
     <string name="ride_code_prompt">Type in the code as displayed at driver\'s  screen</string>
-    <string name="picture_required_dialog_title">Picture required</string>
+    <string name="picture_required_dialog_title">Group picture required</string>
     <string name="picture_required_challenge_dialog_title">Picture required with challenge</string>
     <string name="picture_required_dialog_content">The system requires you to take the picture of all passengers in the cabin</string>
 
@@ -313,11 +313,14 @@ limitations under the License.</string>
     <string name="appeal">Appeal</string>
     <string name="appeal_image">Appeal Image</string>
     <string name="title_activity_appeal_details">Appeal Details</string>
-    <string name="appeal_take_picture">Your request is denied, but you can submit an appeal. Take a picture with all passengers in a cabin, each showing this gesture</string>
+    <string name="appeal_take_picture">Your request is denied, but you can submit an appeal. Take a picture with all passengers in a cabin, each showing this gesture.</string>
+    <string name="prompt_take_challenge_picture">For control reasons, system asking passengers to make group photo with a displayed gesture.</string>
+    <string name="prompt_take_picture">For control reasons, system asking passengers to make group photo</string>
     <string name="appeal_cancel">Cancel</string>
     <string name="approval_another_picture">Try again</string>
     <string name="approval_send_success">Your image was uploaded. You\'ll be notified whether or not approved.</string>
     <string name="approval_send_title">Picture sent to approval</string>
+    <string name="approval_nosend_title">Failed to upload picture</string>
     <string name="approval_answer">Send approval request?</string>
     <string name="appeal_send">Send</string>
 

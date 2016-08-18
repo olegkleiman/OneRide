@@ -2,6 +2,7 @@ package com.labs.okey.oneride;
 
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -41,12 +42,13 @@ import android.support.annotation.WorkerThread;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -114,6 +116,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -155,7 +158,14 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     String                                      mCarNumber;
     Uri                                         mUriPhotoApproval;
     private String                              mRideCode;
-    int                                         mEmojiID;
+    private int                                 mEmojiID = 0;
+    public void setEmojiId(int value) {
+        mEmojiID = value;
+    }
+    public int getmEmojiID() {
+        return mEmojiID;
+    }
+
 
     private P2pPreparer                         mP2pPreparer;
     private P2pConversator                      mP2pConversator;
@@ -198,7 +208,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             if( BluetoothAdapter.ACTION_SCAN_MODE_CHANGED.equals(action) ) {
                 final int newScanMode = intent.getIntExtra( BluetoothAdapter.EXTRA_SCAN_MODE,
                                                             BluetoothAdapter.ERROR);
-                Log.i(LOG_TAG, String.format("Scan mode changed to: %d", newScanMode) );
+                Globals.__log(LOG_TAG, String.format(Locale.getDefault(), "Scan mode changed to: %d", newScanMode) );
                 if( newScanMode == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE ) {
                     // Start animation
                     startTransmitAnimation();
@@ -210,7 +220,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     };
 
-    private Runnable                            mEnableCabinPictureButtonRunnable = new Runnable() {
+    private Runnable mEnableCabinPictureButtonRunnable = new Runnable() {
 
         @Override
         public void run() {
@@ -267,7 +277,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 .onPositive(new MaterialDialog.SingleButtonCallback(){
                     @Override
                     public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        sendToValidateManually();
+                        sendToValidateManually(getmEmojiID());
                     }
                 })
                 .onNegative(new MaterialDialog.SingleButtonCallback(){
@@ -495,8 +505,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         }
 
                     } else {
-                        String msg = String.format("onSaveInstanceState: Passenger FAB %d is not found", i);
-                        Log.e(LOG_TAG, msg);
+                        Globals.__log(LOG_TAG, String.format(Locale.getDefault(),
+                                        "onSaveInstanceState: Passenger FAB %d is not found", i));
                     }
 
                 }
@@ -724,9 +734,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         User currentUser = User.load(this);
         String btDeviceName = currentUser.getRegistrationId() + Globals.BT_DELIMITER + mRideCode;
         if( mBluetoothAdapter.setName(btDeviceName) ) {
-            Log.d(LOG_TAG, "Device name has been changed to " + btDeviceName);
+            Globals.__log(LOG_TAG, "Device name has been changed to " + btDeviceName);
         } else {
-            Log.d(LOG_TAG, "Device name has not been changed");
+            Globals.__log(LOG_TAG, "Device name has not been changed");
         }
 
         if (!mBluetoothAdapter.isEnabled()) {
@@ -749,8 +759,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         try {
             unregisterReceiver(mBtReceiver);
-        } catch( IllegalArgumentException ex){
-            Log.e(LOG_TAG, ex.getMessage());
+        } catch( IllegalArgumentException e){
+            Globals.__logException(e);
         }
 
 
@@ -782,18 +792,16 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             try {
 
                 int nScanMode = mBluetoothAdapter.getScanMode();
-                Log.d(LOG_TAG, String.format("Scan mode is %d", nScanMode));
+                Globals.__log(LOG_TAG, String.format(Locale.getDefault(), "Scan mode is %d", nScanMode));
 
                 _enableBluetoothDiscoverability(discoverableDuration);
 
                 nScanMode = mBluetoothAdapter.getScanMode();
-                Log.d(LOG_TAG, String.format("Now scan mode is %d", nScanMode));
+                Globals.__log(LOG_TAG, String.format(Locale.getDefault(), "Now scan mode is %d", nScanMode));
             }
             catch (Exception e){
-                Throwable t = e.getCause();
-                if( t != null )
-                    Log.e(LOG_TAG, t.getMessage());
 
+                Globals.__logException(e);
                 enableBluetoothDiscoverability(discoverableDuration);
             }
         } else {
@@ -805,9 +813,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             throws NoSuchMethodException,
             IllegalAccessException,
             InvocationTargetException {
-        Method method = mBluetoothAdapter.getClass().getMethod("setScanMode", int.class, int.class);
-        method.invoke(mBluetoothAdapter, BluetoothAdapter.SCAN_MODE_CONNECTABLE, 1);
-        Log.d("invoke","setScanMode() invoke successfully");
+
+        if( mBluetoothAdapter != null ) {
+            Method method = mBluetoothAdapter.getClass().getMethod("setScanMode", int.class, int.class);
+            method.invoke(mBluetoothAdapter, BluetoothAdapter.SCAN_MODE_CONNECTABLE, 1);
+            Globals.__log(LOG_TAG, "setScanMode() invoked successfully");
+        }
     }
 
     private void _enableBluetoothDiscoverability(int duration)
@@ -815,10 +826,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                    IllegalAccessException,
                    InvocationTargetException {
 
-        Method method = mBluetoothAdapter.getClass().getMethod("setScanMode", int.class, int.class);
-        method.invoke(mBluetoothAdapter, BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE,
+        if( mBluetoothAdapter != null ) {
+            Method method = mBluetoothAdapter.getClass().getMethod("setScanMode", int.class, int.class);
+            method.invoke(mBluetoothAdapter, BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE,
                     duration);
-        Log.d("invoke","setScanMode() invoke successfully");
+            Globals.__log(LOG_TAG, "setScanMode() invoked successfully");
+        }
     }
 
     private void enableBluetoothDiscoverability(int duration){
@@ -903,7 +916,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 mApprovalDialog.show();
 
             } catch (Exception e) {
-                Log.e(LOG_TAG, e.getMessage());
+                Globals.__logException(e);
             }
 
         } else if( requestCode == WIFI_CONNECT_REQUEST ) {
@@ -1050,7 +1063,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     android.Manifest.permission.ACCESS_FINE_LOCATION)) {
 
                 mTextSwitcher.setCurrentText(getString(R.string.permission_location_denied));
-                Log.d(LOG_TAG, getString(R.string.permission_location_denied));
+                Globals.__log(LOG_TAG, getString(R.string.permission_location_denied));
 
             } else {
 
@@ -1078,7 +1091,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             }
         }catch(Exception ex) {
-            Log.e(LOG_TAG, ex.getMessage());
+            Globals.__logException(ex);
         }
     }
 
@@ -1126,8 +1139,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 break;
             }
 
-        } catch (Exception ex) {
-            Log.e(LOG_TAG, ex.getMessage());
+        } catch (Exception e) {
+            Globals.__logException(e);
 
         }
 
@@ -1298,31 +1311,16 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                new MaterialDialog.Builder(DriverRoleActivity.this)
-                                        .title(R.string.picture_required_challenge_dialog_title)
-                                        .iconRes(R.drawable.ic_camera_blue)
-                                        .customView(R.layout.dialog_appeal, false) // do not wrap in scroll
-                                        .positiveText(android.R.string.ok)
-                                        .negativeText(android.R.string.no)
-                                        .cancelable(false)
-                                        .autoDismiss(false)
-                                        .onNegative(new MaterialDialog.SingleButtonCallback() {
-                                            @Override
-                                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                                dialog.dismiss();
-                                                finish();
-                                            }
-                                        })
-                                        .onPositive(new MaterialDialog.SingleButtonCallback() {
-                                            @Override
-                                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                                dialog.dismiss();
 
-                                                if( !requestCameraPermissions() )
-                                                    takePictureWithIntent();
-                                            }
-                                        })
-                                        .show();
+                                try {
+                                    PictureChallengePromptFragmentDialog dialogFragment =
+                                            new PictureChallengePromptFragmentDialog();
+                                    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                                    //dialogFragment.show(getSupportFragmentManager(), "picturePromptDialog");
+                                    dialogFragment.show(ft, "picturePromptDialog");
+                                } catch(Exception e){
+                                    Globals.__logException(e);
+                                }
                             }
                         });
                     } else {
@@ -1330,41 +1328,29 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                new MaterialDialog.Builder(DriverRoleActivity.this)
-                                        .title(R.string.picture_required_dialog_title)
-                                        .content(R.string.picture_required_dialog_content)
-                                        .iconRes(R.drawable.ic_camera_blue)
-                                        .positiveText(android.R.string.ok)
-                                        .negativeText(android.R.string.no)
-                                        .cancelable(false)
-                                        .autoDismiss(false)
-                                        .onNegative(new MaterialDialog.SingleButtonCallback() {
-                                            @Override
-                                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                                dialog.dismiss();
-                                                finish();
-                                            }
-                                        })
-                                        .onPositive(new MaterialDialog.SingleButtonCallback() {
-                                            @Override
-                                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                                dialog.dismiss();
 
-                                                if( !requestCameraPermissions() )
-                                                    takePictureWithIntent();
-                                            }
-                                        })
-                                        .show();
+                                try {
+
+                                    PicturePromptFragmentDialog dialogFragment
+                                            = new PicturePromptFragmentDialog();
+                                    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                                    //dialogFragment.show(getSupportFragmentManager(), "picturePromptDialog");
+                                    dialogFragment.show(ft, "picturePromptDialog");
+                                } catch (Exception e) {
+                                    Globals.__logException(e);
+                                }
                             }
                         });
                     }
                 }
                 else
-                    Log.i(LOG_TAG, "Picture IS NOT required");
+                    Globals.__log(LOG_TAG, "Picture IS NOT required");
             }
 
             @Override
             public void onFailure(Throwable t) {
+
+                Globals.__logException(t);
                 Toast.makeText(DriverRoleActivity.this,
                         t.getMessage(), Toast.LENGTH_LONG).show();
             }
@@ -1385,11 +1371,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                             MobileServiceTable<Ride> ridesTable = Globals.getMobileServiceClient()
                                     .getTable("rides", Ride.class);
                             Ride _ride = ridesTable.insert(ride).get();
-                            Log.i(LOG_TAG, String.format("Ride inserted with id: %s" , _ride.id));
+                            Globals.__log(LOG_TAG, String.format("Ride uploaded with id: %s" , _ride.id));
                             return _ride;
 
-                        } catch(ExecutionException | InterruptedException ex) {
-                            Log.e(LOG_TAG, ex.getMessage());
+                        } catch(ExecutionException | InterruptedException e) {
+                            Globals.__logException(e);
                             return null;
                         }
                     }
@@ -1634,19 +1620,19 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                         _join.setLon((float) loc.getLongitude());
                                     }
                                 } catch (Exception e) {
-                                    Log.e(LOG_TAG, e.getMessage());
+                                    Globals.__logException(e);
                                 }
 
                                 String msg = String.format("Inserting join for user with FaceID %s", faceId);
-                                Log.d(LOG_TAG, msg);
+                                Globals.__log(LOG_TAG, msg);
 
                                 joinsTable.insert(_join).get();
                             }
 
-                        } catch (Exception ex) { // ExecutionException | InterruptedException ex ) {
-                            mEx = ex;
+                        } catch (Exception e) { // ExecutionException | InterruptedException ex ) {
+                            mEx = e;
 
-                            Globals.__logException(ex);
+                            Globals.__logException(e);
                         }
 
                         return null;
@@ -1673,7 +1659,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                 mRidesTable.update(mCurrentRide).get();
                             } catch (InterruptedException | ExecutionException e) {
                                 mEx = e;
-                                Log.e(LOG_TAG, e.getMessage());
+                                Globals.__logException(e);
                             }
 
                             return null;
@@ -1713,7 +1699,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         return mutableBitmap;
     }
 
-    public  void sendToValidateManually(){
+    public  void sendToValidateManually(final int emojiId){
+
         mCurrentRide.setApproved(Globals.RIDE_STATUS.BE_VALIDATED_MANUALLY.ordinal());
 
         ListenableFuture<Ride> _rideFuture = mRidesTable.update(mCurrentRide);
@@ -1724,14 +1711,15 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         getUser().getFullName(),
                         "pictures",
                         mCurrentRide.id,
-                        getUser().getRegistrationId())
+                        getUser().getRegistrationId(),
+                        emojiId)
                         .execute(new File(mUriPhotoApproval.getPath()));
 
             }
 
             @Override
             public void onFailure(Throwable t) {
-                Log.e(LOG_TAG, t.getMessage());
+                Globals.__logException(t);
             }
         });
 
@@ -1783,7 +1771,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             builder.show();
 
         } catch (Exception e) {
-            Log.e(LOG_TAG, e.getMessage());
+            Globals.__logException(e);
             // better that catch the exception here would be use handle to send events the activity
         }
     }
@@ -1856,7 +1844,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 try {
                     mUriPhotoApproval = createImageFile();
                 } catch (IOException e) {
-                    Log.e(LOG_TAG, e.getMessage());
+                    Globals.__logException(e);
                 }
 
                 if (mUriPhotoApproval != null) {
@@ -1869,8 +1857,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
                 }
             }
-        } catch(Exception ex) {
-            Globals.__logException(ex);
+        } catch(Exception e) {
+            Globals.__logException(e);
         }
     }
 
@@ -1928,8 +1916,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             }
 
 
-        } catch(Exception ex) {
-            Globals.__logException(ex);
+        } catch(Exception e) {
+            Globals.__logException(e);
         }
     }
 
@@ -2002,10 +1990,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                             }
                         })
                         .show();
-            } catch(MaterialDialog.DialogException ex) {
+            } catch(MaterialDialog.DialogException e) {
                 // Safely dismiss the situation when
                 // an Activity is not yet created or it's hidden
-                Log.e(LOG_TAG, ex.getMessage());
+                Globals.__logException(e);
             }
         }
     };
@@ -2034,7 +2022,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 mRidesTable.update(mCurrentRide).get();
         } catch (InterruptedException | ExecutionException e) {
             mEx = e;
-            Log.e(LOG_TAG, e.getMessage());
+            Globals.__logException(e);
         }
             return null;
         }
@@ -2062,6 +2050,105 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             requestEvent.putCustomAttribute(getString(R.string.answer_approved_attribute), 1);
             if( Fabric.isInitialized() )
                 Answers.getInstance().logCustom(requestEvent);
+        }
+    }
+
+    // DialogFragments
+
+    public static class PictureChallengePromptFragmentDialog extends DialogFragment {
+
+        int _mEmojiId;
+
+        @Override
+        @NonNull
+        public Dialog onCreateDialog(Bundle savedInstanceState){
+
+            final DriverRoleActivity activity = ((DriverRoleActivity)getActivity());
+
+            View customDialog = activity.getLayoutInflater().inflate(R.layout.dialog_picture_prompt,null);
+
+            if( savedInstanceState != null ) {
+                _mEmojiId = savedInstanceState.getInt(Globals.PARCELABLE_KEY_EMOJI_ID);
+            } else {
+                _mEmojiId = new Random().nextInt(Globals.NUM_OF_EMOJIS)
+                        // nextInt() gets number between 0 (inclusive and specified value (exclusive)
+                        + 1;
+            }
+
+            activity.setEmojiId(_mEmojiId);
+
+            String uri = "@drawable/emoji_" + Integer.toString(_mEmojiId);
+            int imageResource = getResources().getIdentifier(uri, "id", activity.getPackageName());
+            ImageView emojiImageView = (ImageView)customDialog.findViewById(R.id.appeal_emoji);
+            emojiImageView.setImageResource(imageResource);
+
+            return new MaterialDialog.Builder(activity)
+                    .title(R.string.picture_required_dialog_title)
+                    .iconRes(R.drawable.ic_camera_blue)
+                    .customView(customDialog, false) // do not wrap in scroll
+                    .positiveText(android.R.string.ok)
+                    .negativeText(android.R.string.no)
+                    .cancelable(false)
+                    .autoDismiss(false)
+                    .onNegative(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            dialog.dismiss();
+                            activity.finish();
+                        }
+                    })
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                dialog.dismiss();
+
+                            if( !activity.requestCameraPermissions() )
+                                activity.takePictureWithIntent();
+                        }
+                    })
+                    .show();
+        }
+
+        @Override
+        public void onSaveInstanceState(Bundle outState) {
+            outState.putInt(Globals.PARCELABLE_KEY_EMOJI_ID, _mEmojiId);
+            super.onSaveInstanceState(outState);
+        }
+
+    }
+
+    public static class PicturePromptFragmentDialog extends DialogFragment {
+        @Override
+        @NonNull
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+
+            final DriverRoleActivity activity = ((DriverRoleActivity)getActivity());
+
+            return  new MaterialDialog.Builder(activity)
+                    .title(R.string.picture_required_dialog_title)
+                    .content(R.string.prompt_take_picture)
+                    .iconRes(R.drawable.ic_camera_blue)
+                    .positiveText(android.R.string.ok)
+                    .negativeText(android.R.string.no)
+                    .cancelable(false)
+                    .autoDismiss(false)
+                    .onNegative(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            dialog.dismiss();
+                            activity.finish();
+                        }
+                    })
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            dialog.dismiss();
+
+                            if( !activity.requestCameraPermissions() )
+                                activity.takePictureWithIntent();
+                        }
+                    })
+                    .show();
         }
     }
 }

@@ -22,7 +22,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.util.Pair;
 import android.util.Patterns;
 import android.view.View;
@@ -677,7 +676,7 @@ public class RegisterActivity extends FragmentActivity
             return false;
 
         String formattedPhoneNumber = PhoneNumberUtils.formatNumber(phoneNumber);
-        Log.d(LOG_TAG, "Formatted phone number: " + formattedPhoneNumber);
+        Globals.__log(LOG_TAG, "Formatted phone number: " + formattedPhoneNumber);
 
         return Patterns.PHONE.matcher(formattedPhoneNumber).matches();
     }

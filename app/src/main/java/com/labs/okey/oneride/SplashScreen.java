@@ -11,7 +11,6 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.view.View;
 
 import com.facebook.AccessToken;
@@ -317,7 +316,7 @@ public class SplashScreen extends AppCompatActivity {
         AccessToken fbAccessToken = AccessToken.getCurrentAccessToken();
 
         if( fbAccessToken == null || fbAccessToken.isExpired()) {
-            Log.d(LOG_TAG, "FB Token is null or expired");
+            Globals.__log(LOG_TAG, "FB Token is null or expired");
             AccessToken.refreshCurrentAccessTokenAsync(new AccessToken.AccessTokenRefreshCallback() {
                 @Override
                 public void OnTokenRefreshed(AccessToken accessToken) {
@@ -332,7 +331,7 @@ public class SplashScreen extends AppCompatActivity {
             return false;
         } else {
             DateFormat df = DateFormat.getDateTimeInstance();
-            Log.d(LOG_TAG, "Token is valid. Will expire at " + df.format(fbAccessToken.getExpires()));
+            Globals.__log(LOG_TAG, "Token is valid. Will expire at " + df.format(fbAccessToken.getExpires()));
 
             Globals.initializeTokenTracker(getApplicationContext());
 

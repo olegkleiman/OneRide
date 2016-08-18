@@ -457,6 +457,7 @@ public class Globals {
     public static String PARCELABLE_KEY_PASSENGERS = "passengers_key";
     public static String PARCELABLE_KEY_DRIVERS = "drivers_key";
     public static String PARCELABLE_KEY_DRVER_NAME = "driver_name";
+    public static String PARCELABLE_KEY_EMOJI_ID = "emoji_id";
     public static String PARCELABLE_KEY_CURRENT_RIDE = "current_ride";
     public static String PARCELABLE_KEY_CABIN_PICTURES_BUTTON_SHOWN = "cabin_button_shown";
     public static String PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS = "captured_passengers_ids";
