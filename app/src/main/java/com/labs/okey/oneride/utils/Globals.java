@@ -180,7 +180,7 @@ public class Globals {
                         for (GlobalSettings _s : list) {
                             switch(_s.getName() ) {
                                 case "apply_challenge": {
-                                    APPLY_CHALLENGE = Boolean.parseBoolean(_s.getValue());
+                                    APPLY_CHALLENGE = _s.getValue().equals("1");
                                 }
                                 break;
 
@@ -284,10 +284,10 @@ public class Globals {
     public static final String PHONE_PREF = "phone";
     public static final String USE_PHONE_PFER = "usephone";
 
-    public static final String FB_PROVIDER = "Facebook";
-    public static final String GOOGLE_PROVIDER = "Google";
-    public static final String TWITTER_PROVIDER = "Twitter";
-    public static final String DIGITS_PROVIDER = "Digits";
+    public static final String FB_PROVIDER = "facebook";
+    public static final String GOOGLE_PROVIDER = "google";
+    public static final String TWITTER_PROVIDER = "twitter";
+    public static final String DIGITS_PROVIDER = "digits";
     public static final String MICROSOFT_PROVIDER = "MicrosoftAccount";
     public static final String PLATFORM = "Android" + Build.VERSION.SDK_INT;
 
@@ -354,14 +354,7 @@ public class Globals {
     public static ArrayList<Geofence> GEOFENCES = new ArrayList<>();
     public static PendingIntent GeofencePendingIntent;
 
-    public static final long GEOFENCE_EXPIRATION_IN_HOURS = 2;
-    public static final long GEOFENCE_EXPIRATION_IN_MILLISECONDS =
-            GEOFENCE_EXPIRATION_IN_HOURS * 60 * 60 * 1000;
-    public static final int GEOFENCE_RADIUS_IN_METERS = 100;
-    public static final int GEOFENCE_LOITERING_DELAY = 60000; // 1 min
-    public static final int GEOFENCE_RESPONSIVENESS = 5000; // 5 sec
-
-    public static Boolean IGNORE_GEOFENCES = false;
+    public static Boolean IGNORE_GEOFENCES = true;
 
     private static final Object lock = new Object();
     private static boolean inGeofenceArea;

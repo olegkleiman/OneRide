@@ -19,11 +19,13 @@ import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.wamsUtils;
 import com.labs.okey.oneride.views.SlidingTabLayout;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
+import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class MyRidesActivity extends BaseActivity
         implements ActionBar.TabListener {
@@ -80,48 +82,71 @@ public class MyRidesActivity extends BaseActivity
         updateHistory();
     }
 
+    private void setUpdateRequired(Boolean value) {
+        Globals.myRides_update_required = value;
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putBoolean(Globals.UPDATE_MYRIDES_REQUIRED, Globals.myRides_update_required);
+        editor.apply();
+    }
+
     public void updateHistory(){
 
-        final ProgressBar progressBar =  (ProgressBar)findViewById(R.id.myrides_progress_refresh);
-            progressBar.setVisibility(View.VISIBLE);
+        final ProgressBar progressBar = (ProgressBar)findViewById(R.id.myrides_progress_refresh);
+        progressBar.setVisibility(View.VISIBLE);
+
+        String myUserID = Globals.userID.toLowerCase();
 
         final Query pullQueryRides = Globals.getMobileServiceClient()
                                             .getTable(Ride.class)
                                             .where()
                                             .field("driverid")
-                                            .eq(Globals.userID);
+                                            .eq(myUserID);
 
         ListenableFuture pullFuture = mRidesSyncTable.pull(pullQueryRides);
         Futures.addCallback(pullFuture, new FutureCallback<Object>() {
             @Override
             public void onSuccess(Object result) {
 
-                Globals.myRides_update_required = false;
-                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                SharedPreferences.Editor editor = sharedPrefs.edit();
-                editor.putBoolean(Globals.UPDATE_MYRIDES_REQUIRED, Globals.myRides_update_required);
-                editor.apply();
+                setUpdateRequired(false);
 
-                try {
-                    mRides = mRidesSyncTable.read(pullQueryRides).get();
-                } catch (Exception  e) {
-                    Globals.__logException(e);
-                }
-
-                runOnUiThread(new Runnable() {
+                ListenableFuture<MobileServiceList<Ride>> readRidesFuture =
+                            mRidesSyncTable.read(pullQueryRides);
+                Futures.addCallback(readRidesFuture, new FutureCallback<MobileServiceList<Ride>>() {
                     @Override
-                    public void run() {
+                    public void onSuccess(final MobileServiceList<Ride> result) {
+
+                          runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    progressBar.setVisibility(View.GONE);
+
+                                    if( result != null ) {
+                                        Globals.__log(LOG_TAG,
+                                                String.format(Locale.getDefault(),
+                                                        "Pull rides got %d rides", result.getTotalCount()));
+
+                                        mRides = result;
+                                        mTabAdapter.updateRides(mRides);
+                                    }
+                                    else {
+                                        Globals.__log(LOG_TAG, "No results from pull rides");
+                                    }
+                                }
+                          });
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        Globals.__logException(t);
                         progressBar.setVisibility(View.GONE);
-                        mTabAdapter.updateRides(mRides);
                     }
                 });
             }
 
             @Override
             public void onFailure(Throwable t) {
-
                 Globals.__logException(t);
-
                 progressBar.setVisibility(View.GONE);
             }
         });

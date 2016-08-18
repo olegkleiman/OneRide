@@ -21,9 +21,6 @@ import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraManager;
 import android.location.Location;
 import android.location.LocationProvider;
 import android.net.Uri;
@@ -747,7 +744,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 enableBluetoothDiscoverability(1); // 1 actually means 'enable for 1 sec.', i.e. disable
             }
         } catch (Exception e) {
-          Log.e(LOG_TAG, "" + e);
+            Globals.__logException(e);
         }
 
         try {
@@ -1295,14 +1292,16 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 if( bPictureRequired ) {
                     Globals.__log(LOG_TAG, "Picture required");
 
+                    btRestore();
+
                     if( Globals.APPLY_CHALLENGE ) {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 new MaterialDialog.Builder(DriverRoleActivity.this)
                                         .title(R.string.picture_required_challenge_dialog_title)
-                                        .content(R.string.picture_required_dialog_content)
                                         .iconRes(R.drawable.ic_camera_blue)
+                                        .customView(R.layout.dialog_appeal, false) // do not wrap in scroll
                                         .positiveText(android.R.string.ok)
                                         .negativeText(android.R.string.no)
                                         .cancelable(false)
@@ -1824,34 +1823,15 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         boolean bFrontCameraFound = false;
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        int nCameras = Camera.getNumberOfCameras();
 
-            try {
+        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
 
-                    CameraManager cameraManager = (CameraManager) this.getSystemService(Context.CAMERA_SERVICE);
-                    for (String cameraId :  cameraManager.getCameraIdList() ) {
-                        CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraId);
-
-                        if (characteristics.get(CameraCharacteristics.LENS_FACING)
-                                == CameraCharacteristics.LENS_FACING_FRONT) {
-                            bFrontCameraFound = true;
-                        }
-                    }
-
-            } catch(CameraAccessException ex) {
-
-            }
-        } else {
-            int nCameras = Camera.getNumberOfCameras();
-
-            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-
-            for(int camIndex =0; camIndex < nCameras; camIndex++) {
-                Camera.getCameraInfo(camIndex, cameraInfo);
-                if( cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT ) {
-                    bFrontCameraFound = true;
-                    break;
-                }
+        for(int camIndex =0; camIndex < nCameras; camIndex++) {
+            Camera.getCameraInfo(camIndex, cameraInfo);
+            if( cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT ) {
+                bFrontCameraFound = true;
+                break;
             }
         }
 
