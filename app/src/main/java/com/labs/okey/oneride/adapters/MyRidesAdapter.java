@@ -58,49 +58,52 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
 
         Ride ride = items.get(position);
 
-        if(!ride.getDriverId().equals( Globals.userID))
-        {
-            holder.driverName.setText(ride.getDriverName());
-            holder.approvedSign.setVisibility(View.GONE);
-        }
-        else
-        {
-            holder.driverName.setVisibility(View.GONE);
+//        if(!ride.getDriverId().equals( Globals.userID))
+//        {
+//            holder.driverName.setText(ride.getDriverName());
+//            holder.approvedSign.setVisibility(View.GONE);
+//        }
+//        else
+//        {
+//            holder.driverName.setVisibility(View.GONE);
 
             int approveStatus = ride.getApproved();
 
             if( approveStatus == Globals.RIDE_STATUS.WAIT .ordinal()) {
                 holder.approvedSign.setImageResource(R.drawable.attention_26);
             } else if( approveStatus == Globals.RIDE_STATUS.APPROVED.ordinal()
-                   || approveStatus == Globals.RIDE_STATUS.APPROVED_BY_SELFY.ordinal() ){
+                    || approveStatus == Globals.RIDE_STATUS.APPROVED_BY_SELFY.ordinal()
+                    || approveStatus == Globals.RIDE_STATUS.VALIDATED_MANUALLY.ordinal()){
                 holder.approvedSign.setImageResource(R.drawable.v_sing_26);
-            } else if ( ride.getApproved() == Globals.RIDE_STATUS.DENIED.ordinal()
-                   ||approveStatus == Globals.RIDE_STATUS.DENIED.ordinal() ) {
+            } else if( approveStatus == Globals.RIDE_STATUS.DENIED.ordinal() ) {
                 holder.approvedSign.setImageResource(R.drawable.ex_sing_26);
+            } else if( approveStatus == Globals.RIDE_STATUS.BE_VALIDATED_MANUALLY.ordinal()
+                    || approveStatus == Globals.RIDE_STATUS.BE_VALIDATED_MANUALLY_SELFIE.ordinal() ) {
+                holder.approvedSign.setImageResource(R.drawable.sand_clock_24);
             }
 
-            try {
-                User user = User.load(context);
+//            try {
+//                User user = User.load(context);
+//
+//                ImageLoader imageLoader = Globals.volley.getImageLoader();
+//                imageLoader.get(user.getPictureURL(), new ImageLoader.ImageListener() {
+//                    @Override
+//                    public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
+//                        Bitmap bitmap = response.getBitmap();
+//                        holder.driverImage.setImageBitmap(bitmap);
+//                    }
+//
+//                    @Override
+//                    public void onErrorResponse(VolleyError error) {
+//
+//                    }
+//                });
+//
+//            } catch (Exception e) {
+//                Log.e(LOG_TAG, e.getMessage());
+//            }
 
-                ImageLoader imageLoader = Globals.volley.getImageLoader();
-                imageLoader.get(user.getPictureURL(), new ImageLoader.ImageListener() {
-                    @Override
-                    public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
-                        Bitmap bitmap = response.getBitmap();
-                        holder.driverImage.setImageBitmap(bitmap);
-                    }
-
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-
-                    }
-                });
-
-            } catch (Exception e) {
-                Log.e(LOG_TAG, e.getMessage());
-            }
-
-        }
+//        }
 
         if( ride.getCreated() != null ) {
             //DateFormat df = DateFormat.getDateInstance();
@@ -119,9 +122,9 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
     public static class ViewHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener {
 
-        CircularImageView driverImage;
+        //CircularImageView driverImage;
         ImageView           approvedSign;
-        TextView            driverName;
+        //TextView            driverName;
         TextView            carNumber;
         TextView            created;
         View                rowLayout;
@@ -133,9 +136,9 @@ public class MyRidesAdapter extends RecyclerView.Adapter<MyRidesAdapter.ViewHold
             super(itemView);
 
             mClickListener = clickListener;
-            driverImage = (CircularImageView) itemView.findViewById(R.id.imageDriver);
+            //driverImage = (CircularImageView) itemView.findViewById(R.id.imageDriver);
+            //driverName = (TextView) itemView.findViewById(R.id.txtDriverName);
             approvedSign = (ImageView) itemView.findViewById(R.id.approvedSign);
-            driverName = (TextView) itemView.findViewById(R.id.txtDriverName);
             created = (TextView) itemView.findViewById(R.id.txtCreated);
             rowLayout = itemView.findViewById(R.id.mode_row);
             rowLayout.setOnClickListener(this);

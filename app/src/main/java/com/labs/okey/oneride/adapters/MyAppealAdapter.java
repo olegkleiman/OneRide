@@ -61,36 +61,38 @@ public class MyAppealAdapter extends RecyclerView.Adapter<MyAppealAdapter.ViewHo
 
         Ride ride = items.get(position);
 
-        int approveStatus = ride.getApproved();
+        holder.approvedSign.setImageResource(R.drawable.ex_sing_26);
 
-        if( approveStatus == Globals.RIDE_STATUS.BE_VALIDATED_MANUALLY.ordinal()
-                || approveStatus == Globals.RIDE_STATUS.BE_VALIDATED_MANUALLY_SELFIE.ordinal() ) {
-            holder.approvedSign.setImageResource(R.drawable.gavel);
-        } else if( approveStatus == Globals.RIDE_STATUS.DENIED.ordinal()){
-            holder.approvedSign.setImageResource(R.drawable.ex_sing_26);
-        }
+//        int approveStatus = ride.getApproved();
+//
+//        if( approveStatus == Globals.RIDE_STATUS.BE_VALIDATED_MANUALLY.ordinal()
+//                || approveStatus == Globals.RIDE_STATUS.BE_VALIDATED_MANUALLY_SELFIE.ordinal() ) {
+//            holder.approvedSign.setImageResource(R.drawable.gavel);
+//        } else if( approveStatus == Globals.RIDE_STATUS.DENIED.ordinal()){
+//            holder.approvedSign.setImageResource(R.drawable.ex_sing_26);
+//        }
 
-        holder.driverName.setVisibility(View.GONE);
-        try {
-            User user = User.load(context);
-
-            ImageLoader imageLoader = Globals.volley.getImageLoader();
-            imageLoader.get(user.getPictureURL(), new ImageLoader.ImageListener() {
-                @Override
-                public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
-                    Bitmap bitmap = response.getBitmap();
-                    holder.driverImage.setImageBitmap(bitmap);
-                }
-
-                @Override
-                public void onErrorResponse(VolleyError error) {
-
-                }
-            });
-
-        } catch (Exception e) {
-            Log.e(LOG_TAG, e.getMessage());
-        }
+//        holder.driverName.setVisibility(View.GONE);
+//        try {
+//            User user = User.load(context);
+//
+//            ImageLoader imageLoader = Globals.volley.getImageLoader();
+//            imageLoader.get(user.getPictureURL(), new ImageLoader.ImageListener() {
+//                @Override
+//                public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
+//                    Bitmap bitmap = response.getBitmap();
+//                    holder.driverImage.setImageBitmap(bitmap);
+//                }
+//
+//                @Override
+//                public void onErrorResponse(VolleyError error) {
+//
+//                }
+//            });
+//
+//        } catch (Exception e) {
+//            Log.e(LOG_TAG, e.getMessage());
+//        }
 
         if( ride.getCreated() != null ) {
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy hh:mm", Locale.getDefault());
@@ -108,8 +110,8 @@ public class MyAppealAdapter extends RecyclerView.Adapter<MyAppealAdapter.ViewHo
     public static class ViewHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener {
 
-        ImageView   driverImage;
-        TextView    driverName;
+//        ImageView   driverImage;
+//        TextView    driverName;
         TextView    created;
         ImageView   approvedSign;
         View        rowLayout;
@@ -121,8 +123,8 @@ public class MyAppealAdapter extends RecyclerView.Adapter<MyAppealAdapter.ViewHo
             super(itemView);
 
             mClickListener = clickListener;
-            driverImage = (ImageView) itemView.findViewById(R.id.imageDriver);
-            driverName = (TextView) itemView.findViewById(R.id.txtDriverName);
+//            driverImage = (ImageView) itemView.findViewById(R.id.imageDriver);
+//            driverName = (TextView) itemView.findViewById(R.id.txtDriverName);
             approvedSign = (ImageView) itemView.findViewById(R.id.approvedSign);
             created = (TextView) itemView.findViewById(R.id.txtCreated);
             rowLayout = itemView.findViewById(R.id.mode_row);

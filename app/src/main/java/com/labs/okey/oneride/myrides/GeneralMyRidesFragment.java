@@ -91,17 +91,17 @@ public class GeneralMyRidesFragment extends Fragment {
         recycler.setItemAnimator(new DefaultItemAnimator());
 
         adapter = new MyRidesAdapter(mRides);
-        adapter.setOnClickListener(new IRecyclerClickListener() {
-            @Override
-            public void clicked(View v, int position) {
-
-                Ride currentRide = mRides.get(position);
-                Intent intent = new Intent(getActivity(), RideDetailsActivity.class);
-
-                intent.putExtra("ride", (Serializable)currentRide);
-                startActivity(intent);
-            }
-        });
+//        adapter.setOnClickListener(new IRecyclerClickListener() {
+//            @Override
+//            public void clicked(View v, int position) {
+//
+//                Ride currentRide = mRides.get(position);
+//                Intent intent = new Intent(getActivity(), RideDetailsActivity.class);
+//
+//                intent.putExtra("ride", (Serializable)currentRide);
+//                startActivity(intent);
+//            }
+//        });
         recycler.setAdapter(adapter);
 
         return rootView;
