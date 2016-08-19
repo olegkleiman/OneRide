@@ -13,7 +13,7 @@
     </string-array>
     <string-array name="my_rides_titles">
         <item>כל הנסיעות</item>
-        <item>נדחות</item>
+        <!--<item>נדחות</item>-->
     </string-array>
 
     <string name="mode_name_driver">נהג</string>
@@ -148,7 +148,7 @@
     <string name="title_activity_ride_details">פרטי נסיעה</string>
     <string name="driver_no_name">ללא שם</string>
     <string name="registration_account_validation_failure">שגיאה באימות הנתונים</string>
-    <string name="approval_send_success">תמונתך התקבלה. נודיעך על בדיקתה.</string>
+    <string name="approval_send_success">סטטוס בדיקתה יתעדכן בתפריט \'נסיעות שלי\'.</string>
     <string name="approval_send_title">תמונה נשלחה לבדיקה</string>
     <string name="push_approval_format">נסיעתך אושרה. קוד הנסיעה : %s</string>
     <string name="no_front_camera">לא ניתן לבצע את הפעולה הנדרשת על המכשיר הזה כי לא זוהתה מצלמה קדמית. השתמש מכשיר אחר.</string>

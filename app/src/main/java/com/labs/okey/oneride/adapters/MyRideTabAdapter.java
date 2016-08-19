@@ -6,7 +6,6 @@ import android.support.v4.app.FragmentPagerAdapter;
 
 import com.labs.okey.oneride.model.Ride;
 import com.labs.okey.oneride.myrides.GeneralMyRidesFragment;
-import com.labs.okey.oneride.myrides.RejectedMyRidesFragment;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -28,13 +27,13 @@ public class MyRideTabAdapter extends FragmentPagerAdapter {
         this.titles = titles;
         this.mRides = rides;
         GeneralMyRidesFragment.getInstance().setRides(rides);
-        RejectedMyRidesFragment.getInstance().setAppeals(rides);
+        //RejectedMyRidesFragment.getInstance().setAppeals(rides);
     }
 
     public void updateRides(List<Ride> rides) {
         this.mRides = rides;
         GeneralMyRidesFragment.getInstance().updateRides(rides);
-        RejectedMyRidesFragment.getInstance().updateAppeals(rides);
+        //RejectedMyRidesFragment.getInstance().updateAppeals(rides);
     }
 
     @Override
@@ -44,8 +43,8 @@ public class MyRideTabAdapter extends FragmentPagerAdapter {
             case 0:
                 return GeneralMyRidesFragment.getInstance();
 
-            case 1:
-                return RejectedMyRidesFragment.getInstance();
+//            case 1:
+//                return RejectedMyRidesFragment.getInstance();
         }
 
         return  null;

@@ -104,7 +104,7 @@
     </string-array>
     <string-array name="my_rides_titles">
         <item>General</item>
-        <item>Rejected</item>
+        <!--<item>Rejected</item>-->
     </string-array>
     <string-array name="about_titles">
         <item>About</item>
@@ -318,7 +318,7 @@ limitations under the License.</string>
     <string name="prompt_take_picture">For control reasons, system asking passengers to make group photo</string>
     <string name="appeal_cancel">Cancel</string>
     <string name="approval_another_picture">Try again</string>
-    <string name="approval_send_success">Your image was uploaded. You\'ll be notified whether or not approved.</string>
+    <string name="approval_send_success">Your image was uploaded. You may observe the status of its validation from \'My rides\' menu.</string>
     <string name="approval_send_title">Picture sent to approval</string>
     <string name="approval_nosend_title">Failed to upload picture</string>
     <string name="approval_answer">Send approval request?</string>

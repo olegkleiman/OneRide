@@ -2,7 +2,12 @@ package com.labs.okey.oneride;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceManager;
+import android.support.annotation.CallSuper;
+import android.support.annotation.MainThread;
+import android.support.annotation.NonNull;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.view.Menu;
@@ -10,6 +15,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -28,9 +35,10 @@ import java.util.List;
 import java.util.Locale;
 
 public class MyRidesActivity extends BaseActivity
-        implements ActionBar.TabListener {
+        implements ActionBar.TabListener,
+                    Handler.Callback {
 
-    private static final String             LOG_TAG = "FR.MyRides";
+    private final String                    LOG_TAG = getClass().getSimpleName();
 
     private MyRideTabAdapter                mTabAdapter;
     private List<Ride>                      mRides;
@@ -38,12 +46,40 @@ public class MyRidesActivity extends BaseActivity
 
     SlidingTabLayout                        slidingTabLayout;
     String[]                                titles;
-    ViewPager mViewPager;
+    ViewPager                               mViewPager;
+    MaterialDialog                          mOfflineDialog;
+
+    private Handler handler = new Handler(this);
+    public Handler getHandler() {
+        return handler;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_rides);
+
+        mOfflineDialog = new MaterialDialog.Builder(this)
+                .title(R.string.offline)
+                .content(R.string.offline_prompt)
+                .iconRes(R.drawable.ic_exclamation)
+                .autoDismiss(true)
+                .cancelable(false)
+                .positiveText(getString(R.string.try_again))
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        if( !isConnectedToNetwork()) {
+                            getHandler().postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mOfflineDialog.show();
+                                }
+                            }, 200);
+                        }
+                    }
+                })
+                .build();
 
         if (Globals.userID == null ||
                 Globals.userID.isEmpty()) {
@@ -79,7 +115,33 @@ public class MyRidesActivity extends BaseActivity
 
         mRides = new ArrayList<Ride>();
 
-        updateHistory();
+    }
+
+    @Override
+    @MainThread
+    @CallSuper
+    public void onResume() {
+
+        super.onResume();
+
+        if( !isConnectedToNetwork() ) {
+            mOfflineDialog.show();
+        }
+        else {
+
+            if (mOfflineDialog != null && mOfflineDialog.isShowing())
+                mOfflineDialog.dismiss();
+
+            updateHistory();
+        }
+    }
+
+    //
+    // Implementation of Handler.Callback
+    //
+    @Override
+    public boolean handleMessage(Message msg) {
+        return true;
     }
 
     private void setUpdateRequired(Boolean value) {
@@ -101,7 +163,8 @@ public class MyRidesActivity extends BaseActivity
                                             .getTable(Ride.class)
                                             .where()
                                             .field("driverid")
-                                            .eq(myUserID);
+                                            .eq(myUserID)
+                                            .top(50);
 
         ListenableFuture pullFuture = mRidesSyncTable.pull(pullQueryRides);
         Futures.addCallback(pullFuture, new FutureCallback<Object>() {
@@ -173,8 +236,20 @@ public class MyRidesActivity extends BaseActivity
     }
 
     public void onRefresh() {
-        Globals.myRides_update_required = true;
-        updateHistory();
+
+
+        if( !isConnectedToNetwork() ) {
+            mOfflineDialog.show();
+        }
+        else {
+
+            if (mOfflineDialog != null && mOfflineDialog.isShowing())
+                mOfflineDialog.dismiss();
+
+            Globals.myRides_update_required = true;
+            updateHistory();
+        }
+
     }
 
     @Override

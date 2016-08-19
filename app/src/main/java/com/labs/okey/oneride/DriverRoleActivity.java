@@ -252,11 +252,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 .autoDismiss(true)
                 .cancelable(false)
                 .positiveText(getString(R.string.try_again))
-                .callback(new MaterialDialog.ButtonCallback() {
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
                     @Override
-                    public void onPositive(MaterialDialog dialog) {
-
-                        if (!isConnectedToNetwork()) {
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        if( !isConnectedToNetwork()) {
                             getHandler().postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
@@ -265,7 +264,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                             }, 200);
                         }
                     }
-                }).build();
+                })
+                .build();
 
         mApprovalDialog = new MaterialDialog.Builder(this)
                 .title(R.string.approval_answer)
@@ -1378,7 +1378,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                         } catch(ExecutionException | InterruptedException e) {
                             Globals.__logException(e);
-                            return null;
+                            throw e;
                         }
                     }
                 };
@@ -2036,6 +2036,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             requestEvent.putCustomAttribute("User", getUser().getFullName());
 
             if( mEx != null ) {
+
+                View v = findViewById(R.id.passenger_snackbar);
+                if( v != null )
+                    Snackbar.make(v, mEx.getMessage(), Snackbar.LENGTH_LONG)
+                            .show();
 
                 lt.error();
                 beepError.start();
