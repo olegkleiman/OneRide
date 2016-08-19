@@ -14,7 +14,6 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -760,7 +759,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         try {
             unregisterReceiver(mBtReceiver);
         } catch( IllegalArgumentException e){
-            Globals.__logException(e);
+            Globals.__log(LOG_TAG, "Safely dismiss unregisterReceiver");
         }
 
 
@@ -892,32 +891,34 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if( requestCode == REQUEST_IMAGE_CAPTURE
                 && resultCode == RESULT_OK) {
 
-            try {
+            sendToValidateManually(getmEmojiID());
 
-                View view = mApprovalDialog.getCustomView();
-                if( view == null)
-                    return;
-
-                ImageView imageViewAppeal =  (ImageView)view.findViewById(R.id.imageViewApproval);
-                if( imageViewAppeal != null ) {
-
-                    Drawable drawable = imageViewAppeal.getDrawable();
-                    if( drawable != null ) {
-                        ((BitmapDrawable) drawable).getBitmap().recycle();
-                    }
-
-                    // Downsample the image to consume less memory
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inSampleSize = 2;
-                    Bitmap bitmap = BitmapFactory.decodeFile(mUriPhotoApproval.getPath(), options);
-                    imageViewAppeal.setImageBitmap(bitmap);
-                }
-
-                mApprovalDialog.show();
-
-            } catch (Exception e) {
-                Globals.__logException(e);
-            }
+//            try {
+//
+//                View view = mApprovalDialog.getCustomView();
+//                if( view == null)
+//                    return;
+//
+//                ImageView imageViewAppeal =  (ImageView)view.findViewById(R.id.imageViewApproval);
+//                if( imageViewAppeal != null ) {
+//
+//                    Drawable drawable = imageViewAppeal.getDrawable();
+//                    if( drawable != null ) {
+//                        ((BitmapDrawable) drawable).getBitmap().recycle();
+//                    }
+//
+//                    // Downsample the image to consume less memory
+//                    BitmapFactory.Options options = new BitmapFactory.Options();
+//                    options.inSampleSize = 2;
+//                    Bitmap bitmap = BitmapFactory.decodeFile(mUriPhotoApproval.getPath(), options);
+//                    imageViewAppeal.setImageBitmap(bitmap);
+//                }
+//
+//                mApprovalDialog.show();
+//
+//            } catch (Exception e) {
+//                Globals.__logException(e);
+//            }
 
         } else if( requestCode == WIFI_CONNECT_REQUEST ) {
 
@@ -1306,6 +1307,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     Globals.__log(LOG_TAG, "Picture required");
 
                     btRestore();
+                    stopTransmitAnimation();
 
                     if( Globals.APPLY_CHALLENGE ) {
                         runOnUiThread(new Runnable() {
@@ -2087,21 +2089,19 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     .iconRes(R.drawable.ic_camera_blue)
                     .customView(customDialog, false) // do not wrap in scroll
                     .positiveText(android.R.string.ok)
-                    .negativeText(android.R.string.no)
+                    //.negativeText(android.R.string.no)
                     .cancelable(false)
-                    .autoDismiss(false)
-                    .onNegative(new MaterialDialog.SingleButtonCallback() {
-                        @Override
-                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                            dialog.dismiss();
-                            activity.finish();
-                        }
-                    })
+                    .autoDismiss(true)
+//                    .onNegative(new MaterialDialog.SingleButtonCallback() {
+//                        @Override
+//                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+//                            dialog.dismiss();
+//                            activity.finish();
+//                        }
+//                    })
                     .onPositive(new MaterialDialog.SingleButtonCallback() {
                         @Override
                         public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                                dialog.dismiss();
-
                             if( !activity.requestCameraPermissions() )
                                 activity.takePictureWithIntent();
                         }
@@ -2131,19 +2131,17 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     .positiveText(android.R.string.ok)
                     .negativeText(android.R.string.no)
                     .cancelable(false)
-                    .autoDismiss(false)
-                    .onNegative(new MaterialDialog.SingleButtonCallback() {
-                        @Override
-                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                            dialog.dismiss();
-                            activity.finish();
-                        }
-                    })
+                    .autoDismiss(true)
+//                    .onNegative(new MaterialDialog.SingleButtonCallback() {
+//                        @Override
+//                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+//                            dialog.dismiss();
+//                            activity.finish();
+//                        }
+//                    })
                     .onPositive(new MaterialDialog.SingleButtonCallback() {
                         @Override
                         public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                            dialog.dismiss();
-
                             if( !activity.requestCameraPermissions() )
                                 activity.takePictureWithIntent();
                         }

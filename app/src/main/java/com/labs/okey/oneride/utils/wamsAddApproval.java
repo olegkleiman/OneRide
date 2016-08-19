@@ -1,11 +1,14 @@
 package com.labs.okey.oneride.utils;
 
 import android.app.Activity;
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Point;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.view.Display;
 
 import com.afollestad.materialdialogs.DialogAction;
@@ -35,8 +38,6 @@ import io.fabric.sdk.android.Fabric;
 
 public class wamsAddApproval extends AsyncTask<File, Void, Void> {
 
-    private final String    LOG_TAG = getClass().getSimpleName();
-
     URI                                 publishedUri;
     Exception                           error;
     String                              mRideID;
@@ -47,8 +48,55 @@ public class wamsAddApproval extends AsyncTask<File, Void, Void> {
     String                              mContainerName;
     IUploader                           mUploader;
     Approval                            mCurrentApproval;
+    ProgressDialogFragment              progressDialog;
+    LoadToast                           lt;
 
-    LoadToast lt;
+    public static class ProgressDialogFragment extends DialogFragment {
+
+        private static final String MESSAGE_TAG = "message";
+        private static String mMessage;
+
+        public static ProgressDialogFragment newInstance(String message) {
+            ProgressDialogFragment fragment = new ProgressDialogFragment();
+
+            Bundle args = new Bundle();
+            args.putString(MESSAGE_TAG, message);
+            fragment.setArguments(args);
+
+            return fragment;
+        }
+
+//        @Override
+//        public void onSaveInstanceState(Bundle outState) {
+//            super.onSaveInstanceState(outState);
+//            outState.putString(Globals.PARCELABLE_KEY_DIALOG_MESSAGE, mMessage);
+//        }
+
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+
+//            if( savedInstanceState != null ) {
+//                mMessage = savedInstanceState.getString(Globals.PARCELABLE_KEY_DIALOG_MESSAGE);
+//            }
+//            else {
+//                mMessage = getArguments().getString(MESSAGE_TAG);
+//            }
+
+            final ProgressDialog progressDialog = new ProgressDialog(getActivity());
+            progressDialog.setTitle(getString(R.string.uploading));
+            //progressDialog.setMessage(mMessage);
+            progressDialog.setMessage(getString(R.string.please_wait));
+
+            return progressDialog;
+        }
+
+        public void setMessage(String message) {
+            ProgressDialog dialog = (ProgressDialog)getDialog();
+            if( dialog != null )
+                dialog.setMessage(message);
+        }
+    }
 
     public static final String storageConnectionString =
             "DefaultEndpointsProtocol=https;AccountName=oneride;" +
@@ -74,29 +122,49 @@ public class wamsAddApproval extends AsyncTask<File, Void, Void> {
 
     @Override
     protected void onPreExecute() {
-        lt = new LoadToast(mContext);
-        lt.setText(mContext.getString(R.string.processing));
 
-        Display display = ((Activity)mContext).getWindow().getWindowManager().getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
-        lt.setTranslationY(size.y / 2);
-        lt.show();
+        try {
+            progressDialog = ProgressDialogFragment.newInstance(
+                    mContext.getString(R.string.please_wait));
+            progressDialog.show(((Activity) mContext).getFragmentManager(), "dialog");
+        } catch(Exception e) {
+            Globals.__logException(e);
+
+            lt = new LoadToast(mContext);
+            lt.setText(mContext.getString(R.string.uploading));
+
+            Display display = ((Activity)mContext).getWindow().getWindowManager().getDefaultDisplay();
+            Point size = new Point();
+            display.getSize(size);
+            lt.setTranslationY(size.y / 2);
+            lt.show();
+        }
+
     }
 
 
     @Override
     protected void onPostExecute(Void result) {
 
+        try {
+            if (progressDialog != null && progressDialog.isVisible()) {
+                progressDialog.dismiss();
+                progressDialog = null;
+            }
+        } catch(Exception e) {
+            Globals.__logException(e);
+        }
+
         if( error == null ) {
 
-            lt.success();
+            if( lt != null )
+                lt.success();
 
             CustomEvent requestEvent = new CustomEvent(mContext.getString(R.string.approval_answer_name));
             requestEvent.putCustomAttribute("User", mDriverName);
 
             if( Fabric.isInitialized() )
-             Answers.getInstance().logCustom(requestEvent);
+                Answers.getInstance().logCustom(requestEvent);
 
             new MaterialDialog.Builder(mContext)
                     .title(mContext.getString(R.string.approval_send_title))
@@ -113,7 +181,8 @@ public class wamsAddApproval extends AsyncTask<File, Void, Void> {
                     .show();
         }
         else {
-            lt.error();
+            if( lt != null )
+                lt.error();
 
             if( ((Activity)mContext).hasWindowFocus() ) { // User may leave parent window for a meanwhile
 
@@ -164,7 +233,7 @@ public class wamsAddApproval extends AsyncTask<File, Void, Void> {
 
         } catch (Exception e) {
             error = e;
-            Log.e(LOG_TAG, e.getMessage());
+            Globals.__logException(e);
         }
 
         return null;

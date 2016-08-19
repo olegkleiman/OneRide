@@ -123,10 +123,10 @@
     <string name="drive_details">נסיעה</string>
     <string name="list_of_passengers">נוסעים</string>
     <string name="detection_error">שגיאה בזיהוי</string>
-    <string name="processing">מתבצע</string>
+    <string name="processing">שליחת תמונה</string>
     <string name="help">עזרה</string>
     <string name="code_try_later">אזין מאוחר יותר</string>
-    <string name="uploading"></string>
+    <string name="uploading">שליחת תמונה</string>
     <string name="detection_no_results">לא זוהו פנים בתמונה</string>
     <string name="instruction_make_additional_selfies">ניתן לצלם נוסעים נוספים</string>
     <string name="instruction_not_enought_passengers">לא זוהו מספיק נוסעים להגשת בקשת פטור</string>
@@ -152,8 +152,8 @@
     <string name="approval_send_title">תמונה שנשלחה לבדיקה</string>
     <string name="push_approval_format">נסיעתך אושרה. קוד הנסיעה : %s</string>
     <string name="no_front_camera">לא ניתן לבצע את הפעולה הנדרשת על המכשיר הזה כי לא זוהתה מצלמה קדמית. השתמש מכשיר אחר.</string>
-    <string name="prompt_take_challenge_picture">מטעמי בקרה, המערכת מבקשת מהנוסעים לבצע צילום קבוצתי משותף עם המחווה המוצגת</string>
-    <string name="prompt_take_picture">מטעמי בקרה, המערכת מבקשת מהנוסעים לבצע צילום קבוצתי משותף</string>
+    <string name="prompt_take_challenge_picture">מטעמי הבקרה, המערכת מבקשת מהנוסעים לבצע צילום קבוצתי משותף עם המחווה המוצגת</string>
+    <string name="prompt_take_picture">מטעמי הבקרה, המערכת מבקשת מהנוסעים לבצע צילום קבוצתי משותף</string>
     <string name="picture_required_dialog_title">בקשה לתמונה קבוצתית</string>
     <string name="approval_nosend_title">נכשל ניסיון להעלות תמונה</string>
     <string name="no_passengers_placeholder">רשימת הנוסעים ריקה.\nנדרשים %d נוסעים.</string>

@@ -152,6 +152,7 @@
     <string name="picture_required_dialog_title">Групповое фото</string>
     <string name="approval_nosend_title">Не удалось загрузить фотографию</string>
     <string name="no_passengers_placeholder">Список пассажиров пуст\n.Необходимо %d пассажиров</string>
+    <string name="uploading">Загрузка фотографии</string>
 
 
 </resources>
