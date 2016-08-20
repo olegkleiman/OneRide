@@ -29,12 +29,10 @@ import java.util.List;
  */
 public class GeneralMyRidesFragment extends Fragment {
 
-
     List<Ride> mRides = new ArrayList<>();
     private static final String ARG_POSITION = "position";
     private static GeneralMyRidesFragment FragmentInstance;
     MyRidesAdapter adapter;
-
 
     public static GeneralMyRidesFragment getInstance() {
 
@@ -58,6 +56,9 @@ public class GeneralMyRidesFragment extends Fragment {
 
         if (rides == null || rides.isEmpty())
             return;
+
+        RecyclerView recycler = (RecyclerView)getActivity().findViewById(R.id.recyclerMyRides);
+        recycler.invalidate();
 
         mRides.clear();
         mRides.addAll(rides);
@@ -93,17 +94,6 @@ public class GeneralMyRidesFragment extends Fragment {
         recycler.setItemAnimator(new DefaultItemAnimator());
 
         adapter = new MyRidesAdapter(mRides);
-//        adapter.setOnClickListener(new IRecyclerClickListener() {
-//            @Override
-//            public void clicked(View v, int position) {
-//
-//                Ride currentRide = mRides.get(position);
-//                Intent intent = new Intent(getActivity(), RideDetailsActivity.class);
-//
-//                intent.putExtra("ride", (Serializable)currentRide);
-//                startActivity(intent);
-//            }
-//        });
         recycler.setAdapter(adapter);
 
         return rootView;

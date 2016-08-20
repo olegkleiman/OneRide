@@ -1,6 +1,8 @@
 package com.labs.okey.oneride;
 
 import android.content.SharedPreferences;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -8,45 +10,43 @@ import android.preference.PreferenceManager;
 import android.support.annotation.CallSuper;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBar;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.support.v4.content.res.ResourcesCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
-import android.widget.ProgressBar;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.labs.okey.oneride.adapters.MyRideTabAdapter;
+import com.labs.okey.oneride.adapters.MyRidesAdapter;
 import com.labs.okey.oneride.model.Ride;
 import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.wamsUtils;
-import com.labs.okey.oneride.views.SlidingTabLayout;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
 public class MyRidesActivity extends BaseActivity
-        implements ActionBar.TabListener,
-                    Handler.Callback {
+        implements Handler.Callback {
 
     private final String                    LOG_TAG = getClass().getSimpleName();
 
-    private MyRideTabAdapter                mTabAdapter;
+    MyRidesAdapter                          mAdapter;
     private List<Ride>                      mRides;
     private MobileServiceSyncTable<Ride>    mRidesSyncTable;
 
-    SlidingTabLayout                        slidingTabLayout;
-    String[]                                titles;
-    ViewPager                               mViewPager;
+    SwipeRefreshLayout                      mSwipeLayout;
     MaterialDialog                          mOfflineDialog;
 
     private Handler handler = new Handler(this);
@@ -96,24 +96,25 @@ public class MyRidesActivity extends BaseActivity
 
         setupUI(getString(R.string.subtitle_activity_my_rides), "");
 
-        titles = getResources().getStringArray(R.array.my_rides_titles);
+        mRides = new ArrayList<>();
 
-        mViewPager = (ViewPager) findViewById(R.id.viewpager);
-        slidingTabLayout = (SlidingTabLayout) findViewById(R.id.sliding_tabs);
-
-        mTabAdapter = new MyRideTabAdapter(getSupportFragmentManager(),
-                                          titles, mRides);
-        mViewPager.setAdapter(mTabAdapter);
-
-        slidingTabLayout.setViewPager(mViewPager);
-        slidingTabLayout.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
+        mSwipeLayout = (SwipeRefreshLayout)findViewById(R.id.swipeRefreshLayout);
+        mSwipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
-            public int getIndicatorColor(int position) {
-                return R.color.ColorAccent;
+            public void onRefresh() {
+
+                refreshRides();
             }
         });
 
-        mRides = new ArrayList<Ride>();
+        RecyclerView recycler = (RecyclerView)findViewById(R.id.recyclerMyRides);
+        recycler.setHasFixedSize(true);
+        recycler.setLayoutManager(new LinearLayoutManager(this));
+        recycler.addItemDecoration(new DividerItemDecoration());
+        recycler.setItemAnimator(new DefaultItemAnimator());
+
+        mAdapter = new MyRidesAdapter(mRides);
+        recycler.setAdapter(mAdapter);
 
     }
 
@@ -124,16 +125,7 @@ public class MyRidesActivity extends BaseActivity
 
         super.onResume();
 
-        if( !isConnectedToNetwork() ) {
-            mOfflineDialog.show();
-        }
-        else {
-
-            if (mOfflineDialog != null && mOfflineDialog.isShowing())
-                mOfflineDialog.dismiss();
-
-            updateHistory();
-        }
+        refreshRides();
     }
 
     //
@@ -154,17 +146,13 @@ public class MyRidesActivity extends BaseActivity
 
     public void updateHistory(){
 
-        final ProgressBar progressBar = (ProgressBar)findViewById(R.id.myrides_progress_refresh);
-        progressBar.setVisibility(View.VISIBLE);
-
         String myUserID = Globals.userID.toLowerCase();
 
         final Query pullQueryRides = Globals.getMobileServiceClient()
                                             .getTable(Ride.class)
                                             .where()
                                             .field("driverid")
-                                            .eq(myUserID)
-                                            .top(50);
+                                            .eq(myUserID);
 
         ListenableFuture pullFuture = mRidesSyncTable.pull(pullQueryRides);
         Futures.addCallback(pullFuture, new FutureCallback<Object>() {
@@ -182,15 +170,19 @@ public class MyRidesActivity extends BaseActivity
                           runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    progressBar.setVisibility(View.GONE);
+
+                                    mSwipeLayout.setRefreshing(false);
 
                                     if( result != null ) {
                                         Globals.__log(LOG_TAG,
                                                 String.format(Locale.getDefault(),
                                                         "Pull rides got %d rides", result.getTotalCount()));
 
-                                        mRides = result;
-                                        mTabAdapter.updateRides(mRides);
+                                        mRides.clear();
+                                        mRides.addAll(result);
+
+                                        sort();
+                                        mAdapter.notifyDataSetChanged();
                                     }
                                     else {
                                         Globals.__log(LOG_TAG, "No results from pull rides");
@@ -202,7 +194,7 @@ public class MyRidesActivity extends BaseActivity
                     @Override
                     public void onFailure(Throwable t) {
                         Globals.__logException(t);
-                        progressBar.setVisibility(View.GONE);
+                        mSwipeLayout.setRefreshing(false);
                     }
                 });
             }
@@ -210,33 +202,26 @@ public class MyRidesActivity extends BaseActivity
             @Override
             public void onFailure(Throwable t) {
                 Globals.__logException(t);
-                progressBar.setVisibility(View.GONE);
+                mSwipeLayout.setRefreshing(false);
             }
         });
 
     }
 
+    private void sort(){
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_my_rides, menu);
-        return true;
+        Collections.sort(mRides, Collections.reverseOrder(new Comparator<Ride>() {
+            public int compare(Ride r1, Ride r2) {
+                if( r1.getCreated() == null
+                        || r2.getCreated() == null )
+                    return 1;
+
+                return r1.getCreated().compareTo(r2.getCreated());
+            }}));
+
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        int id = item.getItemId();
-        if (id == R.id.action_refresh_history) {
-            onRefresh();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    public void onRefresh() {
-
+    public void refreshRides() {
 
         if( !isConnectedToNetwork() ) {
             mOfflineDialog.show();
@@ -252,18 +237,37 @@ public class MyRidesActivity extends BaseActivity
 
     }
 
-    @Override
-    public void onTabSelected(ActionBar.Tab tab, android.support.v4.app.FragmentTransaction fragmentTransaction) {
+    /**
+     * RecyclerView item decoration - give equal margin around grid item
+     */
+    public class DividerItemDecoration extends RecyclerView.ItemDecoration {
 
-    }
+        private Drawable mDivider;
 
-    @Override
-    public void onTabUnselected(ActionBar.Tab tab, android.support.v4.app.FragmentTransaction fragmentTransaction) {
+        public DividerItemDecoration() {
 
-    }
+            mDivider = ResourcesCompat.getDrawable(getResources(), R.drawable.line_divider, null);
 
-    @Override
-    public void onTabReselected(ActionBar.Tab tab, android.support.v4.app.FragmentTransaction fragmentTransaction) {
+        }
+
+        @Override
+        public void onDrawOver(Canvas c, RecyclerView parent, RecyclerView.State state) {
+            int left = parent.getPaddingLeft();
+            int right = parent.getWidth() - parent.getPaddingRight();
+
+            int childCount = parent.getChildCount();
+            for (int i = 0; i < childCount; i++) {
+                View child = parent.getChildAt(i);
+
+                RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) child.getLayoutParams();
+
+                int top = child.getBottom() + params.bottomMargin;
+                int bottom = top + mDivider.getIntrinsicHeight();
+
+                mDivider.setBounds(left, top, right, bottom);
+                mDivider.draw(c);
+            }
+        }
 
     }
 

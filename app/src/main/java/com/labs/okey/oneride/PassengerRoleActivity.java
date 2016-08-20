@@ -2,6 +2,7 @@ package com.labs.okey.oneride;
 
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothClass;
@@ -513,6 +514,8 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
     @CallSuper
     protected void onStart() {
 
+        super.onStart();
+
         mSearchDriverCountDownTimer = new CountDownTimer(Globals.PASSENGER_DISCOVERY_PERIOD * 1000, 1000) {
 
             public void onTick(long millisUntilFinished) {
@@ -528,8 +531,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     this.cancel();
                     Globals.__log(LOG_TAG, "CountDown: Cancelling timer");
 
-                    if( mSearchDriverDialogFragment != null )
+                    if( mSearchDriverDialogFragment != null ) {
+                        Globals.__log(LOG_TAG, "CountDown: Dismissing dialog");
                         mSearchDriverDialogFragment.dismiss();
+                    }
                 }
             }
 
@@ -542,21 +547,31 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                     if (mCountDiscoveryTrials++ >= Globals.MAX_DISCOVERY_TRIALS) {
                         Globals.__log(LOG_TAG, "CountDown: Exceeded");
+
+                        if( mSearchDriverDialogFragment != null )
+                            mSearchDriverDialogFragment.dismiss();
+
                         mCountDiscoveryTrials = 1;
                         this.cancel();
+
+                        // No drivers found - Show ride code pane
+                        showRideCodePane(R.string.ride_code_dialog_content, Color.BLACK);
+
                     } else {
                         Globals.__log(LOG_TAG, "CountDown: Restarting for " + mCountDiscoveryTrials);
                         btRefresh();
                         this.start();
                     }
                 } else {
-                    // Nothing to do
+                    Globals.__log(LOG_TAG, String.format(Locale.getDefault(),
+                                           "CountDown: There are %d drivers on Finish", driversCount));
+                    if( mSearchDriverDialogFragment != null )
+                        mSearchDriverDialogFragment.dismiss();
                 }
             }
         };
-        mSearchDriverCountDownTimer.start();
 
-        super.onStart();
+        mSearchDriverCountDownTimer.start();
     }
 
     @Override
@@ -928,6 +943,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         @Override
                         public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                             btRefresh();
+                            showSearchDialog();
                         }
                     }))
                     .title(R.string.ride_code_title)
@@ -1307,8 +1323,10 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 mDriverName = driverDevice.get_UserName();
             }
 
-            DialogFragment joinConfirmDialog = JoinConfirmDialogFragment.newInstance(mDriverName);
-            joinConfirmDialog.show(getSupportFragmentManager(), "dialog");
+//            DialogFragment joinConfirmDialog = JoinConfirmDialogFragment.newInstance(mDriverName);
+//            joinConfirmDialog.show(getSupportFragmentManager(), "dialog");
+
+            onSubmitCode();
         }
 
     }
@@ -1430,11 +1448,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .title(R.string.thanks)
                     .content(R.string.confirmation_accepted)
                     .cancelable(false)
-                    .positiveText(android.R.string.ok)
+                    .positiveText(R.string.close)
                     .onPositive(new MaterialDialog.SingleButtonCallback(){
                         @Override
                         public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                            //finish();
+                            ((Activity)getContext()).finish();
                         }
                     })
                     .show();

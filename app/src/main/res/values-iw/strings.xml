@@ -107,7 +107,7 @@
     <string name="confirmation_accepted">אישור הצטרפות לנסיעה התקבל</string>
     <string name="geofence_transition_exited">אתה יוצא מאזור הפיקוח</string>
     <string name="connection_lost">החיבור אבד. אנא נסה שוב בעוד מספר שניות.</string>
-    <string name="nofee_request_accepted">בקשתך התקבלה</string>
+    <string name="nofee_request_accepted">בקשתך לפטור התקבלה</string>
     <string name="offline">מכשירך לא מקוון</string>
     <string name="offline_prompt">חבר את המכשיר לרשת</string>
     <string name="camera_directive_1">נא להביט לקצה המשכיר בו ממוקמת המצלמה</string>
@@ -154,7 +154,6 @@
     <string name="prompt_take_picture">מטעמי הבקרה, המערכת מבקשת מהנוסעים לבצע צילום קבוצתי משותף</string>
     <string name="picture_required_dialog_title">בקשה לתמונה קבוצתית</string>
     <string name="approval_nosend_title">נכשל ניסיון להעלות תמונה</string>
-    <string name="no_fee_answer_name" translatable="false"></string>
     <string name="no_passengers_placeholder">רשימת הנוסעים ריקה.\nנדרשים %d נוסעים.</string>
     <string name="uploading">שליחת תמונה</string>
 

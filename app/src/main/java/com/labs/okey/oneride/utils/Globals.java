@@ -209,9 +209,7 @@ public class Globals {
 
     public static void __log(String tag, String message) {
         if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
-            Crashlytics.log(Log.VERBOSE, tag, message);
-
-        Log.d(tag, message);
+            Crashlytics.log(Log.DEBUG, tag, message); // also writes to logcat
     }
 
     public static void __logException(Throwable e) {
