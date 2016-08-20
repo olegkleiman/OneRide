@@ -107,6 +107,13 @@ public class MyRidesActivity extends BaseActivity
             }
         });
 
+        mSwipeLayout.post(new Runnable() {
+           @Override
+            public void run() {
+               mSwipeLayout.setRefreshing(true);
+           }
+        });
+
         RecyclerView recycler = (RecyclerView)findViewById(R.id.recyclerMyRides);
         recycler.setHasFixedSize(true);
         recycler.setLayoutManager(new LinearLayoutManager(this));

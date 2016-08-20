@@ -148,8 +148,6 @@
     <string name="title_activity_ride_details">פרטי נסיעה</string>
     <string name="driver_no_name">ללא שם</string>
     <string name="registration_account_validation_failure">שגיאה באימות הנתונים</string>
-    <string name="approval_send_success">סטטוס בדיקתה יתעדכן בתפריט \'נסיעות שלי\'.</string>
-    <string name="approval_send_title">תמונה נשלחה לבדיקה</string>
     <string name="push_approval_format">נסיעתך אושרה. קוד הנסיעה : %s</string>
     <string name="no_front_camera">לא ניתן לבצע את הפעולה הנדרשת על המכשיר הזה כי לא זוהתה מצלמה קדמית. השתמש מכשיר אחר.</string>
     <string name="prompt_take_challenge_picture">מטעמי הבקרה, המערכת מבקשת מהנוסעים לבצע צילום קבוצתי משותף עם המחווה המוצגת</string>
@@ -157,6 +155,8 @@
     <string name="picture_required_dialog_title">בקשה לתמונה קבוצתית</string>
     <string name="approval_nosend_title">נכשל ניסיון להעלות תמונה</string>
     <string name="no_passengers_placeholder">רשימת הנוסעים ריקה.\nנדרשים %d נוסעים.</string>
+    <string name="approval_sending_title">תמונך נשלחת לבדיקה</string>
+    <string name="approval_send_future">סטטוס בדיקתה יתעדכן בתפריט \'נסיעות שלי\'.</string>
 
 
 </resources>

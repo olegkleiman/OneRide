@@ -23,6 +23,7 @@ import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
 import android.location.Location;
 import android.location.LocationProvider;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -82,6 +83,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.labs.okey.oneride.adapters.PassengersAdapter;
+import com.labs.okey.oneride.model.Approval;
 import com.labs.okey.oneride.model.GFCircle;
 import com.labs.okey.oneride.model.Join;
 import com.labs.okey.oneride.model.PassengerFace;
@@ -94,9 +96,12 @@ import com.labs.okey.oneride.utils.IUploader;
 import com.labs.okey.oneride.utils.RoundedDrawable;
 import com.labs.okey.oneride.utils.UiThreadExecutor;
 import com.labs.okey.oneride.utils.faceapiUtils;
-import com.labs.okey.oneride.utils.wamsAddApproval;
 import com.labs.okey.oneride.utils.wifip2p.P2pConversator;
 import com.labs.okey.oneride.utils.wifip2p.P2pPreparer;
+import com.microsoft.azure.storage.CloudStorageAccount;
+import com.microsoft.azure.storage.blob.CloudBlobClient;
+import com.microsoft.azure.storage.blob.CloudBlobContainer;
+import com.microsoft.azure.storage.blob.CloudBlockBlob;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import junit.framework.Assert;
@@ -104,6 +109,7 @@ import junit.framework.Assert;
 import net.steamcrafted.loadtoast.LoadToast;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -238,6 +244,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             }
         }
     };
+
 
     @Override
     @CallSuper
@@ -781,6 +788,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             // There is no API to check if a receiver is registered.
             // When trying to register it for more than first time, the IllegalArgumentException
             // is raised. Here this exception may be safely ignored.
+            Globals.__logException(e);
         }
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -1096,7 +1104,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     }
 
-
     @TargetApi(Build.VERSION_CODES.M)
     @Override
     @MainThread
@@ -1306,7 +1313,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 if( bPictureRequired ) {
                     Globals.__log(LOG_TAG, "Picture required");
 
-                    btRestore();
+                    if( Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2 ) {
+                        btRestore();
+                    }
                     stopTransmitAnimation();
 
                     if( Globals.APPLY_CHALLENGE ) {
@@ -1350,11 +1359,18 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             }
 
             @Override
-            public void onFailure(Throwable t) {
+            public void onFailure(final Throwable t) {
 
                 Globals.__logException(t);
-                Toast.makeText(DriverRoleActivity.this,
-                        t.getMessage(), Toast.LENGTH_LONG).show();
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(DriverRoleActivity.this,
+                                t.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
+
             }
         });
     }
@@ -1701,30 +1717,96 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         return mutableBitmap;
     }
 
-    public  void sendToValidateManually(final int emojiId){
+    public void sendToValidateManually(final int emojiId){
 
-        mCurrentRide.setApproved(Globals.RIDE_STATUS.BE_VALIDATED_MANUALLY.ordinal());
+        SendingPictureFragmentDialog dialogFragment = new SendingPictureFragmentDialog();
+        dialogFragment.show(getSupportFragmentManager(), "pictureSendingDialog");
 
-        ListenableFuture<Ride> _rideFuture = mRidesTable.update(mCurrentRide);
-        Futures.addCallback(_rideFuture, new FutureCallback<Ride>() {
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        int sb2value = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, sb2value / 2, 0);
+
+        final File photoFile = new File(mUriPhotoApproval.getPath());
+
+        Callable<Void> sendToManualValidationTask = new Callable<Void>() {
             @Override
-            public void onSuccess(Ride result) {
-                new wamsAddApproval(DriverRoleActivity.this,
-                        getUser().getFullName(),
-                        "pictures",
-                        mCurrentRide.id,
-                        getUser().getRegistrationId(),
-                        emojiId)
-                        .execute(new File(mUriPhotoApproval.getPath()));
+            public Void call() throws Exception {
 
+                // 1 - Upload blog
+                CloudStorageAccount storageAccount = CloudStorageAccount.parse(Globals.AZURE_STORAGE_CONNECTION_STRING);
+                CloudBlobClient blobClient = storageAccount.createCloudBlobClient();
+                CloudBlobContainer container = blobClient.getContainerReference("pictures");
+
+                CloudBlockBlob blob = container.getBlockBlobReference(photoFile.getName());
+                //AccessCondition ac = new AccessCondition();
+                blob.upload(new FileInputStream(photoFile), photoFile.length());
+
+                java.net.URI publishedUri = blob.getQualifiedUri();
+
+                Approval approval = new Approval();
+                approval.setPictureUrl(publishedUri.toString());
+                approval.setRideId(mCurrentRide.id);
+                approval.setDriverId(getUser().getRegistrationId());
+                if( emojiId != 0 )
+                    approval.setEmojiId(emojiId);
+
+                // 2 - insert new approval
+                MobileServiceTable<Approval> wamsApprovalsTable =
+                        Globals.getMobileServiceClient().getTable("approvals", Approval.class);
+                ListenableFuture<Approval> insertFuture = wamsApprovalsTable.insert(approval);
+                Futures.addCallback(insertFuture, new FutureCallback<Approval>(){
+                    @Override
+                    public void onSuccess(Approval approval) {
+
+                        if( approval == null ) {
+                            Globals.__log(LOG_TAG, getString(R.string.approval_add_failed) + mCurrentRide.id);
+                            return;
+                        }
+
+                        Globals.__log(LOG_TAG, String.format(Locale.getDefault(),
+                                                            getString(R.string.approval_add_format),
+                                                            mCurrentRide.id, approval.Id));
+
+                        // 3 - update ride
+                        mCurrentRide.setApproved(Globals.RIDE_STATUS.BE_VALIDATED_MANUALLY.ordinal());
+                        ListenableFuture<Ride> _rideFuture = mRidesTable.update(mCurrentRide);
+                        Futures.addCallback(_rideFuture, new FutureCallback<Ride>() {
+                            @Override
+                            public void onSuccess(Ride result) {
+
+                                // 4 - create new crashlytics event
+                                CustomEvent requestEvent = new CustomEvent(getString(R.string.approval_answer_name));
+                                requestEvent.putCustomAttribute("User", getUser().getRegistrationId());
+
+                                if( Fabric.isInitialized() )
+                                    Answers.getInstance().logCustom(requestEvent);
+
+                                beepSuccess.start();
+
+                            }
+
+                            @Override
+                            public void onFailure(Throwable t) {
+                                Globals.__logException(t);
+                                beepError.start();
+                            }
+                        });
+
+                    }
+                    @Override
+                    public void onFailure(Throwable t) {
+                        Globals.__logException(t);
+                        beepError.start();
+                    }
+                });
+
+                return null;
             }
+        };
 
-            @Override
-            public void onFailure(Throwable t) {
-                Globals.__logException(t);
-            }
-        });
-
+        ExecutorService service = Executors.newFixedThreadPool(1);
+        ListeningExecutorService executor = MoreExecutors.listeningDecorator(service);
+        executor.submit(sendToManualValidationTask);
     }
 
     public void onAppealCamera(){
@@ -2094,16 +2176,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     .iconRes(R.drawable.ic_camera_blue)
                     .customView(customDialog, false) // do not wrap in scroll
                     .positiveText(android.R.string.ok)
-                    //.negativeText(android.R.string.no)
                     .cancelable(false)
                     .autoDismiss(true)
-//                    .onNegative(new MaterialDialog.SingleButtonCallback() {
-//                        @Override
-//                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-//                            dialog.dismiss();
-//                            activity.finish();
-//                        }
-//                    })
                     .onPositive(new MaterialDialog.SingleButtonCallback() {
                         @Override
                         public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
@@ -2149,6 +2223,28 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                             if( !activity.requestCameraPermissions() )
                                 activity.takePictureWithIntent();
+                        }
+                    })
+                    .show();
+        }
+    }
+
+    public static class SendingPictureFragmentDialog extends DialogFragment {
+        @Override
+        @NonNull
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            final DriverRoleActivity activity = ((DriverRoleActivity)getActivity());
+
+            return  new MaterialDialog.Builder(activity)
+                    .title(getString(R.string.approval_sending_title))
+                    .content(getString(R.string.approval_send_future))
+                    .iconRes(R.drawable.selfie_office)
+                    .positiveText(android.R.string.ok)
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog,
+                                            @NonNull DialogAction which) {
+                            activity.finish();
                         }
                     })
                     .show();

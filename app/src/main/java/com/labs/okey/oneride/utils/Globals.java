@@ -295,6 +295,9 @@ public class Globals {
     public static final String SENDER_ID = "982244912173";
     public static final String AZURE_HUB_NAME = "oneridehub";
     public static final String AZURE_HUB_CONNECTION_STRING = "Endpoint=sb://oneridehub-ns.servicebus.windows.net/;SharedAccessKeyName=DefaultFullSharedAccessSignature;SharedAccessKey=VA/kIgB0KzxhenuquHpqbqceD2z9MUwarmN+FdOFTck=";
+    public static final String AZURE_STORAGE_CONNECTION_STRING =
+            "DefaultEndpointsProtocol=https;AccountName=oneride;" +
+                    "AccountKey=bdNIAOimN48pj29UmMQRgo5UK5a29cyJ3HnTM5Ikc4HzI7/DUOpxclfedehnQ/D7uSFEm8YOtcUyxUiSKpDqvw==";
 
     public static final String NOTIFICATION_ID_EXTRA = "NOTIFICATION_ID";
     public static final String ACTION_CONFIRM = "oneride.intent.action.CONFIRM";
@@ -458,6 +461,7 @@ public class Globals {
     public static String PARCELABLE_KEY_EMOJI_ID = "emoji_id";
     public static String PARCELABLE_KEY_CURRENT_RIDE = "current_ride";
     public static String PARCELABLE_KEY_CABIN_PICTURES_BUTTON_SHOWN = "cabin_button_shown";
+    public static String PARCELABLE_KEY_UPLOAD_PROGRESS_SHOWN = "upload_progress_shown";
     public static String PARCELABLE_KEY_CAPTURED_PASSENGERS_IDS = "captured_passengers_ids";
     public static String PARCELABLE_KEY_PASSENGERS_FACE_IDS = "face_ids";
     public static String PARCELABLE_KEY_APPROVAL_PHOTO_URI = "approval_uri";

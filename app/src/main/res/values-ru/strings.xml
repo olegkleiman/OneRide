@@ -143,7 +143,7 @@
     <string name="ride_same_ids">Использование одной и той же регистрационной записи для водителя и пассажира не разрешается.</string>
     <string name="driver_no_name">Без имени</string>
     <string name="registration_account_validation_failure">Ошибка проверки учетной записи</string>
-    <string name="approval_send_success">Ваша фотография загружена. Вы можете проверить статус ее проверки, выбрав меню \'Мои поездки\'.</string>
+    <string name="approval_send_success">Вскоре бы сможете проверить статус ее проверки, выбрав меню \'Мои поездки\'.</string>
     <string name="push_approval_format">Ваша поездка подтверждена. Код поездки: %s</string>
     <string name="no_phone_number">Укажите правильный номер телефона</string>
     <string name="no_front_camera">Ваш телефон не имеет фронтальной камеры. К сожалению, мы не можем выполнить необходимые действия.</string>
@@ -153,6 +153,7 @@
     <string name="approval_nosend_title">Не удалось загрузить фотографию</string>
     <string name="no_passengers_placeholder">Список пассажиров пуст\n.Необходимо %d пассажиров</string>
     <string name="uploading">Загрузка фотографии</string>
+    <string name="approval_sending_title">Ваша фотография загружается</string>
 
 
 </resources>

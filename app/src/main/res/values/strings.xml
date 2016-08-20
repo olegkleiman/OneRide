@@ -318,11 +318,13 @@ limitations under the License.</string>
     <string name="prompt_take_picture">For control reasons, system asking passengers to make group photo</string>
     <string name="appeal_cancel">Cancel</string>
     <string name="approval_another_picture">Try again</string>
-    <string name="approval_send_success">Your image was uploaded. You may observe the status of its validation from \'My rides\' menu.</string>
-    <string name="approval_send_title">Picture sent to approval</string>
+    <string name="approval_send_future">Soon you will be able to observe the status of its validation from \'My rides\' menu.</string>
+    <string name="approval_sending_title">Picture is sent to approval</string>
     <string name="approval_nosend_title">Failed to upload picture</string>
     <string name="approval_answer">Send approval request?</string>
     <string name="appeal_send">Send</string>
+    <string name="approval_add_format" translatable="false">Approval for ride %s added with id %s</string>
+    <string name="approval_add_failed">Failed to add approval for ride</string>
 
     <string name="instruction_make_additional_selfies">You can make photos of other passengers</string>
     <string name="instruction_not_enought_passengers">Not enough passengers to submit no-fee request</string>
@@ -354,4 +356,11 @@ limitations under the License.</string>
     <string name="push_approval_format">Your ride was approved. Ride code: %s</string>
 
     <string name="notification_message_format">%s has confirmed participation in your ride</string>
+
+    <string name="progressBar_pref_key">progressBar_pref_key</string>
+    <string name="progressBar_pref_defValue">0</string>
+    <string name="firstcolor_pref_key">firstcolor_pref_key</string>
+    <string name="secondcolor_pref_key">secondcolor_pref_key</string>
+    <string name="thirdcolor_pref_key">thirdcolor_pref_key</string>
+    <string name="fourthcolor_pref_key">fourthcolor_pref_key</string>
 </resources>
