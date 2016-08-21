@@ -1939,9 +1939,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 
         File photoFile = File.createTempFile(
-                photoFileName,   /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
+                photoFileName,
+                ".jpg",
+                storageDir
         );
 
         return photoFile;
