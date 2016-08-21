@@ -6,11 +6,6 @@
         android:orderInCategory="100"
         app:showAsAction="never" />
 
-    <item android:id="@+id/action_refresh_classifiers"
-        android:title="@string/action_refresh_classifiers"
-        android:orderInCategory="200"
-        app:showAsAction="never" />
-
     <group>
         <item android:id="@+id/ignore_geofences"
             android:title="Ignore GeoFences"
