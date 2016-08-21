@@ -49,12 +49,6 @@ import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
 import com.pkmmte.view.CircularImageView;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -121,8 +115,6 @@ public class SettingsActivity extends BaseActivity
         if (id == R.id.action_refresh_settings) {
             onRefreshGeofences();
             return true;
-        } else if( id == R.id.action_refresh_classifiers) {
-            onRefreshClassifiers();
         } else if( id == R.id.ignore_geofences) {
             Globals.IGNORE_GEOFENCES = !Globals.IGNORE_GEOFENCES;
             item.setChecked(Globals.IGNORE_GEOFENCES);
@@ -421,72 +413,6 @@ public class SettingsActivity extends BaseActivity
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    void onRefreshClassifiers() {
-        new AsyncTask<Void, Void, Void>() {
-
-            Exception mEx;
-            MaterialDialog progress;
-
-            @Override
-            protected void onPreExecute() {
-                progress = new MaterialDialog.Builder(SettingsActivity.this)
-                        .title(getString(R.string.download_classifiers_desc))
-                        .content(R.string.please_wait)
-                        .progress(true, 0)
-                        .show();
-            }
-
-            @Override
-            protected void onPostExecute(Void result){
-                progress.dismiss();
-
-                String msg = "Classifiers updated";
-
-                if( mEx != null ) {
-                    msg = mEx.getMessage() + " Cause: " + mEx.getCause();
-                }
-
-                Toast.makeText(SettingsActivity.this, msg,
-                        Toast.LENGTH_LONG).show();
-            }
-
-            @Override
-            protected Void doInBackground(Void... voids) {
-
-                try {
-                    URL url = new URL(Globals.CASCADE_URL);
-                    HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-                    urlConnection.setRequestMethod("GET");
-                    urlConnection.connect();
-
-                    String cascadeName = Uri.parse(Globals.CASCADE_URL).getLastPathSegment();
-
-                    //set the path where we want to save the file
-                    File file = new File(getFilesDir(), cascadeName);
-                    FileOutputStream fileOutput = new FileOutputStream(file);
-
-                    InputStream inputStream = urlConnection.getInputStream();
-
-                    byte[] buffer = new byte[1024];
-                    int bufferLength = 0;
-
-                    while ( (bufferLength = inputStream.read(buffer)) > 0 ) {
-                        fileOutput.write(buffer, 0, bufferLength);
-                    }
-                    fileOutput.close();
-
-                    Globals.setCascadePath(file.getAbsolutePath());
-
-                } catch (IOException e) {
-                    Globals.__logException(e);
-                    mEx = e;
-                }
-
-                return null;
-            }
-        }.execute();
     }
 
     void onRefreshGeofences() {
