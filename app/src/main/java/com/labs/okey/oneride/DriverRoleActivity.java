@@ -9,11 +9,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -28,6 +28,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
@@ -45,6 +46,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -108,8 +110,9 @@ import junit.framework.Assert;
 
 import net.steamcrafted.loadtoast.LoadToast;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -161,7 +164,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     private MobileServiceTable<Ride>            mRidesTable;
     String                                      mCarNumber;
-    Uri                                         mUriPhotoApproval;
+    File                                        mPhotoFile;
     private String                              mRideCode;
     private int                                 mEmojiID = 0;
     public void setEmojiId(int value) {
@@ -196,7 +199,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     MaterialDialog                              mOfflineDialog;
-    MaterialDialog                              mApprovalDialog;
 
     private boolean                             mCabinPictureButtonShown = false;
     private boolean                             mCabinShown = false;
@@ -270,26 +272,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                 }
                             }, 200);
                         }
-                    }
-                })
-                .build();
-
-        mApprovalDialog = new MaterialDialog.Builder(this)
-                .title(R.string.approval_answer)
-                .iconRes(R.drawable.ic_info)
-                .positiveText(R.string.appeal_send)
-                .negativeText(R.string.appeal_cancel)
-                .customView(R.layout.dialog_approval_answer, false) // do not wrap in scroll
-                .onPositive(new MaterialDialog.SingleButtonCallback(){
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        sendToValidateManually(getmEmojiID());
-                    }
-                })
-                .onNegative(new MaterialDialog.SingleButtonCallback(){
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        finish();
                     }
                 })
                 .build();
@@ -401,7 +383,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             bInitializedBeforeRotation = true;
 
             String str = savedInstanceState.getString(Globals.PARCELABLE_KEY_APPROVAL_PHOTO_URI);
-            mUriPhotoApproval = Uri.parse(str);
+            mPhotoFile = new File(str);
+            Globals.__log(LOG_TAG, "Photo file restored: " + mPhotoFile.getPath());
         }
 
         if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_EMOJIID)) {
@@ -439,18 +422,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 vEmptyText.setVisibility(View.GONE);
         }
 
-        if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_APPEAL_DIALOG_SHOWN)) {
-            bInitializedBeforeRotation = true;
-
-            View view = mApprovalDialog.getCustomView();
-            if (view != null) {
-                ImageView imageViewAppeal = (ImageView) view.findViewById(R.id.imageViewApproval);
-                if (imageViewAppeal != null)
-                    imageViewAppeal.setImageURI(mUriPhotoApproval);
-            }
-            mApprovalDialog.show();
-        }
-
         Globals.__log(LOG_TAG, getString(R.string.log_state_restored));
     }
 
@@ -477,8 +448,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             outState.putSerializable(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS, Globals.get_PassengerFaces());
 
-            if( mUriPhotoApproval != null)
-                outState.putString(Globals.PARCELABLE_KEY_APPROVAL_PHOTO_URI, mUriPhotoApproval.toString());
+            if( mPhotoFile != null) {
+                outState.putString(Globals.PARCELABLE_KEY_APPROVAL_PHOTO_URI, mPhotoFile.toString());
+                Globals.__log(LOG_TAG, "Photo file saved: " + mPhotoFile.getPath());
+            }
 
             outState.putInt(Globals.PARCELABLE_KEY_EMOJIID, mEmojiID);
 
@@ -521,9 +494,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 Globals.__logException(ex);
             }
 
-            if( mApprovalDialog.isShowing() ) {
-                outState.putBoolean(Globals.PARCELABLE_KEY_APPEAL_DIALOG_SHOWN, true);
-            }
         }
 
         Globals.__log(LOG_TAG, getString(R.string.log_state_saved));
@@ -784,7 +754,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             IntentFilter filter = new IntentFilter();
             filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
             registerReceiver(mBtReceiver, filter); // Don't forget to unregister during onDestroy
-        } catch(IllegalArgumentException e) {
+        } catch(Exception e) {
             // There is no API to check if a receiver is registered.
             // When trying to register it for more than first time, the IllegalArgumentException
             // is raised. Here this exception may be safely ignored.
@@ -887,9 +857,107 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         mRidesTable = Globals.getMobileServiceClient().getTable("rides", Ride.class);
     }
 
+    public void sendToValidateManually(final String blobName, final Bitmap bitmap, final int emojiId){
+
+        SendingPictureFragmentDialog dialogFragment = new SendingPictureFragmentDialog();
+        dialogFragment.show(getSupportFragmentManager(), "pictureSendingDialog");
+
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        int sb2value = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, sb2value / 2, 0);
+
+        //final File photoFile = new File(mUriPhotoApproval.getPath());
+
+        Callable<Void> sendToManualValidationTask = new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+
+                // 1 - Upload blog
+                CloudStorageAccount storageAccount = CloudStorageAccount.parse(Globals.AZURE_STORAGE_CONNECTION_STRING);
+                CloudBlobClient blobClient = storageAccount.createCloudBlobClient();
+                CloudBlobContainer container = blobClient.getContainerReference("pictures");
+
+                //String blobName = photoFile.getName();
+                CloudBlockBlob blob = container.getBlockBlobReference(blobName);
+                blob.getProperties().setContentType("image/jpg");
+
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+                ByteArrayInputStream bs = new ByteArrayInputStream(bos.toByteArray());
+                blob.upload(bs, bs.available());
+
+                java.net.URI publishedUri = blob.getQualifiedUri();
+
+                Approval approval = new Approval();
+                approval.setPictureUrl(publishedUri.toString());
+                approval.setRideId(mCurrentRide.id);
+                approval.setDriverId(getUser().getRegistrationId());
+                if( emojiId != 0 )
+                    approval.setEmojiId(emojiId);
+
+                // 2 - insert new approval
+                MobileServiceTable<Approval> wamsApprovalsTable =
+                        Globals.getMobileServiceClient().getTable("approvals", Approval.class);
+                ListenableFuture<Approval> insertFuture = wamsApprovalsTable.insert(approval);
+                Futures.addCallback(insertFuture, new FutureCallback<Approval>(){
+                    @Override
+                    public void onSuccess(Approval approval) {
+
+                        if( approval == null ) {
+                            Globals.__log(LOG_TAG, getString(R.string.approval_add_failed) + mCurrentRide.id);
+                            return;
+                        }
+
+                        Globals.__log(LOG_TAG, String.format(Locale.getDefault(),
+                                getString(R.string.approval_add_format),
+                                mCurrentRide.id, approval.Id));
+
+                        // 3 - update ride
+                        mCurrentRide.setApproved(Globals.RIDE_STATUS.BE_VALIDATED_MANUALLY.ordinal());
+                        ListenableFuture<Ride> _rideFuture = mRidesTable.update(mCurrentRide);
+                        Futures.addCallback(_rideFuture, new FutureCallback<Ride>() {
+                            @Override
+                            public void onSuccess(Ride result) {
+
+                                // 4 - create new crashlytics event
+                                CustomEvent requestEvent = new CustomEvent(getString(R.string.approval_answer_name));
+                                requestEvent.putCustomAttribute("User", getUser().getRegistrationId());
+
+                                if( Fabric.isInitialized() )
+                                    Answers.getInstance().logCustom(requestEvent);
+
+                                beepSuccess.start();
+
+                            }
+
+                            @Override
+                            public void onFailure(Throwable t) {
+                                Globals.__logException(t);
+                                beepError.start();
+                            }
+                        });
+
+                    }
+                    @Override
+                    public void onFailure(Throwable t) {
+                        Globals.__logException(t);
+                        beepError.start();
+                    }
+                });
+
+                return null;
+            }
+        };
+
+        ExecutorService service = Executors.newFixedThreadPool(1);
+        ListeningExecutorService executor = MoreExecutors.listeningDecorator(service);
+        executor.submit(sendToManualValidationTask);
+    }
+
+
     @Override
     @CallSuper
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
 
         super.onActivityResult(requestCode, resultCode, data);
 
@@ -899,34 +967,39 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if( requestCode == REQUEST_IMAGE_CAPTURE
                 && resultCode == RESULT_OK) {
 
-            sendToValidateManually(getmEmojiID());
+            Bitmap imageBitmap = null;
 
-//            try {
-//
-//                View view = mApprovalDialog.getCustomView();
-//                if( view == null)
-//                    return;
-//
-//                ImageView imageViewAppeal =  (ImageView)view.findViewById(R.id.imageViewApproval);
-//                if( imageViewAppeal != null ) {
-//
-//                    Drawable drawable = imageViewAppeal.getDrawable();
-//                    if( drawable != null ) {
-//                        ((BitmapDrawable) drawable).getBitmap().recycle();
-//                    }
-//
-//                    // Downsample the image to consume less memory
-//                    BitmapFactory.Options options = new BitmapFactory.Options();
-//                    options.inSampleSize = 2;
-//                    Bitmap bitmap = BitmapFactory.decodeFile(mUriPhotoApproval.getPath(), options);
-//                    imageViewAppeal.setImageBitmap(bitmap);
-//                }
-//
-//                mApprovalDialog.show();
-//
-//            } catch (Exception e) {
-//                Globals.__logException(e);
-//            }
+            if( data == null ) {
+                Globals.__log(LOG_TAG, "Intent NULL, File: " + mPhotoFile.getPath());
+
+                try {
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                    options.inSampleSize = 2;
+                    imageBitmap = BitmapFactory.decodeFile(mPhotoFile.getPath(), options);
+                } catch(Exception e) {
+                    Globals.__logException(e);
+                }
+            } else {
+                Globals.__log(LOG_TAG, "Getting image from intent");
+                Bundle extras = data.getExtras();
+                imageBitmap = (Bitmap) extras.get("data");
+            }
+
+            if( imageBitmap != null ) {
+
+                final File photoFile = new File(mPhotoFile.getPath());
+                sendToValidateManually(photoFile.getName(),
+                        imageBitmap,
+                        getmEmojiID());
+            } else {
+                Globals.__log(LOG_TAG, getString(R.string.picture_not_acquired));
+
+                View v = findViewById(R.id.passenger_snackbar);
+                if( v != null )
+                    Snackbar.make(v, R.string.picture_not_acquired, Snackbar.LENGTH_LONG)
+                            .show();
+            }
 
         } else if( requestCode == WIFI_CONNECT_REQUEST ) {
 
@@ -1717,97 +1790,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         return mutableBitmap;
     }
 
-    public void sendToValidateManually(final int emojiId){
-
-        SendingPictureFragmentDialog dialogFragment = new SendingPictureFragmentDialog();
-        dialogFragment.show(getSupportFragmentManager(), "pictureSendingDialog");
-
-        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        int sb2value = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, sb2value / 2, 0);
-
-        final File photoFile = new File(mUriPhotoApproval.getPath());
-
-        Callable<Void> sendToManualValidationTask = new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-
-                // 1 - Upload blog
-                CloudStorageAccount storageAccount = CloudStorageAccount.parse(Globals.AZURE_STORAGE_CONNECTION_STRING);
-                CloudBlobClient blobClient = storageAccount.createCloudBlobClient();
-                CloudBlobContainer container = blobClient.getContainerReference("pictures");
-
-                CloudBlockBlob blob = container.getBlockBlobReference(photoFile.getName());
-                //AccessCondition ac = new AccessCondition();
-                blob.upload(new FileInputStream(photoFile), photoFile.length());
-
-                java.net.URI publishedUri = blob.getQualifiedUri();
-
-                Approval approval = new Approval();
-                approval.setPictureUrl(publishedUri.toString());
-                approval.setRideId(mCurrentRide.id);
-                approval.setDriverId(getUser().getRegistrationId());
-                if( emojiId != 0 )
-                    approval.setEmojiId(emojiId);
-
-                // 2 - insert new approval
-                MobileServiceTable<Approval> wamsApprovalsTable =
-                        Globals.getMobileServiceClient().getTable("approvals", Approval.class);
-                ListenableFuture<Approval> insertFuture = wamsApprovalsTable.insert(approval);
-                Futures.addCallback(insertFuture, new FutureCallback<Approval>(){
-                    @Override
-                    public void onSuccess(Approval approval) {
-
-                        if( approval == null ) {
-                            Globals.__log(LOG_TAG, getString(R.string.approval_add_failed) + mCurrentRide.id);
-                            return;
-                        }
-
-                        Globals.__log(LOG_TAG, String.format(Locale.getDefault(),
-                                                            getString(R.string.approval_add_format),
-                                                            mCurrentRide.id, approval.Id));
-
-                        // 3 - update ride
-                        mCurrentRide.setApproved(Globals.RIDE_STATUS.BE_VALIDATED_MANUALLY.ordinal());
-                        ListenableFuture<Ride> _rideFuture = mRidesTable.update(mCurrentRide);
-                        Futures.addCallback(_rideFuture, new FutureCallback<Ride>() {
-                            @Override
-                            public void onSuccess(Ride result) {
-
-                                // 4 - create new crashlytics event
-                                CustomEvent requestEvent = new CustomEvent(getString(R.string.approval_answer_name));
-                                requestEvent.putCustomAttribute("User", getUser().getRegistrationId());
-
-                                if( Fabric.isInitialized() )
-                                    Answers.getInstance().logCustom(requestEvent);
-
-                                beepSuccess.start();
-
-                            }
-
-                            @Override
-                            public void onFailure(Throwable t) {
-                                Globals.__logException(t);
-                                beepError.start();
-                            }
-                        });
-
-                    }
-                    @Override
-                    public void onFailure(Throwable t) {
-                        Globals.__logException(t);
-                        beepError.start();
-                    }
-                });
-
-                return null;
-            }
-        };
-
-        ExecutorService service = Executors.newFixedThreadPool(1);
-        ListeningExecutorService executor = MoreExecutors.listeningDecorator(service);
-        executor.submit(sendToManualValidationTask);
-    }
 
     public void onAppealCamera(){
 
@@ -1919,25 +1901,29 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     .show();
         }
 
-
         try {
 
             Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
 
                 try {
-                    mUriPhotoApproval = createImageFile();
+                    mPhotoFile = createImageFile();
+                    Globals.__log(LOG_TAG, "Photo file created: " + mPhotoFile.getPath());
                 } catch (IOException e) {
                     Globals.__logException(e);
                 }
 
-                if (mUriPhotoApproval != null) {
+                if (mPhotoFile != null) {
 
-                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mUriPhotoApproval);
+                    Uri photoUri = FileProvider.getUriForFile(this,
+                                                              "com.labs.okey.oneride",
+                                                              mPhotoFile);
+
+                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
                     takePictureIntent.putExtra("android.intent.extras.CAMERA_FACING",
                             Camera.CameraInfo.CAMERA_FACING_FRONT);
-                    takePictureIntent.putExtra(MediaStore.EXTRA_SCREEN_ORIENTATION,
-                            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+//                    takePictureIntent.putExtra(MediaStore.EXTRA_SCREEN_ORIENTATION,
+//                            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
                     startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
                 }
             }
@@ -1946,20 +1932,19 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     }
 
-    private Uri createImageFile() throws IOException {
+    private File createImageFile() throws IOException {
 
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String photoFileName = "ApprovalJPEG_" + timeStamp + "_";
-
-        File storageDir = getExternalFilesDir(null);
+        String photoFileName = "OneRide" + timeStamp;
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 
         File photoFile = File.createTempFile(
-                photoFileName,  /* prefix */
+                photoFileName,   /* prefix */
                 ".jpg",         /* suffix */
                 storageDir      /* directory */
         );
 
-        return Uri.fromFile(photoFile);
+        return photoFile;
     }
 
     private void addPassengerFace(int at, UUID faceID, String faceURI) {
@@ -2173,7 +2158,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             return new MaterialDialog.Builder(activity)
                     .title(R.string.picture_required_dialog_title)
-                    .iconRes(R.drawable.ic_camera_blue)
+                    .iconRes(R.drawable.selfie_office)
                     .customView(customDialog, false) // do not wrap in scroll
                     .positiveText(android.R.string.ok)
                     .cancelable(false)
