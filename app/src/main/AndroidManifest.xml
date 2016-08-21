@@ -118,19 +118,16 @@
         <activity
             android:name=".AppealCameraActivity"
             android:label="@string/title_activity_camera_appeal" />
-        <!-- <activity -->
-        <!-- android:name=".CameraCVActivity" -->
-        <!-- android:label="@string/title_activity_camera_cv" -->
-        <!-- android:screenOrientation="landscape" -->
-        <!-- android:theme="@android:style/Theme.NoTitleBar.Fullscreen" /> -->
 
-
-        <!-- <receiver android:name=".utils.sms.SMSReceiver" -->
-        <!-- android:permission="android.permission.BROADCAST_SMS"> -->
-        <!-- <intent-filter android:priority="999"> -->
-        <!-- <action android:name="android.provider.Telephony.SMS_RECEIVED" /> -->
-        <!-- </intent-filter> -->
-        <!-- </receiver> -->
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.labs.okey.oneride"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths"></meta-data>
+        </provider>
 
         <receiver
             android:name="com.microsoft.windowsazure.notifications.NotificationsBroadcastReceiver"
