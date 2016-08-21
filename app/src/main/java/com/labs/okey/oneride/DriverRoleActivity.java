@@ -46,6 +46,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -116,6 +117,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -162,7 +164,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     private MobileServiceTable<Ride>            mRidesTable;
     String                                      mCarNumber;
-    Uri                                         mUriPhotoApproval;
+    File                                        mPhotoFile;
     private String                              mRideCode;
     private int                                 mEmojiID = 0;
     public void setEmojiId(int value) {
@@ -381,7 +383,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             bInitializedBeforeRotation = true;
 
             String str = savedInstanceState.getString(Globals.PARCELABLE_KEY_APPROVAL_PHOTO_URI);
-            mUriPhotoApproval = Uri.parse(str);
+            mPhotoFile = new File(str);
+            Globals.__log(LOG_TAG, "Photo file restored: " + mPhotoFile.getPath());
         }
 
         if (savedInstanceState.containsKey(Globals.PARCELABLE_KEY_EMOJIID)) {
@@ -445,8 +448,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
             outState.putSerializable(Globals.PARCELABLE_KEY_PASSENGERS_FACE_IDS, Globals.get_PassengerFaces());
 
-            if( mUriPhotoApproval != null)
-                outState.putString(Globals.PARCELABLE_KEY_APPROVAL_PHOTO_URI, mUriPhotoApproval.toString());
+            if( mPhotoFile != null) {
+                outState.putString(Globals.PARCELABLE_KEY_APPROVAL_PHOTO_URI, mPhotoFile.toString());
+                Globals.__log(LOG_TAG, "Photo file saved: " + mPhotoFile.getPath());
+            }
 
             outState.putInt(Globals.PARCELABLE_KEY_EMOJIID, mEmojiID);
 
@@ -749,7 +754,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             IntentFilter filter = new IntentFilter();
             filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
             registerReceiver(mBtReceiver, filter); // Don't forget to unregister during onDestroy
-        } catch(IllegalArgumentException e) {
+        } catch(Exception e) {
             // There is no API to check if a receiver is registered.
             // When trying to register it for more than first time, the IllegalArgumentException
             // is raised. Here this exception may be safely ignored.
@@ -875,17 +880,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 //String blobName = photoFile.getName();
                 CloudBlockBlob blob = container.getBlockBlobReference(blobName);
                 blob.getProperties().setContentType("image/jpg");
-//                long photoFileLength = photoFile.length();
-//                Globals.__log(LOG_TAG, String.format(Locale.getDefault(),
-//                        "Photo file. Name: %s. length: %d",
-//                        blobName, photoFileLength));
 
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos);
                 ByteArrayInputStream bs = new ByteArrayInputStream(bos.toByteArray());
                 blob.upload(bs, bs.available());
-
-                //blob.upload(new FileInputStream(photoFile), photoFileLength);
 
                 java.net.URI publishedUri = blob.getQualifiedUri();
 
@@ -968,75 +967,39 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if( requestCode == REQUEST_IMAGE_CAPTURE
                 && resultCode == RESULT_OK) {
 
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    Bitmap imageBitmap = null;
+            Bitmap imageBitmap = null;
 
-                    if( data == null ) {
-                        Globals.__log(LOG_TAG, "Intent NULL, File: " + mUriPhotoApproval.getPath());
+            if( data == null ) {
+                Globals.__log(LOG_TAG, "Intent NULL, File: " + mPhotoFile.getPath());
 
-                        try {
-                            BitmapFactory.Options options = new BitmapFactory.Options();
-                            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-                            //options.inSampleSize = 2;
-                            imageBitmap = BitmapFactory.decodeFile(mUriPhotoApproval.getPath(), options);
-                        } catch(Exception e) {
-                            Globals.__logException(e);
-                        }
-                    } else {
-                        Globals.__log(LOG_TAG, "Getting image from intent");
-                        Bundle extras = data.getExtras();
-                        imageBitmap = (Bitmap) extras.get("data");
-                    }
-
-                    if( imageBitmap != null ) {
-
-                        final File photoFile = new File(mUriPhotoApproval.getPath());
-                        sendToValidateManually(photoFile.getName(),
-                                imageBitmap,
-                                getmEmojiID());
-                    } else {
-                        Globals.__log(LOG_TAG, getString(R.string.picture_not_acquired));
-
-                        View v = findViewById(R.id.passenger_snackbar);
-                        if( v != null )
-                            Snackbar.make(v, R.string.picture_not_acquired, Snackbar.LENGTH_LONG)
-                                    .show();
-                    }
+                try {
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                    options.inSampleSize = 2;
+                    imageBitmap = BitmapFactory.decodeFile(mPhotoFile.getPath(), options);
+                } catch(Exception e) {
+                    Globals.__logException(e);
                 }
-            }, 2000);
+            } else {
+                Globals.__log(LOG_TAG, "Getting image from intent");
+                Bundle extras = data.getExtras();
+                imageBitmap = (Bitmap) extras.get("data");
+            }
 
+            if( imageBitmap != null ) {
 
+                final File photoFile = new File(mPhotoFile.getPath());
+                sendToValidateManually(photoFile.getName(),
+                        imageBitmap,
+                        getmEmojiID());
+            } else {
+                Globals.__log(LOG_TAG, getString(R.string.picture_not_acquired));
 
-
-//            try {
-//
-//                View view = mApprovalDialog.getCustomView();
-//                if( view == null)
-//                    return;
-//
-//                ImageView imageViewAppeal =  (ImageView)view.findViewById(R.id.imageViewApproval);
-//                if( imageViewAppeal != null ) {
-//
-//                    Drawable drawable = imageViewAppeal.getDrawable();
-//                    if( drawable != null ) {
-//                        ((BitmapDrawable) drawable).getBitmap().recycle();
-//                    }
-//
-//                    // Downsample the image to consume less memory
-//                    BitmapFactory.Options options = new BitmapFactory.Options();
-//                    options.inSampleSize = 2;
-//                    Bitmap bitmap = BitmapFactory.decodeFile(mUriPhotoApproval.getPath(), options);
-//                    imageViewAppeal.setImageBitmap(bitmap);
-//                }
-//
-//                mApprovalDialog.show();
-//
-//            } catch (Exception e) {
-//                Globals.__logException(e);
-//            }
+                View v = findViewById(R.id.passenger_snackbar);
+                if( v != null )
+                    Snackbar.make(v, R.string.picture_not_acquired, Snackbar.LENGTH_LONG)
+                            .show();
+            }
 
         } else if( requestCode == WIFI_CONNECT_REQUEST ) {
 
@@ -1944,15 +1907,19 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
 
                 try {
-                    mUriPhotoApproval = createImageFile();
-                    Globals.__log(LOG_TAG, "Photo file created: " + mUriPhotoApproval.getPath());
+                    mPhotoFile = createImageFile();
+                    Globals.__log(LOG_TAG, "Photo file created: " + mPhotoFile.getPath());
                 } catch (IOException e) {
                     Globals.__logException(e);
                 }
 
-                if (mUriPhotoApproval != null) {
+                if (mPhotoFile != null) {
 
-                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, mUriPhotoApproval);
+                    Uri photoUri = FileProvider.getUriForFile(this,
+                                                              "com.labs.okey.oneride",
+                                                              mPhotoFile);
+
+                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
                     takePictureIntent.putExtra("android.intent.extras.CAMERA_FACING",
                             Camera.CameraInfo.CAMERA_FACING_FRONT);
 //                    takePictureIntent.putExtra(MediaStore.EXTRA_SCREEN_ORIENTATION,
@@ -1965,20 +1932,19 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     }
 
-    private Uri createImageFile() throws IOException {
+    private File createImageFile() throws IOException {
 
-//        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-//        String photoFileName = "Approval_" + timeStamp + "_";
-
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String photoFileName = "OneRide" + timeStamp;
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 
         File photoFile = File.createTempFile(
-                "OneRide", //photoFileName,  /* prefix */
+                photoFileName,   /* prefix */
                 ".jpg",         /* suffix */
                 storageDir      /* directory */
         );
 
-        return Uri.fromFile(photoFile);
+        return photoFile;
     }
 
     private void addPassengerFace(int at, UUID faceID, String faceURI) {

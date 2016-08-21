@@ -332,7 +332,7 @@ limitations under the License.</string>
     <string name="instruction_advanced_mode">Each passenger should make a self-picture</string>
 
     <string name="ride_upload_failed">Something goes wrong. The ride was terminated unexpectedly</string>
-    <string name="picture_not_acquired" translatable="false">An internal error prevented to acquire picture. Please start the ride again</string>
+    <string name="picture_not_acquired" translatable="false">An internal error prevented to acquire picture. It\'s may be useful to restart the app</string>
     <string name="ride_uploaded">Your ride is uploaded</string>
     <string name="ride_not_uploaded">The ride has not been uploaded</string>
     <string name="location_inaccurate">Location is inaccurate. Considered as out of Gfs</string>
