@@ -470,7 +470,6 @@ public class Globals {
     public static String PARCELABLE_KEY_EMPTY_TEXT_SHOWN = "empty_text_shown";
     public static String PARCELABLE_KEY_SUBMIT_BUTTON_SHOWN = "submit_button_shown";
     public static String PARCELABLE_KEY_PASSENGER_PREFIX = "thumb_";
-    public static String PARCELABLE_KEY_APPEAL_DIALOG_SHOWN = "appeak_shown";
     public static String PARCELABLE_KEY_RIDES_HISTORY = "rides_history";
     public static String PARCELABLE_KEY_DIALOG_MESSAGE = "dialog_Message";
     public static String PARCELABLE_LOCATION = "currentLocation";

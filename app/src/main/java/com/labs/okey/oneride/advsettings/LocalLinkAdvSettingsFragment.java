@@ -2,11 +2,8 @@ package com.labs.okey.oneride.advsettings;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.ShareCompat;
-import android.support.v4.widget.TextViewCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -145,7 +142,7 @@ public class LocalLinkAdvSettingsFragment extends Fragment
             break;
 
             case R.id.cbTablesScan: {
-                Log.d(LOG_TAG, String.format("TableScan checked: %d", isChecked));
+                Log.d(LOG_TAG, String.format("TableScan checked: %b", isChecked));
 
                 SharedPreferences.Editor editor = mSharedPrefs.edit();
                 editor.putBoolean(Globals.PREF_SCAN_MODE, isChecked);
