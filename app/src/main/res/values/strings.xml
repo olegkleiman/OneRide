@@ -332,6 +332,7 @@ limitations under the License.</string>
     <string name="instruction_advanced_mode">Each passenger should make a self-picture</string>
 
     <string name="ride_upload_failed">Something goes wrong. The ride was terminated unexpectedly</string>
+    <string name="picture_not_acquired" translatable="false">An internal error prevented to acquire picture. It\'s may be useful to restart the app</string>
     <string name="ride_uploaded">Your ride is uploaded</string>
     <string name="ride_not_uploaded">The ride has not been uploaded</string>
     <string name="location_inaccurate">Location is inaccurate. Considered as out of Gfs</string>
@@ -347,8 +348,8 @@ limitations under the License.</string>
 
     <string name="title_activity_adv_settings" translatable="false">Advanced Settings</string>
     <string name="txt_rssi_level">RSSI Level: </string>
-    <string name="local_link_transport">Transport</string>
-    <string name="local_link_discovery">Discovery</string>
+    <string name="local_link_transport" translatable="false">Transport</string>
+    <string name="local_link_discovery" translatable="false">Discovery (for Android leq 4.1)</string>
     <string name="push_notifications_transport">Push Notifications</string>
     <string name="table_scan_transport">Remote table scan</string>
     <string name="sockets_transport">Sockets</string>
