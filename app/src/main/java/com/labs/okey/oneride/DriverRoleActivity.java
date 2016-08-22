@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -977,6 +978,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     options.inPreferredConfig = Bitmap.Config.ARGB_8888;
                     options.inSampleSize = 2;
                     imageBitmap = BitmapFactory.decodeFile(mPhotoFile.getPath(), options);
+
+                    mPhotoFile.delete();
+
                 } catch(Exception e) {
                     Globals.__logException(e);
                 }
@@ -1915,9 +1919,22 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                 if (mPhotoFile != null) {
 
-                    Uri photoUri = FileProvider.getUriForFile(this,
-                                                              "com.labs.okey.oneride",
-                                                              mPhotoFile);
+                    Context context = getApplicationContext();
+
+                    String packageName = context.getPackageName();
+
+                    Uri photoUri = FileProvider.getUriForFile(this, packageName, mPhotoFile);
+
+                    // Grant permissions to photo file URI
+                    // to all candidates that may be used as camera app
+                    List<ResolveInfo> resInfoList =
+                            context.getPackageManager().queryIntentActivities(takePictureIntent,
+                                                                              PackageManager.MATCH_DEFAULT_ONLY);
+                    for(ResolveInfo resolveInfo : resInfoList) {
+                        String _packageName = resolveInfo.activityInfo.packageName;
+                        context.grantUriPermission(_packageName, photoUri,
+                                Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    }
 
                     takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
                     takePictureIntent.putExtra("android.intent.extras.CAMERA_FACING",
