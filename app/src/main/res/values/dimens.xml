@@ -29,6 +29,12 @@
     <dimen name="card_backpanel_height">64dp</dimen>
     <dimen name="card_backpanel_height_landscape">32dp</dimen>
     <dimen name="card_horizontal_margin">16dp</dimen>
+    <dimen name="card_vertical_margin">6dp</dimen>
+
+    <dimen name="fab_horizontal_margin">4dp</dimen>
+    <dimen name="fab_vertical_margin">4dp</dimen>
+    <dimen name="fab_elevation">6dp</dimen>
+
     <dimen name="negativeActionBarSize">-62dp</dimen>
     <dimen name="snackbar_height">64dp</dimen>
     <dimen name="snackbar_detection_height">48dp</dimen>
@@ -39,7 +45,6 @@
 
     <dimen name="elevation_low">1dp</dimen>
     <dimen name="elevation_high">4dp</dimen>
-    <dimen name="fab_margin">16dp</dimen>
     <dimen name="appbar_padding_top">8dp</dimen>
 
 </resources>

@@ -887,6 +887,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 //        _mDrivers.clear();
 //        _mDriversAdapter.notifyDataSetChanged();
 
+        if( mBluetoothAdapter != null ) {
+            if( mBluetoothAdapter.isDiscovering() )
+                mBluetoothAdapter.cancelDiscovery();
+        }
+
         btStartDiscovery();
     }
 

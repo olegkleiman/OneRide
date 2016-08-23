@@ -134,6 +134,9 @@ dependencies {
     // See https://github.com/umano/AndroidSlidingUpPanel
     compile 'com.sothree.slidinguppanel:library:3.3.0'
 
+    // See https://github.com/xiprox/ErrorView
+    compile 'com.github.xiprox.errorview:library:2.+'
+
     androidTestCompile 'junit:junit:4.12'
 }
 

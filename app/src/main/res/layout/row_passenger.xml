@@ -41,33 +41,21 @@
                 android:src="@drawable/ic_camera_blue"
                 android:layout_gravity="center_vertical"
                 android:layout_alignBottom="@+id/userPicture"
-                android:layout_toStartOf="@+id/linearLayout"
-                android:layout_toLeftOf="@+id/linearLayout"
                 android:layout_marginRight="-8dp"
                 android:layout_marginEnd="-8dp"
                 android:layout_marginBottom="-2dp"
                 android:visibility="visible" />
 
-            <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="fill_parent"
-                android:layout_height="72dp"
-                android:layout_marginBottom="4dp"
-                android:layout_marginStart="18dp"
-                android:layout_marginLeft="18dp"
-                android:gravity="center_vertical|start"
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:id="@+id/txt_peer_name"
+                android:text="Passenger Name"
+                android:layout_centerVertical="true"
                 android:layout_toEndOf="@+id/userPicture"
                 android:layout_toRightOf="@+id/userPicture"
-                android:id="@+id/linearLayout">
-
-                <TextView
-                    android:layout_height="wrap_content"
-                    android:layout_width="match_parent"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:id="@+id/txt_peer_name"
-                    android:text="Passenger Name"/>
-
-            </LinearLayout>
+                android:layout_marginLeft="8dp" />
 
 
         </RelativeLayout>

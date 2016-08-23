@@ -80,7 +80,7 @@
                 android:id="@+id/user_details_card"
                 android:layout_width="fill_parent"
                 app:cardElevation="4dp"
-                android:layout_height="120dp"
+                android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:layout_marginLeft="@dimen/card_horizontal_margin"
                 android:layout_marginRight="@dimen/card_horizontal_margin"
@@ -98,7 +98,7 @@
                         android:layout_marginStart="12dp"
                         android:layout_marginLeft="12dp"
                         android:id="@+id/imageView"
-                        android:src="@drawable/ic_action_email"
+                        android:src="@drawable/ic_email_blue_24dp"
                         android:layout_gravity="center_vertical" />
 
                     <TextView
@@ -124,7 +124,7 @@
                         android:layout_marginStart="12dp"
                         android:layout_marginLeft="12dp"
                         android:id="@+id/imageView2"
-                        android:src="@drawable/ic_action_phone"
+                        android:src="@drawable/ic_phone_blue_24dp"
                         android:layout_gravity="center_vertical" />
 
                     <TextView
@@ -161,7 +161,7 @@
                 android:layout_marginLeft="@dimen/card_horizontal_margin"
                 android:layout_marginRight="@dimen/card_horizontal_margin"
                 android:layout_marginBottom="@dimen/card_horizontal_margin"
-                android:layout_marginTop="@dimen/card_horizontal_margin">
+                android:layout_marginTop="@dimen/card_vertical_margin">
 
                 <ListView
                     android:layout_width="wrap_content"
@@ -173,7 +173,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/ic_action_add"
-                    app:elevation="4dp"
+                    app:elevation="@dimen/fab_elevation"
 
                     app:layout_anchorGravity="bottom|right|end"
 
@@ -183,9 +183,10 @@
                     app:backgroundTint="@color/ColorAccent"
                     app:borderWidth="0dp"
                     android:onClick="onAddCar"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginBottom="16dp"
+
+                    android:layout_marginEnd="@dimen/fab_horizontal_margin"
+                    android:layout_marginRight="@dimen/fab_horizontal_margin"
+                    android:layout_marginBottom="@dimen/fab_vertical_margin"
 
                     android:layout_alignParentBottom="true"
                     android:layout_alignParentLeft="true"

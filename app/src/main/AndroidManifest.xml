@@ -159,10 +159,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.labs.okey.oneride.SettingsActivity" />
         </activity>
-        <activity
-            android:name=".CameraCVActivity"
-            android:label="@string/title_activity_camera_cv"
-            android:theme="@style/AppTheme" />
     </application>
 
 </manifest>
