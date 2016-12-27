@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.labs.okey.oneride">
 
     <!-- FCM (GCM) permissions. See https://developers.google.com/cloud-messaging/android/client#manifest -->
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <uses-permission android:name="android.permission.INTERNET" android:required="true" />
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        android:required="true" />
 
     <!-- Needed if camera pictures are stored locally -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -98,7 +101,8 @@
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
             android:label="@string/app_name"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            tools:replace="android:theme" />
         <activity
             android:name=".AboutActivity"
             android:label="@string/title_activity_about" />
@@ -159,6 +163,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.labs.okey.oneride.SettingsActivity" />
         </activity>
+
+        <service
+            android:name=".services.ChildEventListenerService"
+            android:enabled="true"
+            android:exported="false"></service>
     </application>
 
 </manifest>
