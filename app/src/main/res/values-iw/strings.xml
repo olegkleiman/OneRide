@@ -156,6 +156,8 @@
     <string name="uploading">שליחת תמונה</string>
     <string name="approval_sending_title">תמונתך נשחלת לבדיקה</string>
     <string name="approval_send_future">סטטוס הנסיעה יופיע במסך \'נסיעות שלי\'.</string>
+    <string name="picture_request">בקשה לתמונה</string>
+    <string name="registration_exists">חשבון משתמש זה כבר רשום במערכת. להחליף את הרישום הקודם?</string>
 
 
 </resources>
