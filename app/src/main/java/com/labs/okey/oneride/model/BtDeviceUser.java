@@ -48,6 +48,10 @@ public class BtDeviceUser implements Parcelable {
         _rssi = value;
     }
 
+    public BluetoothDevice getDevice() {
+        return mBluetoothDevice;
+    }
+
     public int getStatus() {
         return mBluetoothDevice.getBondState();
     }
