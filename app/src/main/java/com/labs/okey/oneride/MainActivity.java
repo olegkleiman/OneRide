@@ -145,11 +145,28 @@ public class MainActivity extends BaseActivity
         String accessTokenSecret = sharedPrefs.getString(Globals.TOKENSECRET_PREF, "");
         String authorizationToken = sharedPrefs.getString(Globals.AUTHORIZATION_CODE_PREF, "");
 
+        boolean bNotificationsMode = sharedPrefs.getBoolean(Globals.PREF_PUSH_MODE, true);
+        Globals.setPushNotificationsModeEnabled(bNotificationsMode);
+        bNotificationsMode = sharedPrefs.getBoolean(Globals.PREF_REALTIMEDB__MODE, true);
+        Globals.setRealtimeDbNotificationsMode(bNotificationsMode);
+        bNotificationsMode = sharedPrefs.getBoolean(Globals.PREF_SOCKETS_MODE, false);
+        Globals.setSocketsNotificationsMode(bNotificationsMode);
+
         // Don't confuse with BaseActivity.wamsInit();
         if (!wamsInit()) {
-            if (!login(accessToken, accessTokenSecret, authorizationToken)) {
-                // TBD: provide UI error for login failure
-                Globals.__log(LOG_TAG, "WAMS login failed");
+
+            try {
+
+                if (!login(accessToken, accessTokenSecret, authorizationToken)) {
+                    // TBD: provide UI error for login failure
+                    Globals.__log(LOG_TAG, "WAMS login failed");
+                }
+            } catch(AssertionError ex) {
+
+                clearRegistrationAndLogOff();
+
+                Intent intent = new Intent(this, RegisterActivity.class);
+                startActivity(intent);
             }
         }
 
