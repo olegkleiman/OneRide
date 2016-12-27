@@ -154,6 +154,7 @@
     <string name="no_passengers_placeholder">Список пассажиров пуст\n.Необходимо %d пассажиров</string>
     <string name="uploading">Загрузка фотографии</string>
     <string name="approval_sending_title">Ваша фотография загружается</string>
+    <string name="picture_request">Запрос на фотографию</string>
 
 
 </resources>
