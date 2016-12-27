@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -31,6 +32,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
@@ -65,6 +67,7 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.answers.Answers;
 import com.crashlytics.android.answers.CustomEvent;
 import com.github.brnunes.swipeablerecyclerview.SwipeableRecyclerViewTouchListener;
@@ -85,6 +88,12 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.labs.okey.oneride.adapters.PassengersAdapter;
 import com.labs.okey.oneride.model.Approval;
 import com.labs.okey.oneride.model.GFCircle;
@@ -93,11 +102,14 @@ import com.labs.okey.oneride.model.PassengerFace;
 import com.labs.okey.oneride.model.Ride;
 import com.labs.okey.oneride.model.User;
 import com.labs.okey.oneride.model.WifiP2pDeviceUser;
+import com.labs.okey.oneride.services.ChildEventListenerService;
 import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.ITrace;
 import com.labs.okey.oneride.utils.IUploader;
 import com.labs.okey.oneride.utils.RoundedDrawable;
 import com.labs.okey.oneride.utils.UiThreadExecutor;
+import com.labs.okey.oneride.utils.bt.BtAcceptThread;
+import com.labs.okey.oneride.utils.bt.BtChatService;
 import com.labs.okey.oneride.utils.faceapiUtils;
 import com.labs.okey.oneride.utils.wifip2p.P2pConversator;
 import com.labs.okey.oneride.utils.wifip2p.P2pPreparer;
@@ -105,6 +117,7 @@ import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
+import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
 import junit.framework.Assert;
@@ -115,6 +128,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -129,6 +144,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -175,7 +192,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         return mEmojiID;
     }
 
-
     private P2pPreparer                         mP2pPreparer;
     private P2pConversator                      mP2pConversator;
 
@@ -186,6 +202,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     Ride                                        mCurrentRide;
 
+    // Firebase staff
+    DatabaseReference                           mRidesRef;
+    DatabaseReference                           mCurrentRideRef;
+    // End Firebase staff
+
     private AtomicBoolean                       mRideCodeUploaded = new AtomicBoolean(false);
 
     // codes handled in onActivityResult()
@@ -193,7 +214,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     final int                                   BT_REQUEST_DISCOVERABLE_CODE = 101;
     final int                                   REQUEST_IMAGE_CAPTURE = 1000;
 
-    private Handler handler = new Handler(this);
+    private Handler handler = new Handler(this);//Looper.getMainLooper());
 
     public Handler getHandler() {
         return handler;
@@ -207,6 +228,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private boolean                             mEmptyTextShown = true;
 
     private BluetoothAdapter                    mBluetoothAdapter;
+    private BtChatService                       mBluetoothChatService;
+    private Timer                               mBluetoothWatchTimer;
 
     private final BroadcastReceiver mBtReceiver = new BroadcastReceiver() {
         @Override
@@ -588,15 +611,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         int rideCode = r.nextInt(max - min + 1) + min;
         mRideCode = Integer.toString(rideCode);
 
-        TextView txtRideCodeCaption = (TextView)findViewById(R.id.code_label_caption);
-        if( txtRideCodeCaption != null )
-            txtRideCodeCaption.setText(R.string.ride_code_label);
-
-        TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
-        if( txtRideCode != null ) {
-            txtRideCode.setVisibility(View.VISIBLE);
-            txtRideCode.setText(mRideCode);
-        }
+        showRideCode();
 
         List<String> _cars = new ArrayList<>();
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -685,6 +700,30 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     }
 
+    private void showRideCode(){
+        TextView txtRideCodeCaption = (TextView)findViewById(R.id.code_label_caption);
+        if( txtRideCodeCaption != null )
+            txtRideCodeCaption.setText(R.string.ride_code_label);
+
+        TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
+        if( txtRideCode != null ) {
+            txtRideCode.setVisibility(View.VISIBLE);
+            txtRideCode.setText(mRideCode);
+        }
+    }
+
+    private void hideRideCode(){
+        TextView txtRideCodeCaption = (TextView)findViewById(R.id.code_label_caption);
+        if( txtRideCodeCaption != null )
+            txtRideCodeCaption.setText(R.string.picture_request);
+
+        TextView txtRideCode = (TextView) findViewById(R.id.txtRideCode);
+        if( txtRideCode != null ) {
+            txtRideCode.setVisibility(View.VISIBLE);
+            txtRideCode.setText("");
+        }
+    }
+
     private void startTransmitAnimation() {
         if( mImageTransmit != null ) {
             mImageTransmit.setVisibility(View.VISIBLE);
@@ -698,6 +737,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             mImageTransmit.setVisibility(View.VISIBLE);
             AnimationDrawable animationDrawable = (AnimationDrawable) mImageTransmit.getDrawable();
             animationDrawable.stop();
+        }
+    }
+
+    private void hideTransmitAnimation() {
+        if( mImageTransmit != null ) {
+            mImageTransmit.setVisibility(View.GONE);
         }
     }
 
@@ -721,7 +766,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     }
 
-    private void btRestore() {
+    private void btStopAdvertise() {
 
         try {
             if( Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2 ) {
@@ -740,12 +785,53 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             Globals.__log(LOG_TAG, "Safely dismiss unregisterReceiver");
         }
 
+        btRestoreFriendlyName();
+    }
+
+    private void btRestoreFriendlyName() {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String bluetoothOriginalName = prefs.getString("btOriginalName", "");
 
         if( mBluetoothAdapter != null )
             mBluetoothAdapter.setName(bluetoothOriginalName);
+    }
+
+    private void btStartAcceptingConnections() {
+        mBluetoothChatService = new BtChatService(this, mBluetoothAdapter, getHandler());
+        mBluetoothChatService.start();
+
+//        mBluetoothWatchTimer = new Timer();
+//        mBluetoothWatchTimer.scheduleAtFixedRate( new TimerTask() {
+//            @Override
+//            public void run() {
+//
+//                for(BluetoothSocket socket : mBluetoothAcceptThread.getConnectedSockets() ) {
+//                    if( !socket.isConnected() ) {
+//                        mBluetoothAcceptThread.removeSocket(socket);
+//                        Globals.__log(LOG_TAG, "socket disconnected");
+//                    } else {
+//                        try {
+//                            OutputStream outputStream = socket.getOutputStream();
+//                            outputStream.write("ping".getBytes());
+//                            outputStream.close();
+//
+//                            String deviceName = socket.getRemoteDevice().getName();
+//                            Globals.__log(LOG_TAG, "Pinged " + deviceName);
+//
+//                        } catch(IOException e) {
+//                            Globals.__logException(LOG_TAG, e);
+//                        }
+//                    }
+//                }
+//            }
+//        }, 1000, 5000);
+    }
+
+    private void btStopAcceptingConnections() {
+
+        if( mBluetoothWatchTimer != null )
+            mBluetoothWatchTimer.cancel();
     }
 
     private void btStartAdvertise() {
@@ -809,6 +895,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             method.invoke(mBluetoothAdapter, BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE,
                     duration);
             Globals.__log(LOG_TAG, "setScanMode() invoked successfully");
+
+            btStartAcceptingConnections();
         }
     }
 
@@ -881,6 +969,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 //String blobName = photoFile.getName();
                 CloudBlockBlob blob = container.getBlockBlobReference(blobName);
                 blob.getProperties().setContentType("image/jpg");
+                blob.getMetadata().put("", "");
 
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos);
@@ -1011,6 +1100,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             // How to distinguish between successful connection
             // and just pressing back from there?
             wamsInit(true);
+
+        } else if( requestCode == BT_REQUEST_DISCOVERABLE_CODE ) {
+
+            btStartAcceptingConnections();
 
         } else if( (requestCode >= 1 && requestCode <= 4 )  // passengers selfies
                 && resultCode == RESULT_OK ) {
@@ -1255,9 +1348,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     @CallSuper
     protected void onDestroy() {
 
-        if( !isChangingConfigurations() ) // Do not cancel BT transmission
-                                          // when display orientation changed
-            btRestore();
+        if( !isChangingConfigurations() ) { // Do not cancel BT transmission
+            // when display orientation changed
+            btStopAdvertise();
+            btStopAcceptingConnections();
+        }
 
         Globals.setDriverActivity(null);
 
@@ -1391,9 +1486,12 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     Globals.__log(LOG_TAG, "Picture required");
 
                     if( Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2 ) {
-                        btRestore();
+                        btStopAdvertise();
                     }
+
                     stopTransmitAnimation();
+                    hideTransmitAnimation();
+                    hideRideCode();
 
                     if( Globals.APPLY_CHALLENGE ) {
                         runOnUiThread(new Runnable() {
@@ -1431,8 +1529,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         });
                     }
                 }
-                else
+                else {
+                    startTransmitAnimation();
                     Globals.__log(LOG_TAG, "Picture IS NOT required");
+                }
             }
 
             @Override
@@ -1452,6 +1552,43 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         });
     }
 
+    private void processJoinNotification(final String userId) {
+        final MobileServiceTable<User> usersTable = Globals.getMobileServiceClient()
+                .getTable("users", User.class);
+        ListenableFuture<MobileServiceList<User>> future =
+                usersTable.where().field("registration_id").eq(userId).execute();
+        Futures.addCallback(future, new FutureCallback<MobileServiceList<User>>() {
+            @Override
+            public void onSuccess(MobileServiceList<User> users) {
+                User passenger = users.get(0);
+
+                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                final boolean allowSamePassengers = sharedPrefs.getBoolean(Globals.PREF_ALLOW_SAME_PASSENGERS, false);
+
+                boolean bIsAlreadyJoined = isPassengerJoined(passenger);
+
+                if( allowSamePassengers )
+                    bIsAlreadyJoined = false;
+
+                if( !bIsAlreadyJoined ) {
+                    addPassenger(passenger, allowSamePassengers);
+
+                    String title = getApplicationContext().getResources().getString(R.string.app_label);
+                    String format = getApplicationContext().getString(R.string.notification_message_format);
+                    String _message = String.format(format, passenger.getFullName());
+                    //sendNotification(getApplicationContext(), _message, title);
+                }
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
+                    Crashlytics.logException(t);
+            }
+        });
+
+    }
+
     private ListenableFuture<Ride> asyncUploadRide(final Ride ride) {
         ExecutorService service = Executors.newFixedThreadPool(1);
         ListeningExecutorService executor = MoreExecutors.listeningDecorator(service);
@@ -1462,6 +1599,51 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     public Ride call() throws Exception {
 
                         try {
+
+                            FirebaseDatabase database = FirebaseDatabase.getInstance();
+                            mRidesRef = database.getReference("rides");
+                            mCurrentRideRef = mRidesRef.child(ride.getRideCode());
+
+                            Intent serviceIntent = new Intent(DriverRoleActivity.this,
+                                                              ChildEventListenerService.class);
+                            serviceIntent.putExtra("ridecode", mRideCode);
+                            startService(serviceIntent);
+
+//                            mCurrentRideRef.child("passengers").addChildEventListener(new ChildEventListener() {
+//                                @Override
+//                                public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
+//                                    String passengerId = dataSnapshot.getKey();
+//                                    Globals.__log(LOG_TAG, "passenger joined. UserId: " + passengerId);
+//
+//                                    processJoinNotification(passengerId);
+//                                }
+//
+//                                @Override
+//                                public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
+//                                    Globals.__log(LOG_TAG, "child changed");
+//                                }
+//
+//                                @Override
+//                                public void onChildRemoved(DataSnapshot dataSnapshot) {
+//                                    Globals.__log(LOG_TAG, "child removed");
+//                                }
+//
+//                                @Override
+//                                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+//                                    Globals.__log(LOG_TAG, "child moved");
+//                                }
+//
+//                                @Override
+//                                public void onCancelled(DatabaseError databaseError) {
+//                                    Globals.__log(LOG_TAG, databaseError.getMessage());
+//                                }
+//                            });
+
+                            Map<String, Object> driver = new HashMap<String, Object>();
+                            driver.put("started", new Date().toString());
+                            driver.put("name", ride.getDriverName());
+                            driver.put("uid",  ride.getDriverId());
+                            mCurrentRideRef.child("driver").setValue(driver);
 
                             MobileServiceTable<Ride> ridesTable = Globals.getMobileServiceClient()
                                     .getTable("rides", Ride.class);
@@ -1554,16 +1736,22 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     public boolean handleMessage(Message msg) {
 
         switch (msg.what) {
-            case Globals.TRACE_MESSAGE:
-                Bundle bundle = msg.getData();
-                String strMessage = bundle.getString("message");
-                trace(strMessage);
+            case Globals.TRACE_MESSAGE: {
+                    Bundle bundle = msg.getData();
+                    String strMessage = bundle.getString("message");
+                    trace(strMessage);
+                }
                 break;
 
-            case Globals.MESSAGE_READ:
-                byte[] buffer = (byte[]) msg.obj;
-                strMessage = new String(buffer);
-                trace(strMessage);
+            case Globals.MESSAGE_READ: {
+                    Bundle bundle = msg.getData();
+                    User passenger = (User)bundle.getParcelable("passenger");
+
+                    // Commented out just for debugging purposes.
+                    // Feel free to uncomment this line if you wand
+                    // to experiment with Bluetooth sockets
+                    //addPassenger(passenger, true);
+                }
                 break;
 
         }
@@ -2076,7 +2264,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                             }
                         })
                         .show();
-            } catch(MaterialDialog.DialogException e) {
+            } catch(Exception e) {
                 // Safely dismiss the situation when
                 // an Activity is not yet created or it's hidden
                 Globals.__logException(e);
