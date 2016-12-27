@@ -228,30 +228,42 @@ public class SplashScreen extends AppCompatActivity {
 
                         if (fbAccessToken.isExpired()) {
 
+                            mFbAccessTokenTracker = new AccessTokenTracker() {
+                                @Override
+                                protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken,
+                                                                           AccessToken currentAccessToken) {
+                                    Globals.__log(LOG_TAG, getString(R.string.log_token_changed));
+                                    AccessToken.setCurrentAccessToken(currentAccessToken);
+                                }
+                            };
+
                             final CountDownLatch refreshLatch = new CountDownLatch(1);
-                            AccessToken.refreshCurrentAccessTokenAsync(new AccessToken.AccessTokenRefreshCallback() {
-                                @Override
-                                public void OnTokenRefreshed(AccessToken accessToken) {
-                                    AccessToken.setCurrentAccessToken(accessToken);
-                                    bRes[0] = true;
 
-                                    refreshLatch.countDown();
-                                }
+                            AccessToken.refreshCurrentAccessTokenAsync();
 
-                                @Override
-                                public void OnTokenRefreshFailed(FacebookException exception) {
-                                    bRes[0] = false;
+//                            AccessToken.refreshCurrentAccessTokenAsync(new AccessToken.AccessTokenRefreshCallback() {
+//                                @Override
+//                                public void OnTokenRefreshed(AccessToken accessToken) {
+//                                    AccessToken.setCurrentAccessToken(accessToken);
+//                                    bRes[0] = true;
+//
+//                                    refreshLatch.countDown();
+//                                }
+//
+//                                @Override
+//                                public void OnTokenRefreshFailed(FacebookException exception) {
+//                                    bRes[0] = false;
+//
+//                                    refreshLatch.countDown();
+//                                }
+//
+//                            });
 
-                                    refreshLatch.countDown();
-                                }
-
-                            });
-
-                            try {
-                                refreshLatch.await();
-                            } catch (InterruptedException ex) {
-                                Globals.__logException(ex);
-                            }
+//                            try {
+//                                refreshLatch.await();
+//                            } catch (InterruptedException ex) {
+//                                Globals.__logException(ex);
+//                            }
 
                         } else {
                             Globals.initializeTokenTracker(getApplicationContext());
@@ -260,14 +272,6 @@ public class SplashScreen extends AppCompatActivity {
                     }
 
                     bRes[0] = true;
-                    mFbAccessTokenTracker = new AccessTokenTracker() {
-                        @Override
-                        protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken,
-                                                                   AccessToken currentAccessToken) {
-                            Globals.__log(LOG_TAG, getString(R.string.log_token_changed));
-                            AccessToken.setCurrentAccessToken(currentAccessToken);
-                        }
-                    };
 
                     latch.countDown();
                 }
