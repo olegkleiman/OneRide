@@ -8,11 +8,13 @@ import android.preference.PreferenceManager;
 
 import com.labs.okey.oneride.utils.Globals;
 
+import java.io.Serializable;
+
 /**
  * @author Oleg Kleiman
  * created 11-Apr-15.
  */
-public class User implements Parcelable {
+public class User implements Parcelable, Serializable {
 
     @com.google.gson.annotations.SerializedName("id")
     public String Id;
