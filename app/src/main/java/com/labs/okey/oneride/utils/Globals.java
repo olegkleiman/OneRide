@@ -132,6 +132,8 @@ public class Globals {
 
         return true;
     }
+
+
     public static MobileServiceClient getMobileServiceClient() {
         return wamsClient;
     }
@@ -213,12 +215,16 @@ public class Globals {
     }
 
     public static void __logException(Throwable e) {
+        __logException(LOG_TAG, e);
+    }
+
+    public static void __logException(String tag, Throwable e) {
         if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
             Crashlytics.logException(e);
 
         String message = e.getMessage();
         if( message != null && !message.isEmpty() )
-            Log.e(LOG_TAG, e.getMessage());
+            Log.e(tag, e.getMessage());
     }
 
     public static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
@@ -318,8 +324,32 @@ public class Globals {
 
     public static final String PREF_ALLOW_SAME_PASSENGERS = "allow_same_passengers";
     public static final String PREF_PUSH_MODE = "push_mode";
-    public static final String PREF_SCAN_MODE = "scan_mode";
+    public static final String PREF_REALTIMEDB__MODE = "scan_mode";
     public static final String PREF_SOCKETS_MODE = "sockets_mode";
+
+    private static boolean bPushNotificationsMode = true;
+    public static boolean isPushNotificationsModeEnabled() {
+        return bPushNotificationsMode;
+    }
+    public static void setPushNotificationsModeEnabled(boolean mode) {
+        bPushNotificationsMode = mode;
+    }
+
+    private static boolean bRealtimeDbNotificationsMode = true;
+    public static boolean isRealtimeDbNotificationsMode() {
+        return bRealtimeDbNotificationsMode;
+    }
+    public static void setRealtimeDbNotificationsMode(boolean mode) {
+        bRealtimeDbNotificationsMode = mode;
+    }
+
+    private static boolean bSocketsNotificationsMode = false;
+    public static boolean isSocketsNotificationsMode() {
+        return bSocketsNotificationsMode;
+    }
+    public static void setSocketsNotificationsMode(boolean mode) {
+        bSocketsNotificationsMode = mode;
+    }
 
     private static final Object lock2 = new Object();
     private static String MONITOR_STATUS;
