@@ -67,16 +67,21 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.labs.okey.oneride.adapters.BtPeersAdapter;
 import com.labs.okey.oneride.model.BtDeviceUser;
 import com.labs.okey.oneride.model.GFCircle;
 import com.labs.okey.oneride.model.Join;
+import com.labs.okey.oneride.model.User;
 import com.labs.okey.oneride.model.WifiP2pDeviceUser;
 import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.IRecyclerClickListener;
 import com.labs.okey.oneride.utils.IRefreshable;
 import com.labs.okey.oneride.utils.ITrace;
 import com.labs.okey.oneride.utils.UiThreadExecutor;
+import com.labs.okey.oneride.utils.bt.BtChatService;
+import com.labs.okey.oneride.utils.bt.BtConnectThread;
 import com.labs.okey.oneride.utils.wifip2p.P2pConversator;
 import com.labs.okey.oneride.utils.wifip2p.P2pPreparer;
 import com.microsoft.windowsazure.mobileservices.MobileServiceException;
@@ -87,8 +92,12 @@ import junit.framework.Assert;
 
 import net.steamcrafted.loadtoast.LoadToast;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -533,7 +542,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                     if( mSearchDriverDialogFragment != null ) {
                         Globals.__log(LOG_TAG, "CountDown: Dismissing dialog");
-                        mSearchDriverDialogFragment.dismiss();
+                        try {
+                            mSearchDriverDialogFragment.dismiss();
+                        } catch(IllegalStateException ex){
+                            Globals.__logException(ex);
+                        }
                     }
                 }
             }
@@ -1215,10 +1228,28 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     } catch (Exception e) {
                         Globals.__logException(e);
                     }
+
                     // The rest of params are set within WAMS insert script
                     String userId = Globals.getMobileServiceClient().getCurrentUser().getUserId();
                     Globals.__log(LOG_TAG, userId);
                     joinsTable.insert(_join).get();
+
+                    if( Globals.isRealtimeDbNotificationsMode() ) {
+
+                        FirebaseDatabase database = FirebaseDatabase.getInstance();
+                        DatabaseReference ridesRef = database.getReference("rides");
+                        DatabaseReference passengerRef = ridesRef.child(mRideCode)
+                                .child("passengers")
+                                .child(userId);
+
+                        Map<String, Object> passenger = new HashMap<String, Object>();
+                        passenger.put("name", User.load(PassengerRoleActivity.this).getFullName());
+                        SimpleDateFormat simpleDate = new SimpleDateFormat("dd MMM yyyy hh:mm:ss", Locale.US);
+                        String dt = simpleDate.format(new Date());
+                        passenger.put("when_joined", dt);
+                        passengerRef.updateChildren(passenger);
+
+                    }
 
                 } catch (ExecutionException | InterruptedException ex) {
                     mEx = ex;
@@ -1316,6 +1347,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
             if (position >= 0
                     && mRideCode == null) {
+
                 // Ride code was stored if the activity is invoked from notification
                 // In this case the position is -1 because this
                 // function is called manually (from within onNewIntent())
@@ -1324,14 +1356,39 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 BtDeviceUser driverDevice = _mDrivers.get(position);
                 Assert.assertNotNull(driverDevice);
 
+                mBluetoothAdapter.cancelDiscovery();
+
+                BluetoothDevice device = driverDevice.getDevice();
+                final BtChatService btService = new BtChatService(this, mBluetoothAdapter, null);
+                btService.connect(device, 0);
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        User thisUser = User.load(getApplicationContext());
+
+                        try {
+                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                            ObjectOutputStream oos = new ObjectOutputStream(baos);
+                            oos.writeObject(thisUser);
+                            oos.close();
+                            byte[] bytes = baos.toByteArray();
+
+                            btService.write(bytes);
+                        } catch (IOException e) {
+                            Globals.__logException(e);
+                        }
+                    }
+                }, 5000);
+
+
                 mRideCode = driverDevice.get_RideCode();
                 mDriverName = driverDevice.get_UserName();
+
+                onSubmitCode();
+
             }
 
-//            DialogFragment joinConfirmDialog = JoinConfirmDialogFragment.newInstance(mDriverName);
-//            joinConfirmDialog.show(getSupportFragmentManager(), "dialog");
-
-            onSubmitCode();
         }
 
     }
