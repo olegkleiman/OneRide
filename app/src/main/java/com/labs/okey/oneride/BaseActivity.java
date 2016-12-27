@@ -43,6 +43,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.crashlytics.android.Crashlytics;
+import com.facebook.login.LoginManager;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -237,6 +238,30 @@ public class BaseActivity extends AppCompatActivity
             return MobileServiceAuthenticationProvider.Google;
         else
             return null;
+    }
+
+    private void FB_logout(Context context) {
+        try {
+            LoginManager.getInstance().logOut();
+        } catch(Exception ex) {
+            Globals.__logException(ex);
+        }
+    }
+
+    public void clearRegistrationAndLogOff() {
+
+        FB_logout(this);
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+
+        editor.remove(Globals.REG_PROVIDER_PREF);
+        editor.remove(Globals.USERIDPREF);
+        editor.remove(Globals.TOKEN_PREF);
+        editor.remove(Globals.TOKENSECRET_PREF);
+        editor.remove(Globals.WAMSTOKENPREF);
+
+        editor.apply();
     }
 
     public void loadBitmap(int resId, ImageView imageView) {
