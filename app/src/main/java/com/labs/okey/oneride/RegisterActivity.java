@@ -99,6 +99,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import io.fabric.sdk.android.Fabric;
+import retrofit2.Call;
 
 public class RegisterActivity extends FragmentActivity
         implements ConfirmRegistrationFragment.RegistrationDialogListener,
@@ -238,30 +239,31 @@ public class RegisterActivity extends FragmentActivity
                 mAccessTokenSecret = result.data.getAuthToken().secret;
 
                 TwitterApiClient twitterApiClient = TwitterCore.getInstance().getApiClient();
-                twitterApiClient.getAccountService().verifyCredentials(false, false, new Callback<com.twitter.sdk.android.core.models.User>() {
-
-                    @Override
+                final Call<com.twitter.sdk.android.core.models.User> userResult = twitterApiClient
+                                                                            .getAccountService()
+                                                                            .verifyCredentials(true, false);
+                userResult.enqueue(new Callback<com.twitter.sdk.android.core.models.User>() {
+                   @Override
                     public void success(Result<com.twitter.sdk.android.core.models.User> userResult) {
+                       mNewUser = new User();
+                       String userID = userResult.data.idStr;
+                       mNewUser.setRegistrationId(Globals.TWITTER_PROVIDER + Globals.BT_DELIMITER + userID);
+                       String userName = userResult.data.name;
+                       String[] unTokens = userName.split(" ");
+                       mNewUser.setFirstName(unTokens[0]);
+                       mNewUser.setLastName(unTokens[1]);
 
-                        mNewUser = new User();
-                        String userID = userResult.data.idStr;
-                        mNewUser.setRegistrationId(Globals.TWITTER_PROVIDER + Globals.BT_DELIMITER + userID);
-                        String userName = userResult.data.name;
-                        String[] unTokens = userName.split(" ");
-                        mNewUser.setFirstName(unTokens[0]);
-                        mNewUser.setLastName(unTokens[1]);
+                       mNewUser.setDeviceId(mAndroidId);
+                       mNewUser.setDeviceModel(mDeviceModel);
 
-                        mNewUser.setDeviceId(mAndroidId);
-                        mNewUser.setDeviceModel(mDeviceModel);
+                       mNewUser.setPictureURL(userResult.data.profileImageUrl.replace("_normal", "_bigger"));
 
-                        mNewUser.setPictureURL(userResult.data.profileImageUrl.replace("_normal", "_bigger"));
-
-                        saveProviderAccessToken(Globals.TWITTER_PROVIDER, userID);
-                    }
+                       saveProviderAccessToken(Globals.TWITTER_PROVIDER, userID);
+                   }
 
                     @Override
-                    public void failure(TwitterException e) {
-
+                    public void failure(TwitterException exception) {
+                        Globals.__logException(exception);
                     }
                 });
 
@@ -522,9 +524,9 @@ public class RegisterActivity extends FragmentActivity
                             JSONObject object,
                             GraphResponse response) {
 
-                        try {
+                        //try {
                             JSONObject gUser = response.getJSONObject();
-                            String email = gUser.getString("email");
+                            String email = gUser.optString("email");
                             mNewUser.setEmail(email);
 
                             String regID = Globals.FB_PROVIDER + Globals.BT_DELIMITER + regId;
@@ -532,9 +534,9 @@ public class RegisterActivity extends FragmentActivity
 
                             verifyAccount(regID);
 
-                        } catch (JSONException ex) {
-                            Globals.__logException(ex);
-                        }
+                        //} catch (JSONException ex) {
+                        //    Globals.__logException(ex);
+                        //}
 
                     }
                 });
