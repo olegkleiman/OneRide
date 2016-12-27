@@ -92,8 +92,8 @@ public class LocalLinkAdvSettingsFragment extends Fragment
 
         CheckBox cbPushNotification = (CheckBox)rootView.findViewById(R.id.cbPushNotificationTransport);
         cbPushNotification.setOnCheckedChangeListener(this);
-        CheckBox cbScanNotification = (CheckBox)rootView.findViewById(R.id.cbTablesScan);
-        cbScanNotification.setOnCheckedChangeListener(this);
+        CheckBox cbRealtimeDBNotification = (CheckBox)rootView.findViewById(R.id.cbRealtimeDb);
+        cbRealtimeDBNotification.setOnCheckedChangeListener(this);
         CheckBox cbSocketsNotification = (CheckBox)rootView.findViewById(R.id.cbSockets);
         cbSocketsNotification.setOnCheckedChangeListener(this);
 
@@ -133,29 +133,35 @@ public class LocalLinkAdvSettingsFragment extends Fragment
 
         switch (compoundButton.getId() ) {
             case R.id.cbPushNotificationTransport: {
-                Log.d(LOG_TAG, String.format("PushTransport checked: %d", isChecked));
+                Log.d(LOG_TAG, String.format("Push Notifications transport checked: %b", isChecked));
 
                 SharedPreferences.Editor editor = mSharedPrefs.edit();
                 editor.putBoolean(Globals.PREF_PUSH_MODE, isChecked);
                 editor.apply();
+
+                Globals.setPushNotificationsModeEnabled(isChecked);
             }
             break;
 
-            case R.id.cbTablesScan: {
-                Log.d(LOG_TAG, String.format("TableScan checked: %b", isChecked));
+            case R.id.cbRealtimeDb: {
+                Log.d(LOG_TAG, String.format("Realtime DB transport checked: %b", isChecked));
 
                 SharedPreferences.Editor editor = mSharedPrefs.edit();
-                editor.putBoolean(Globals.PREF_SCAN_MODE, isChecked);
+                editor.putBoolean(Globals.PREF_REALTIMEDB__MODE, isChecked);
                 editor.apply();
+
+                Globals.setRealtimeDbNotificationsMode(isChecked);
             }
             break;
 
             case R.id.cbSockets: {
-                Log.d(LOG_TAG, "Socket transport checked");
+                Log.d(LOG_TAG, String.format("Socket transport checked: %b", isChecked));
 
                 SharedPreferences.Editor editor = mSharedPrefs.edit();
                 editor.putBoolean(Globals.PREF_SOCKETS_MODE, isChecked);
                 editor.apply();
+
+                Globals.setSocketsNotificationsMode(isChecked);
             }
             break;
         }
