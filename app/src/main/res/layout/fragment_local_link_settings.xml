@@ -113,11 +113,11 @@
             android:text="@string/push_notifications_transport"
             android:checked="true"/>
 
-        <CheckBox android:id="@+id/cbTablesScan"
+        <CheckBox android:id="@+id/cbRealtimeDb"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="@string/table_scan_transport"/>
+            android:text="@string/realtime_db_transport"
+            android:checked="true" />
 
         <CheckBox android:id="@+id/cbSockets"
             android:layout_width="wrap_content"
