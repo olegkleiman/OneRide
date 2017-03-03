@@ -80,8 +80,6 @@ import com.labs.okey.oneride.utils.IRecyclerClickListener;
 import com.labs.okey.oneride.utils.IRefreshable;
 import com.labs.okey.oneride.utils.ITrace;
 import com.labs.okey.oneride.utils.UiThreadExecutor;
-import com.labs.okey.oneride.utils.bt.BtChatService;
-import com.labs.okey.oneride.utils.bt.BtConnectThread;
 import com.labs.okey.oneride.utils.wifip2p.P2pConversator;
 import com.labs.okey.oneride.utils.wifip2p.P2pPreparer;
 import com.microsoft.windowsazure.mobileservices.MobileServiceException;
@@ -92,9 +90,6 @@ import junit.framework.Assert;
 
 import net.steamcrafted.loadtoast.LoadToast;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
@@ -1359,28 +1354,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 mBluetoothAdapter.cancelDiscovery();
 
                 BluetoothDevice device = driverDevice.getDevice();
-                final BtChatService btService = new BtChatService(this, mBluetoothAdapter, null);
-                btService.connect(device, 0);
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        User thisUser = User.load(getApplicationContext());
-
-                        try {
-                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                            ObjectOutputStream oos = new ObjectOutputStream(baos);
-                            oos.writeObject(thisUser);
-                            oos.close();
-                            byte[] bytes = baos.toByteArray();
-
-                            btService.write(bytes);
-                        } catch (IOException e) {
-                            Globals.__logException(e);
-                        }
-                    }
-                }, 5000);
-
 
                 mRideCode = driverDevice.get_RideCode();
                 mDriverName = driverDevice.get_UserName();
@@ -1388,7 +1361,6 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                 onSubmitCode();
 
             }
-
         }
 
     }

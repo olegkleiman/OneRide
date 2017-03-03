@@ -149,8 +149,6 @@ public class MainActivity extends BaseActivity
         Globals.setPushNotificationsModeEnabled(bNotificationsMode);
         bNotificationsMode = sharedPrefs.getBoolean(Globals.PREF_REALTIMEDB__MODE, true);
         Globals.setRealtimeDbNotificationsMode(bNotificationsMode);
-        bNotificationsMode = sharedPrefs.getBoolean(Globals.PREF_SOCKETS_MODE, false);
-        Globals.setSocketsNotificationsMode(bNotificationsMode);
 
         // Don't confuse with BaseActivity.wamsInit();
         if (!wamsInit()) {

@@ -109,7 +109,7 @@ public class DrawMan {
                     Log.e(LOG_TAG, ex.getCause().toString());
                 }
             }
-        }, MoreExecutors.sameThreadExecutor());
+        }, MoreExecutors.directExecutor());
 
         return future;
     }

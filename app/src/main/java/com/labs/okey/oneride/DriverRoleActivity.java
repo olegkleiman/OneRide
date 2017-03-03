@@ -4,7 +4,6 @@ import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -32,7 +31,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
@@ -88,12 +86,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.firebase.analytics.FirebaseAnalytics;
-import com.google.firebase.database.ChildEventListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.labs.okey.oneride.adapters.PassengersAdapter;
 import com.labs.okey.oneride.model.Approval;
 import com.labs.okey.oneride.model.GFCircle;
@@ -108,8 +102,6 @@ import com.labs.okey.oneride.utils.ITrace;
 import com.labs.okey.oneride.utils.IUploader;
 import com.labs.okey.oneride.utils.RoundedDrawable;
 import com.labs.okey.oneride.utils.UiThreadExecutor;
-import com.labs.okey.oneride.utils.bt.BtAcceptThread;
-import com.labs.okey.oneride.utils.bt.BtChatService;
 import com.labs.okey.oneride.utils.faceapiUtils;
 import com.labs.okey.oneride.utils.wifip2p.P2pConversator;
 import com.labs.okey.oneride.utils.wifip2p.P2pPreparer;
@@ -128,8 +120,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -145,7 +135,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -228,7 +217,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private boolean                             mEmptyTextShown = true;
 
     private BluetoothAdapter                    mBluetoothAdapter;
-    private BtChatService                       mBluetoothChatService;
     private Timer                               mBluetoothWatchTimer;
 
     private final BroadcastReceiver mBtReceiver = new BroadcastReceiver() {
@@ -746,6 +734,9 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         }
     }
 
+    //
+    // TODO: return boolean to indicate success/failure
+    //
     private void btInit() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -795,43 +786,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
         if( mBluetoothAdapter != null )
             mBluetoothAdapter.setName(bluetoothOriginalName);
-    }
-
-    private void btStartAcceptingConnections() {
-        mBluetoothChatService = new BtChatService(this, mBluetoothAdapter, getHandler());
-        mBluetoothChatService.start();
-
-//        mBluetoothWatchTimer = new Timer();
-//        mBluetoothWatchTimer.scheduleAtFixedRate( new TimerTask() {
-//            @Override
-//            public void run() {
-//
-//                for(BluetoothSocket socket : mBluetoothAcceptThread.getConnectedSockets() ) {
-//                    if( !socket.isConnected() ) {
-//                        mBluetoothAcceptThread.removeSocket(socket);
-//                        Globals.__log(LOG_TAG, "socket disconnected");
-//                    } else {
-//                        try {
-//                            OutputStream outputStream = socket.getOutputStream();
-//                            outputStream.write("ping".getBytes());
-//                            outputStream.close();
-//
-//                            String deviceName = socket.getRemoteDevice().getName();
-//                            Globals.__log(LOG_TAG, "Pinged " + deviceName);
-//
-//                        } catch(IOException e) {
-//                            Globals.__logException(LOG_TAG, e);
-//                        }
-//                    }
-//                }
-//            }
-//        }, 1000, 5000);
-    }
-
-    private void btStopAcceptingConnections() {
-
-        if( mBluetoothWatchTimer != null )
-            mBluetoothWatchTimer.cancel();
     }
 
     private void btStartAdvertise() {
@@ -895,8 +849,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             method.invoke(mBluetoothAdapter, BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE,
                     duration);
             Globals.__log(LOG_TAG, "setScanMode() invoked successfully");
-
-            btStartAcceptingConnections();
         }
     }
 
@@ -1100,10 +1052,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
             // How to distinguish between successful connection
             // and just pressing back from there?
             wamsInit(true);
-
-        } else if( requestCode == BT_REQUEST_DISCOVERABLE_CODE ) {
-
-            btStartAcceptingConnections();
 
         } else if( (requestCode >= 1 && requestCode <= 4 )  // passengers selfies
                 && resultCode == RESULT_OK ) {
@@ -1351,7 +1299,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         if( !isChangingConfigurations() ) { // Do not cancel BT transmission
             // when display orientation changed
             btStopAdvertise();
-            btStopAcceptingConnections();
         }
 
         Globals.setDriverActivity(null);
@@ -1489,45 +1436,37 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                         btStopAdvertise();
                     }
 
-                    stopTransmitAnimation();
-                    hideTransmitAnimation();
-                    hideRideCode();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
 
-                    if( Globals.APPLY_CHALLENGE ) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
+                            try {
 
-                                try {
+                                stopTransmitAnimation();
+                                hideTransmitAnimation();
+                                hideRideCode();
+
+                                if( Globals.APPLY_CHALLENGE ) {
+
                                     PictureChallengePromptFragmentDialog dialogFragment =
                                             new PictureChallengePromptFragmentDialog();
                                     FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
                                     //dialogFragment.show(getSupportFragmentManager(), "picturePromptDialog");
                                     dialogFragment.show(ft, "picturePromptDialog");
-                                } catch(Exception e){
-                                    Globals.__logException(e);
-                                }
-                            }
-                        });
-                    } else {
-
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-
-                                try {
+                                } else {
 
                                     PicturePromptFragmentDialog dialogFragment
                                             = new PicturePromptFragmentDialog();
                                     FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
                                     //dialogFragment.show(getSupportFragmentManager(), "picturePromptDialog");
                                     dialogFragment.show(ft, "picturePromptDialog");
-                                } catch (Exception e) {
-                                    Globals.__logException(e);
                                 }
+                            } catch(Exception e){
+                                Globals.__logException(e);
                             }
-                        });
-                    }
+                        }
+                    });
+
                 }
                 else {
                     startTransmitAnimation();
@@ -1608,36 +1547,6 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                                               ChildEventListenerService.class);
                             serviceIntent.putExtra("ridecode", mRideCode);
                             startService(serviceIntent);
-
-//                            mCurrentRideRef.child("passengers").addChildEventListener(new ChildEventListener() {
-//                                @Override
-//                                public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
-//                                    String passengerId = dataSnapshot.getKey();
-//                                    Globals.__log(LOG_TAG, "passenger joined. UserId: " + passengerId);
-//
-//                                    processJoinNotification(passengerId);
-//                                }
-//
-//                                @Override
-//                                public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
-//                                    Globals.__log(LOG_TAG, "child changed");
-//                                }
-//
-//                                @Override
-//                                public void onChildRemoved(DataSnapshot dataSnapshot) {
-//                                    Globals.__log(LOG_TAG, "child removed");
-//                                }
-//
-//                                @Override
-//                                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-//                                    Globals.__log(LOG_TAG, "child moved");
-//                                }
-//
-//                                @Override
-//                                public void onCancelled(DatabaseError databaseError) {
-//                                    Globals.__log(LOG_TAG, databaseError.getMessage());
-//                                }
-//                            });
 
                             Map<String, Object> driver = new HashMap<String, Object>();
                             driver.put("started", new Date().toString());

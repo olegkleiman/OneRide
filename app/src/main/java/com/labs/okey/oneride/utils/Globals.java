@@ -343,14 +343,6 @@ public class Globals {
         bRealtimeDbNotificationsMode = mode;
     }
 
-    private static boolean bSocketsNotificationsMode = false;
-    public static boolean isSocketsNotificationsMode() {
-        return bSocketsNotificationsMode;
-    }
-    public static void setSocketsNotificationsMode(boolean mode) {
-        bSocketsNotificationsMode = mode;
-    }
-
     private static final Object lock2 = new Object();
     private static String MONITOR_STATUS;
     public static String getMonitorStatus() {

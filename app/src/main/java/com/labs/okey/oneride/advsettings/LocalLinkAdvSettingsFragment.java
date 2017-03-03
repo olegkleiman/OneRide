@@ -94,8 +94,6 @@ public class LocalLinkAdvSettingsFragment extends Fragment
         cbPushNotification.setOnCheckedChangeListener(this);
         CheckBox cbRealtimeDBNotification = (CheckBox)rootView.findViewById(R.id.cbRealtimeDb);
         cbRealtimeDBNotification.setOnCheckedChangeListener(this);
-        CheckBox cbSocketsNotification = (CheckBox)rootView.findViewById(R.id.cbSockets);
-        cbSocketsNotification.setOnCheckedChangeListener(this);
 
         CheckBox cbAllowSamePassengers = (CheckBox)rootView.findViewById(R.id.cbAllowSamePassengers);
         boolean isSamePassengersAllowed = mSharedPrefs.getBoolean(Globals.PREF_ALLOW_SAME_PASSENGERS, false);
@@ -154,16 +152,6 @@ public class LocalLinkAdvSettingsFragment extends Fragment
             }
             break;
 
-            case R.id.cbSockets: {
-                Log.d(LOG_TAG, String.format("Socket transport checked: %b", isChecked));
-
-                SharedPreferences.Editor editor = mSharedPrefs.edit();
-                editor.putBoolean(Globals.PREF_SOCKETS_MODE, isChecked);
-                editor.apply();
-
-                Globals.setSocketsNotificationsMode(isChecked);
-            }
-            break;
         }
     }
 }

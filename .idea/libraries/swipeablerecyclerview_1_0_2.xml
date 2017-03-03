@@ -1,8 +1,8 @@
 <component name="libraryTable">
   <library name="swipeablerecyclerview-1.0.2">
     <CLASSES>
-      <root url="file://$PROJECT_DIR$/app/build/intermediates/exploded-aar/com.github.brnunes/swipeablerecyclerview/1.0.2/res" />
-      <root url="jar://$PROJECT_DIR$/app/build/intermediates/exploded-aar/com.github.brnunes/swipeablerecyclerview/1.0.2/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.android/build-cache/55698e7eb3d559d5197952fd7fdaf85e633e8ddc/output/res" />
+      <root url="jar://$USER_HOME$/.android/build-cache/55698e7eb3d559d5197952fd7fdaf85e633e8ddc/output/jars/classes.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
