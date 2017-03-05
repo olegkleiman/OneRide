@@ -865,6 +865,16 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
         return mPassengers.contains(passenger);
     }
 
+    public void updatePassenger(User passenger){
+
+        for(User _passenger : mPassengers) {
+            if( _passenger.getRegistrationId().equalsIgnoreCase(passenger.getRegistrationId()) )
+                _passenger.setLastSeen(passenger.getLastSeen());
+        }
+
+        mPassengersAdapter.notifyDataSetChanged();
+    }
+
     @WorkerThread
     public void addPassenger(User passenger, Boolean addEvenAlreadyJoined) {
 
@@ -1548,7 +1558,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                             serviceIntent.putExtra("ridecode", mRideCode);
                             startService(serviceIntent);
 
-                            Map<String, Object> driver = new HashMap<String, Object>();
+                            Map<String, Object> driver = new HashMap<>();
                             driver.put("started", new Date().toString());
                             driver.put("name", ride.getDriverName());
                             driver.put("uid",  ride.getDriverId());

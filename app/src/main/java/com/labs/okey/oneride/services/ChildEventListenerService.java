@@ -26,6 +26,7 @@ import com.labs.okey.oneride.utils.Globals;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -64,9 +65,17 @@ public class ChildEventListenerService extends Service {
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
-                String key = dataSnapshot.getKey();
-                Map<String, Object> passenger = (Map<String, Object>)dataSnapshot.getValue();
-                Log.i(LOG_TAG, passenger.toString());
+                String passengerId = dataSnapshot.getKey();
+                Map<String, Object> propsMap = (Map<String, Object>)dataSnapshot.getValue();
+                Date lastSeen = null;
+                try {
+                    SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy HH:mm:ss", Locale.US);
+                    String strLastSeen = (String) propsMap.get("last_seen");
+                    lastSeen = sdf.parse(strLastSeen);
+                } catch(ParseException ex) {
+                    lastSeen = new Date();
+                }
+                updateJoin(passengerId, lastSeen);
             }
 
             @Override
@@ -88,14 +97,28 @@ public class ChildEventListenerService extends Service {
         return START_STICKY;
     }
 
-    private void processJoinNotification(final Context context, final String user) {
+    private void updateJoin(String userId, Date lastSeen) {
+        DriverRoleActivity driverActivity = Globals.getDriverActivity();
+        if( driverActivity != null ) {
+
+            User passenger = new User();
+            passenger.setRegistrationId(userId);
+            passenger.setLastSeen(lastSeen);
+            boolean bIsAlreadyJoined = driverActivity.isPassengerJoined(passenger);
+            if( bIsAlreadyJoined ) {
+                driverActivity.updatePassenger(passenger);
+            }
+        }
+    }
+
+    private void processJoinNotification(final Context context, final String userId) {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
         final boolean allowSamePassengers = sharedPrefs.getBoolean(Globals.PREF_ALLOW_SAME_PASSENGERS, false);
 
         final MobileServiceTable<User> usersTable = Globals.getMobileServiceClient()
                 .getTable("users", User.class);
         ListenableFuture<MobileServiceList<User>> future =
-                usersTable.where().field("registration_id").eq(user).execute();
+                usersTable.where().field("registration_id").eq(userId).execute();
         Futures.addCallback(future, new FutureCallback<MobileServiceList<User>>() {
             @Override
             public void onSuccess(MobileServiceList<User> users) {

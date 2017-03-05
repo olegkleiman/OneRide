@@ -353,7 +353,8 @@ limitations under the License.</string>
     <string name="local_link_discovery" translatable="false">Discovery (for Android leq 4.1)</string>
     <string name="push_notifications_transport">Push Notifications</string>
     <string name="realtime_db_transport">Realtime DB</string>
-    <string name="sockets_transport">Sockets</string>
+
+    <string name="lastSeen">Last seen at: </string>
 
     <string name="push_approval_format">Your ride was approved. Ride code: %s</string>
 

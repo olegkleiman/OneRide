@@ -36,6 +36,8 @@ public class BtDeviceUser implements Parcelable {
         _userId = value;
     }
 
+    public String get_RegistrationId() { return _authProvider + ":" + _userId; }
+
     private String _rideCode;
     public String get_RideCode() { return  _rideCode; }
     public void set_RideCode(String value) { _rideCode = value; }

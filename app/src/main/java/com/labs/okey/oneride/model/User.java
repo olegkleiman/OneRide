@@ -9,6 +9,7 @@ import android.preference.PreferenceManager;
 import com.labs.okey.oneride.utils.Globals;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @author Oleg Kleiman
@@ -97,8 +98,12 @@ public class User implements Parcelable, Serializable {
 
     @com.google.gson.annotations.SerializedName("confirmation_code")
     private String confirmationCode;
-    public String getConfiramtionCode() { return confirmationCode; }
+    public String getConfirmationCode() { return confirmationCode; }
     public void setConfirmationCode(String code) { confirmationCode = code; }
+
+    private Date lastSeen;
+    public Date getLastSeen() { return lastSeen; }
+    public void setLastSeen(Date when) { lastSeen = when;}
 
     @Override
     public boolean equals(Object object) {

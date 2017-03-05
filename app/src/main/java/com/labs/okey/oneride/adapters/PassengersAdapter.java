@@ -21,7 +21,10 @@ import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.IRecyclerClickListener;
 import com.pkmmte.view.CircularImageView;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * @author Oleg Kleiman
@@ -95,6 +98,10 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
             User passenger = items.get(nPosition);
 
             holder.txtDriverName.setText(passenger.getFullName());
+            Date lastSeen = passenger.getLastSeen();
+            SimpleDateFormat simpleDateFormat =
+                    new SimpleDateFormat("HH:mm:ss", Locale.UK);
+            holder.txtLastSeen.setText( simpleDateFormat.format(lastSeen));
             if( !passenger.wasSelfPictured() ) {
                 holder.imageStatus.setVisibility(View.INVISIBLE);
             } else {
@@ -185,6 +192,7 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
 
         // Row views
         TextView            txtDriverName;
+        TextView            txtLastSeen;
         CircularImageView   userPicture;
         RelativeLayout      rowLayout;
         ImageView           imageStatus;
@@ -206,6 +214,7 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
                 userPicture     = (CircularImageView) itemLayoutView.findViewById(R.id.userPicture);
                 rowLayout       = (RelativeLayout)itemLayoutView.findViewById(R.id.device_row);
                 imageStatus     = (ImageView) itemLayoutView.findViewById(R.id.imgStatus);
+                txtLastSeen     = (TextView) itemLayoutView.findViewById(R.id.txt_last_seen);
 
                 drawableAvailable = context.getResources().getDrawable(R.drawable.ic_action_disconnected);
                 drawableConnected = context.getResources().getDrawable(R.drawable.accept_24);

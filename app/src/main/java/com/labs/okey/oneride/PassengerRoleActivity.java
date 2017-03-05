@@ -75,6 +75,8 @@ import com.labs.okey.oneride.model.GFCircle;
 import com.labs.okey.oneride.model.Join;
 import com.labs.okey.oneride.model.User;
 import com.labs.okey.oneride.model.WifiP2pDeviceUser;
+import com.labs.okey.oneride.services.ChildEventListenerService;
+import com.labs.okey.oneride.services.PassengerCIService;
 import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.IRecyclerClickListener;
 import com.labs.okey.oneride.utils.IRefreshable;
@@ -972,7 +974,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                                 @Override
                                 public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
                                     mRideCode = input.toString();
-                                    onSubmitCode();
+                                    onSubmitCode(null);
                                 }
                             }
 
@@ -1034,7 +1036,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
         });
     }
 
-    public void onSubmitCode() {
+    public void onSubmitCode(final String driverId) {
 
         // Only allow participation request from monitored areas
         if (!Globals.isInGeofenceArea()) {
@@ -1237,13 +1239,28 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                                 .child("passengers")
                                 .child(userId);
 
-                        Map<String, Object> passenger = new HashMap<String, Object>();
+                        Map<String, Object> passenger = new HashMap<>();
                         passenger.put("name", User.load(PassengerRoleActivity.this).getFullName());
-                        SimpleDateFormat simpleDate = new SimpleDateFormat("dd MMM yyyy hh:mm:ss", Locale.US);
+                        SimpleDateFormat simpleDate = new SimpleDateFormat("dd MMM yyyy HH:mm:ss", Locale.US);
                         String dt = simpleDate.format(new Date());
-                        passenger.put("when_joined", dt);
+                        passenger.put("last_seen", dt);
                         passengerRef.updateChildren(passenger);
 
+                    }
+
+                    // driverId is null when submitted manually
+                    // In this case, continuous ride is inappropriate
+                    if( driverId != null) {
+
+                        Intent serviceIntent = new Intent(PassengerRoleActivity.this,
+                                PassengerCIService.class);
+                        serviceIntent.putExtra("driverId", driverId);
+                        serviceIntent.putExtra("passengerId", userId);
+                        serviceIntent.putExtra("rideCode", mRideCode);
+
+                        // This service will start discovery process again and again
+                        // At this point of execution the previous discovery mode is already cancelled.
+                        startService(serviceIntent);
                     }
 
                 } catch (ExecutionException | InterruptedException ex) {
@@ -1353,13 +1370,11 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
 
                 mBluetoothAdapter.cancelDiscovery();
 
-                BluetoothDevice device = driverDevice.getDevice();
-
                 mRideCode = driverDevice.get_RideCode();
                 mDriverName = driverDevice.get_UserName();
 
-                onSubmitCode();
-
+                String driverId = driverDevice.get_UserId();
+                onSubmitCode(driverId);
             }
         }
 
@@ -1465,7 +1480,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                         @Override
                         public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
                             if (which == DialogAction.POSITIVE) {
-                                ((PassengerRoleActivity)getActivity()).onSubmitCode();
+                                ((PassengerRoleActivity)getActivity()).onSubmitCode(null);
                             }
                         }
                     })

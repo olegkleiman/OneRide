@@ -20,6 +20,8 @@ import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.notifications.NotificationsHandler;
 
+import java.util.Date;
+
 import io.fabric.sdk.android.Fabric;
 
 /**
@@ -76,6 +78,7 @@ public class GCMHandler extends NotificationsHandler {
             @Override
             public void onSuccess(MobileServiceList<User> users) {
                 User passenger = users.get(0);
+                passenger.setLastSeen(new Date());
 
                 DriverRoleActivity driverActivity = Globals.getDriverActivity();
                 if( driverActivity != null ) {
