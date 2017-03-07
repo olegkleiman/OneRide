@@ -68,6 +68,9 @@
 
     <string name="title_activity_ride_details">Ride Details</string>
 
+    <string name="driver_name" translatable="false">Driver Name</string>
+    <string name="driver_pic" translatable="false">Driver Picture</string>
+    <string name="driver_status" translatable="false">Driver Status</string>
 
     <string name="passengers_header">Passengers</string>
     <string name="drivers_header">Select the driver</string>
