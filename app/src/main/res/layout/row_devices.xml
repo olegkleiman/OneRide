@@ -33,6 +33,7 @@
                 android:layout_height="72dp"
                 android:layout_marginStart="2dip"
                 android:layout_marginLeft="2dip"
+                android:contentDescription="@string/driver_pic"
                 app:border="true"
                 app:border_color="#FFFFFFFF"
                 app:border_width="4dp"
@@ -44,6 +45,7 @@
                 android:layout_height="32dp"
                 android:id="@+id/imgStatus"
                 android:src="@drawable/load"
+                android:contentDescription="@string/driver_status"
                 android:layout_gravity="center_vertical"
                 android:layout_alignBottom="@+id/userPicture"
                 android:layout_toStartOf="@+id/linearLayout"
@@ -80,14 +82,14 @@
                 android:id="@+id/linearLayout">
 
                 <TextView
-                    android:layout_height="wrap_content"
-                    android:layout_width="match_parent"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
                     android:id="@+id/txt_peer_name"
-                    android:maxLines="1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:ellipsize="marquee"
-                    android:text="Driver name"
-                    android:gravity="center_vertical|end"/>
+                    android:maxLines="1"
+                    android:text="@string/driver_name"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    tools:text="@string/driver_name" />
 
                 <LinearLayout
                     android:layout_height="wrap_content"
@@ -127,7 +129,7 @@
                         android:textStyle="bold"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:singleLine="true"
+                        android:maxLines="1"
                         android:ellipsize="marquee"
                         android:layout_marginLeft="4dp"
                         android:layout_marginStart="4dp" />
