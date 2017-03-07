@@ -118,10 +118,10 @@ dependencies {
     compile 'com.google.guava:guava:20.0'
 
     compile 'com.microsoft.azure:azure-mobile-android:3.1.0'
-    compile 'com.microsoft.azure.android:azure-storage-android:0.7.0@aar'
+    compile 'com.microsoft.azure.android:azure-storage-android:1.0.0@aar'
 
     // See https://msdn.microsoft.com/en-us/library/mt605324.aspx
-    compile 'com.microsoft.projectoxford:face:1.0.0'
+    compile 'com.microsoft.projectoxford:face:1.2.1'
 
     compile 'org.jbundle.util.osgi.wrapped:org.jbundle.util.osgi.wrapped.org.apache.http.client:4.1.2'
 
@@ -132,7 +132,7 @@ dependencies {
     compile 'com.github.brnunes:swipeablerecyclerview:1.0.2'
 
     // See https://github.com/koral--/android-gif-drawable
-    compile 'pl.droidsonroids.gif:android-gif-drawable:1.2.3'
+    compile 'pl.droidsonroids.gif:android-gif-drawable:1.2.5'
 
     // See https://github.com/Pkmmte/CircularImageView
     compile 'com.pkmmte.view:circularimageview:1.1'
