@@ -64,7 +64,9 @@ public class Globals {
         BE_VALIDATED_MANUALLY, // = 4
         BE_VALIDATED_MANUALLY_SELFIE, // = 5
         VALIDATED_MANUALLY // = 6
-    }; // use it as casted to int like : Globals.RIDE_STATUS.APPROVED.ordinal())
+    }
+
+    ; // use it as casted to int like : Globals.RIDE_STATUS.APPROVED.ordinal())
 
     public enum LayoutManagerType {
         GRID_LAYOUT_MANAGER,
@@ -80,24 +82,27 @@ public class Globals {
 
         static DrawMan drawMan;
 
-        static DrawMan getDrawMan(){
-            if( drawMan == null )
+        static DrawMan getDrawMan() {
+            if (drawMan == null)
                 return new DrawMan();
             else
                 return drawMan;
         }
     }
+
     public static final DrawMan drawMan = DManClassFactory.getDrawMan();
 
     public static VolleySingletone volley;
-    public static void initializeVolley(Context context){
+
+    public static void initializeVolley(Context context) {
         volley = VolleySingletone.getInstance(context);
     }
 
     private static AccessTokenTracker mFbAccessTokenTracker;
+
     public static void initializeTokenTracker(Context context) {
 
-        if( !FacebookSdk.isInitialized() )
+        if (!FacebookSdk.isInitialized())
             FacebookSdk.sdkInitialize(context);
 
         mFbAccessTokenTracker = new AccessTokenTracker() {
@@ -111,20 +116,22 @@ public class Globals {
 
         mFbAccessTokenTracker.startTracking();
     }
+
     public static void stopTokenTracker() {
-        if( mFbAccessTokenTracker != null )
+        if (mFbAccessTokenTracker != null)
             mFbAccessTokenTracker.stopTracking();
     }
 
     private static MobileServiceClient wamsClient;
+
     public static boolean initMobileServices(Context ctx) {
         try {
             wamsClient = new MobileServiceClient(Globals.WAMS_URL, ctx);
             //.withFilter(new RefreshTokenCacheFilter());
             //.withFilter(new wamsUtils.ProgressFilter());
-        } catch(MalformedURLException ex) {
+        } catch (MalformedURLException ex) {
 
-            if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
+            if (Fabric.isInitialized() && Crashlytics.getInstance() != null)
                 Crashlytics.logException(ex);
 
             return false;
@@ -139,23 +146,25 @@ public class Globals {
     }
 
     private static Boolean _monitorInitialized = false;
+
     private static Boolean isMonitorInitialized() {
         return _monitorInitialized;
     }
-    public static void initializeMonitor(Context ctx, Application app){
 
-        if( isMonitorInitialized() )
+    public static void initializeMonitor(Context ctx, Application app) {
+
+        if (isMonitorInitialized())
             return;
 
         try {
 
-            if( !FacebookSdk.isInitialized() )
+            if (!FacebookSdk.isInitialized())
                 FacebookSdk.sdkInitialize(ctx);
 
             AppEventsLogger.activateApp(app);
 
-            TwitterAuthConfig authConfig =  new TwitterAuthConfig(TWITTER_CONSUMER_KEY,
-                                                                  TWITTER_CONSUMER_SECRET);
+            TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_CONSUMER_KEY,
+                    TWITTER_CONSUMER_SECRET);
             final Fabric fabric = new Fabric.Builder(ctx)
                     .kits(new Crashlytics())
                     .debuggable(true)
@@ -169,18 +178,18 @@ public class Globals {
 
             MobileServiceTable<GlobalSettings> settingsTable
                     = Globals.getMobileServiceClient()
-                      .getTable("globalsettings", GlobalSettings.class);
+                    .getTable("globalsettings", GlobalSettings.class);
             ListenableFuture<MobileServiceList<GlobalSettings>> settingsFuture =
                     settingsTable
-                    .execute();
-            Futures.addCallback(settingsFuture, new FutureCallback<MobileServiceList<GlobalSettings>>(){
+                            .execute();
+            Futures.addCallback(settingsFuture, new FutureCallback<MobileServiceList<GlobalSettings>>() {
                 @Override
                 public void onSuccess(MobileServiceList<GlobalSettings> list) {
 
-                    if( !list.isEmpty() ) {
+                    if (!list.isEmpty()) {
 
                         for (GlobalSettings _s : list) {
-                            switch(_s.getName() ) {
+                            switch (_s.getName()) {
                                 case "apply_challenge": {
                                     APPLY_CHALLENGE = _s.getValue().equals("1");
                                 }
@@ -196,22 +205,25 @@ public class Globals {
                 }
 
                 @Override
-                public void onFailure(Throwable t){
+                public void onFailure(Throwable t) {
                     Log.e(LOG_TAG, t.getMessage());
                 }
             });
 
             _monitorInitialized = true;
 
-        } catch(Exception e) {
+        } catch (Exception e) {
 
             Globals.__logException(e);
         }
     }
 
     public static void __log(String tag, String message) {
-        if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
-            Crashlytics.log(Log.DEBUG, tag, message); // also writes to logcat
+        if (Fabric.isInitialized() && Crashlytics.getInstance() != null) {
+            Crashlytics.log(Log.DEBUG, tag, message); // should also writes to logcat?
+        }
+
+        Log.d(tag, message);
     }
 
     public static void __logException(Throwable e) {
@@ -219,11 +231,11 @@ public class Globals {
     }
 
     public static void __logException(String tag, Throwable e) {
-        if( Fabric.isInitialized() && Crashlytics.getInstance() != null)
+        if (Fabric.isInitialized() && Crashlytics.getInstance() != null)
             Crashlytics.logException(e);
 
         String message = e.getMessage();
-        if( message != null && !message.isEmpty() )
+        if (message != null && !message.isEmpty())
             Log.e(tag, e.getMessage());
     }
 
@@ -242,9 +254,11 @@ public class Globals {
     public static int CABIN_PICTURES_BUTTON_SHOW_INTERVAL = 40 * 1000;
 
     private static DriverRoleActivity driverActivity;
+
     public static void setDriverActivity(DriverRoleActivity activity) {
         driverActivity = activity;
     }
+
     public static DriverRoleActivity getDriverActivity() {
         return driverActivity;
     }
@@ -267,6 +281,10 @@ public class Globals {
     public static final String BT_DELIMITER = ":";
     public static final String PREF_DISCOVERABLE_DURATION = "bt_discoverable_period";
     public static final int PREF_DISCOVERABLE_DURATION_DEFAULT = 300;
+
+    public static final String PREF_LAST_SEEN_BEFORE = "last_seen_interval";
+    public static final int PREF_LAST_SEEN_DEFAULT_INTERVAL = 30;
+    public static long LAST_SEEN_INTERVAL = 30L;
 
     public static final String WAMS_URL = "https://oneride.azurewebsites.net";
     //public static final String WAMS_API_KEY = "omCudOMCUJgIGbOklMKYckSiGKajJU91";
@@ -328,28 +346,34 @@ public class Globals {
     public static final String PREF_SOCKETS_MODE = "sockets_mode";
 
     private static boolean bPushNotificationsMode = true;
+
     public static boolean isPushNotificationsModeEnabled() {
         return bPushNotificationsMode;
     }
+
     public static void setPushNotificationsModeEnabled(boolean mode) {
         bPushNotificationsMode = mode;
     }
 
     private static boolean bRealtimeDbNotificationsMode = true;
+
     public static boolean isRealtimeDbNotificationsMode() {
         return bRealtimeDbNotificationsMode;
     }
+
     public static void setRealtimeDbNotificationsMode(boolean mode) {
         bRealtimeDbNotificationsMode = mode;
     }
 
     private static final Object lock2 = new Object();
     private static String MONITOR_STATUS;
+
     public static String getMonitorStatus() {
         synchronized (lock2) {
             return MONITOR_STATUS;
         }
     }
+
     public static void setMonitorStatus(String value) {
         synchronized (lock2) {
             MONITOR_STATUS = value;
@@ -360,10 +384,12 @@ public class Globals {
     public static boolean myRides_update_required = true;
 
     private static String _currentGeoFenceName;
-    public static void set_CurrentGeoFenceName(String value){
+
+    public static void set_CurrentGeoFenceName(String value) {
         _currentGeoFenceName = value;
     }
-    public static String get_currentGeoFenceName(){
+
+    public static String get_currentGeoFenceName() {
         return _currentGeoFenceName;
     }
 
@@ -381,14 +407,16 @@ public class Globals {
 
     private static final Object lock = new Object();
     private static boolean inGeofenceArea;
+
     public static boolean isInGeofenceArea() {
         synchronized (lock) {
-            if( Globals.IGNORE_GEOFENCES )
+            if (Globals.IGNORE_GEOFENCES)
                 return true;
             else
                 return inGeofenceArea;
         }
     }
+
     public static void setInGeofenceArea(boolean value) {
         synchronized (lock) {
             inGeofenceArea = value;
@@ -399,38 +427,43 @@ public class Globals {
 
     private static final Object lock3 = new Object();
     private static boolean _REMIND_GEOFENCE_ENTRANCE;
+
     public static void setRemindGeofenceEntrance() {
-        synchronized ( lock3 ) {
+        synchronized (lock3) {
             _REMIND_GEOFENCE_ENTRANCE = true;
         }
     }
+
     public static Boolean getRemindGeofenceEntrance() {
-        synchronized ( lock3 ) {
+        synchronized (lock3) {
             return _REMIND_GEOFENCE_ENTRANCE;
         }
     }
+
     public static void clearRemindGeofenceEntrance() {
-        synchronized ( lock3 ) {
+        synchronized (lock3) {
             _REMIND_GEOFENCE_ENTRANCE = false;
         }
     }
 
-    public static  String CASCADE_URL = "http://oneride.azurewebsites.net/data/haarcascades/haarcascade_frontalface_default.xml";
+    public static String CASCADE_URL = "http://oneride.azurewebsites.net/data/haarcascades/haarcascade_frontalface_default.xml";
     private static String CASCADE_PATH;
+
     public static void initCascadePath(Context ctx) {
         String DEFAULT_CASCADE_NAME = "haarcascade_frontalface_default.xml";
         File file = new File(ctx.getFilesDir(), DEFAULT_CASCADE_NAME);
-        synchronized (lock ) {
+        synchronized (lock) {
             CASCADE_PATH = file.getAbsolutePath();
         }
     }
 
-    public static String getCascadePath (Context ctx) {
-        if( CASCADE_PATH == null || CASCADE_PATH.isEmpty() )
+    public static String getCascadePath(Context ctx) {
+        if (CASCADE_PATH == null || CASCADE_PATH.isEmpty())
             initCascadePath(ctx);
 
         return CASCADE_PATH;
     }
+
     public static void setCascadePath(String path) {
         synchronized (lock) {
             CASCADE_PATH = path;
@@ -439,27 +472,32 @@ public class Globals {
 
     private static final Object lockPassengerFaces = new Object();
     private static HashMap<Integer, PassengerFace> _passengerFaces = new HashMap<>();
+
     public static HashMap<Integer, PassengerFace> get_PassengerFaces() {
         synchronized (lockPassengerFaces) {
             return _passengerFaces;
         }
     }
+
     public static void set_PassengerFaces(HashMap<Integer, PassengerFace> faces) {
         _passengerFaces.putAll(faces);
     }
+
     public static void add_PassengerFace(PassengerFace pf) {
-        for(int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++) {
-            if( _passengerFaces.get(i) == null ) {
+        for (int i = 0; i < Globals.REQUIRED_PASSENGERS_NUMBER; i++) {
+            if (_passengerFaces.get(i) == null) {
                 _passengerFaces.put(i, pf);
                 break;
             }
         }
     }
-    public static PassengerFace get_PassengerFace(int at){
+
+    public static PassengerFace get_PassengerFace(int at) {
         synchronized (lockPassengerFaces) {
             return _passengerFaces.get(at);
         }
     }
+
     public static void clearPassengerFaces() {
         synchronized (lockPassengerFaces) {
             _passengerFaces.clear();
@@ -520,8 +558,8 @@ public class Globals {
     public static final int FACE_VERIFY_TASK_TAG = 1;
     public static final int APPROVAL_UPLOAD_TASK_TAG = 2;
 
-    public static final int TUTORIAL_Intro      = 1;
-    public static final int TUTORIAL_Driver     = 2;
-    public static final int TUTORIAL_Passenger  = 3;
-    public static final int TUTORIAL_Appeal     = 4;
+    public static final int TUTORIAL_Intro = 1;
+    public static final int TUTORIAL_Driver = 2;
+    public static final int TUTORIAL_Passenger = 3;
+    public static final int TUTORIAL_Appeal = 4;
 }

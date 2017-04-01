@@ -31,6 +31,10 @@ import com.labs.okey.oneride.utils.wamsUtils;
 import com.microsoft.windowsazure.notifications.NotificationsManager;
 
 import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -270,8 +274,6 @@ public class SplashScreen extends AppCompatActivity {
                             bRes[0] = true;
                         }
                     }
-
-                    bRes[0] = true;
 
                     latch.countDown();
                 }

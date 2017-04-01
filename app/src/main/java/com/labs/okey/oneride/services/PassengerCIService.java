@@ -142,23 +142,26 @@ public class PassengerCIService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startid) {
 
-        mSharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        if( intent == null ) {
 
-        mDriverId = intent.getStringExtra("driverId");
-        mPassengerID = intent.getStringExtra("passengerId");
-        mRideCode = intent.getStringExtra("rideCode");
+            mSharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 
-        // Register the BroadcastReceiver for BT intents
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(BluetoothDevice.ACTION_FOUND);
-        filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
-        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
-        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+            mDriverId = intent.getStringExtra("driverId");
+            mPassengerID = intent.getStringExtra("passengerId");
+            mRideCode = intent.getStringExtra("rideCode");
 
-        registerReceiver(mBtReceiver, filter);
+            // Register the BroadcastReceiver for BT intents
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(BluetoothDevice.ACTION_FOUND);
+            filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
+            filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+            filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
 
-        renewBtDiscovery();
+            registerReceiver(mBtReceiver, filter);
 
-        return START_STICKY;
+            renewBtDiscovery();
+        }
+
+        return START_NOT_STICKY ;
     }
 }

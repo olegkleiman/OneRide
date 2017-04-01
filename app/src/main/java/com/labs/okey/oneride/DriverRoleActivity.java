@@ -135,6 +135,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -163,7 +164,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     private PassengersAdapter                   mPassengersAdapter;
     SwipeableRecyclerViewTouchListener          mSwipeTouchListener;
-    private ArrayList<User>                     mPassengers = new ArrayList<>();
+    private final ArrayList<User>               mPassengers = new ArrayList<>();
 
     private ImageView                           mImageTransmit;
     private GoogleMap                           mGoogleMap;
@@ -217,7 +218,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     private boolean                             mEmptyTextShown = true;
 
     private BluetoothAdapter                    mBluetoothAdapter;
-    private Timer                               mBluetoothWatchTimer;
+    private final Timer                         mBluetoothWatchTimer = new Timer();
 
     private final BroadcastReceiver mBtReceiver = new BroadcastReceiver() {
         @Override
@@ -585,6 +586,40 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                                 }
                             });
             mPeersRecyclerView.addOnItemTouchListener(mSwipeTouchListener);
+
+            mBluetoothWatchTimer.scheduleAtFixedRate(new TimerTask() {
+                     @Override
+                     public void run() {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+
+                                Date now = new Date();
+
+                                Iterator<User> iterator = mPassengers.iterator();
+                                while( iterator.hasNext() ) {
+
+                                    User _passenger = iterator.next();
+                                    Date lastSeen = _passenger.getLastSeen();
+                                    if (lastSeen != null) {
+                                        long diff = now.getTime() - lastSeen.getTime();
+                                        long seconds = diff / 1000;
+                                        if (seconds > Globals.LAST_SEEN_INTERVAL) {
+                                            String msg = String.format(Locale.ENGLISH,
+                                                    "%s last seen before %d sec.", _passenger.getFullName(), seconds);
+                                            Globals.__log(LOG_TAG, msg);
+
+                                            iterator.remove();
+                                            mPassengersAdapter.notifyDataSetChanged();
+                                        }
+                                    }
+                                }
+
+                            }
+                        });
+                     }
+                 }
+                 , 0, 5000);
         }
 
         TextView vEmptyText = (TextView)findViewById(R.id.empty_view);

@@ -35,7 +35,8 @@ public class LocalLinkAdvSettingsFragment extends Fragment
     private int                                 mRssiCurrentValue;
     private SharedPreferences                   mSharedPrefs;
 
-    private EditText                            mTxtPeriod;
+    private EditText                            mDiscoveryPeriodEdit;
+    private EditText                            mLastSeenEdit;
 
     public static LocalLinkAdvSettingsFragment getInstance() {
 
@@ -107,10 +108,15 @@ public class LocalLinkAdvSettingsFragment extends Fragment
             }
         });
 
-        mTxtPeriod = (EditText)rootView.findViewById(R.id.txtDiscoveryPeriod);
+        mLastSeenEdit = (EditText)rootView.findViewById(R.id.txtLastSeenBefore);
+        int lastSeenInterval = mSharedPrefs.getInt(Globals.PREF_LAST_SEEN_BEFORE,
+                                                   Globals.PREF_LAST_SEEN_DEFAULT_INTERVAL);
+        mLastSeenEdit.setText(Long.toString(lastSeenInterval));
+
+        mDiscoveryPeriodEdit = (EditText)rootView.findViewById(R.id.txtDiscoveryPeriod);
         int discoverableDuration = mSharedPrefs.getInt(Globals.PREF_DISCOVERABLE_DURATION,
                                         Globals.PREF_DISCOVERABLE_DURATION_DEFAULT);
-        mTxtPeriod.setText(Integer.toString(discoverableDuration));
+        mDiscoveryPeriodEdit.setText(Integer.toString(discoverableDuration));
 
         Button btnDiscoveryApply = (Button)rootView.findViewById(R.id.btnDiscoveryPeriodApply);
         btnDiscoveryApply.setOnClickListener(this);
@@ -120,10 +126,19 @@ public class LocalLinkAdvSettingsFragment extends Fragment
 
     @Override
     public void onClick(View view) {
-        int discoverableDuration = Integer.parseInt(mTxtPeriod.getText().toString());
+        int discoverableDuration = Integer.parseInt(mDiscoveryPeriodEdit.getText().toString());
         SharedPreferences.Editor editor = mSharedPrefs.edit();
         editor.putInt(Globals.PREF_DISCOVERABLE_DURATION, discoverableDuration);
         editor.apply();
+    }
+
+    public void onLastSeenPeriodApply(View v) {
+
+        Globals.LAST_SEEN_INTERVAL = Long.parseLong(mLastSeenEdit.getText().toString());
+    }
+
+    public void onDiscoveryPeriodApply(View v) {
+
     }
 
     @Override

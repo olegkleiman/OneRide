@@ -99,9 +99,12 @@ public class PassengersAdapter extends RecyclerView.Adapter<PassengersAdapter.Vi
 
             holder.txtDriverName.setText(passenger.getFullName());
             Date lastSeen = passenger.getLastSeen();
-            SimpleDateFormat simpleDateFormat =
-                    new SimpleDateFormat("HH:mm:ss", Locale.UK);
-            holder.txtLastSeen.setText( simpleDateFormat.format(lastSeen));
+            if( lastSeen != null ) {
+                SimpleDateFormat simpleDateFormat =
+                        new SimpleDateFormat("HH:mm:ss", Locale.UK);
+                holder.txtLastSeen.setText(simpleDateFormat.format(lastSeen));
+            }
+
             if( !passenger.wasSelfPictured() ) {
                 holder.imageStatus.setVisibility(View.INVISIBLE);
             } else {

@@ -46,41 +46,49 @@
                 android:layout_marginRight="-8dp"
                 android:layout_marginEnd="-8dp"
                 android:layout_marginBottom="-2dp"
-                android:visibility="visible" />
+                android:visibility="visible"
+                tools:ignore="ContentDescription" />
 
             <android.support.v7.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
+                android:layout_centerVertical="true"
+                android:layout_toEndOf="@+id/userPicture"
                 android:layout_toRightOf="@+id/userPicture"
-                android:layout_toEndOf="@+id/userPicture">
+                android:gravity="center_vertical"
+                android:orientation="vertical">
+
                 <TextView
-                    android:layout_height="wrap_content"
-                    android:layout_width="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
                     android:id="@+id/txt_peer_name"
-                    android:text="Passenger Name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginStart="8dp"
                     android:layout_toEndOf="@+id/userPicture"
                     android:layout_toRightOf="@+id/userPicture"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginLeft="8dp"
+                    android:text="@string/passenger_name"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
                     tools:ignore="RtlHardcoded" />
+
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginLeft="8dp">
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginStart="8dp">
+
                     <TextView
-                        android:text="@string/lastSeen"
-                        android:layout_height="wrap_content"
                         android:layout_width="wrap_content"
-                        />
+                        android:layout_height="wrap_content"
+                        android:text="@string/lastSeen" />
+
                     <TextView
+                        android:id="@+id/txt_last_seen"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="17:05:55"
-                        android:id="@+id/txt_last_seen"/>
+                        tools:ignore="HardcodedText" />
 
                 </LinearLayout>
             </android.support.v7.widget.LinearLayoutCompat>
