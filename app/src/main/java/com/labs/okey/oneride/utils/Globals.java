@@ -18,6 +18,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.firebase.auth.FirebaseAuth;
 import com.labs.okey.oneride.DriverRoleActivity;
 import com.labs.okey.oneride.model.GlobalSettings;
 import com.labs.okey.oneride.model.PassengerFace;
@@ -121,6 +122,17 @@ public class Globals {
         if (mFbAccessTokenTracker != null)
             mFbAccessTokenTracker.stopTracking();
     }
+
+    private static FirebaseAuth mFirebaseAuth;
+    public static FirebaseAuth getFirebaseAuth() {
+
+        if( mFirebaseAuth == null ) {
+            mFirebaseAuth = FirebaseAuth.getInstance();
+        }
+
+        return mFirebaseAuth;
+    }
+
 
     private static MobileServiceClient wamsClient;
 

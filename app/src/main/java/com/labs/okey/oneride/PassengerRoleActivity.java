@@ -63,6 +63,9 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.Task;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -1239,12 +1242,28 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                                 .child("passengers")
                                 .child(userId);
 
-                        Map<String, Object> passenger = new HashMap<>();
-                        passenger.put("name", User.load(PassengerRoleActivity.this).getFullName());
+                        Map<String, Object> passengerMap = new HashMap<>();
+                        passengerMap.put("name", User.load(PassengerRoleActivity.this).getFullName());
                         SimpleDateFormat simpleDate = new SimpleDateFormat("dd MMM yyyy HH:mm:ss", Locale.US);
                         String dt = simpleDate.format(new Date());
-                        passenger.put("last_seen", dt);
-                        passengerRef.updateChildren(passenger);
+                        passengerMap.put("last_seen", dt);
+
+                        passengerRef
+                        .updateChildren(passengerMap)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    Globals.__log(LOG_TAG, "Last seen updated");
+                                }
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Globals.__logException(LOG_TAG, e);
+                            }
+                        });
 
                     }
 

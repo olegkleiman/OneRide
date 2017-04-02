@@ -11,7 +11,11 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.labs.okey.oneride.model.BtDeviceUser;
@@ -67,7 +71,23 @@ public class PassengerCIService extends Service {
                             String dt = simpleDate.format(new Date());
                             Map<String, Object> lastSeenMap = new HashMap<>();
                             lastSeenMap.put("last_seen", dt);
-                            passengerRef.updateChildren(lastSeenMap);
+
+                            passengerRef
+                            .updateChildren(lastSeenMap)
+                             .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()) {
+                                        Globals.__log(LOG_TAG, "Last seen updated");
+                                    }
+                                }
+                              })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Globals.__logException(LOG_TAG, e);
+                                }
+                            });
                         }
                     }
                 }

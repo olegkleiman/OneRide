@@ -40,12 +40,18 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FacebookAuthProvider;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.JsonObject;
 import com.labs.okey.oneride.adapters.ModesPeersAdapter;
 import com.labs.okey.oneride.model.FRMode;
@@ -167,6 +173,8 @@ public class MainActivity extends BaseActivity
                 startActivity(intent);
             }
         }
+
+        firebaseLogin(accessToken);
 
         Globals.__log(LOG_TAG, getString(R.string.log_start));
 
@@ -402,7 +410,29 @@ public class MainActivity extends BaseActivity
         startActivity(intent);
     }
 
+    private void firebaseLogin(String accessToken) {
+
+        final MobileServiceAuthenticationProvider tokenProvider = getTokenProvider();
+
+        if( tokenProvider == MobileServiceAuthenticationProvider.Facebook ) {
+
+            AuthCredential credential = FacebookAuthProvider.getCredential(accessToken);
+            Globals.getFirebaseAuth()
+                    .signInWithCredential(credential)
+                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            if( task.isSuccessful() ) {
+                                Globals.__log(LOG_TAG, "Firebase authentication completed");
+                            }
+                        }
+                    });
+        }
+
+    }
+
     private Boolean login(String accessToken, String accessTokenSecret, String authorizationCode) {
+
         final MobileServiceAuthenticationProvider tokenProvider = getTokenProvider();
         if (tokenProvider == null)
             throw new AssertionError("Token provider cannot be null");
@@ -414,6 +444,9 @@ public class MainActivity extends BaseActivity
             body.addProperty("id_token", accessToken);
             body.addProperty("authorization_code", authorizationCode);
         } else {
+
+
+
             body.addProperty("access_token", accessToken);
             if (!accessTokenSecret.isEmpty())
                 body.addProperty("access_token_secret", accessTokenSecret);
