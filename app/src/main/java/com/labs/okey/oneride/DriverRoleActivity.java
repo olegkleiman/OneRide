@@ -80,14 +80,21 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.Task;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.labs.okey.oneride.adapters.PassengersAdapter;
 import com.labs.okey.oneride.model.Approval;
 import com.labs.okey.oneride.model.GFCircle;
@@ -357,13 +364,8 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                 mPassengersAdapter.notifyDataSetChanged();
 
                 if (passengers.size() >= Globals.REQUIRED_PASSENGERS_NUMBER) {
-                    FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
-                    fab.setVisibility(View.VISIBLE);
-                    Context ctx = getApplicationContext();
-                    fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));
-                    fab.setTag(getString(R.string.submit_tag));
+                    showSubmitButton();
                 }
-
             }
 
         }
@@ -594,10 +596,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                             @Override
                             public void run() {
 
-                                Date now = new Date();
-
                                 Iterator<User> iterator = mPassengers.iterator();
                                 while( iterator.hasNext() ) {
+
+                                    Date now = new Date();
 
                                     User _passenger = iterator.next();
                                     Date lastSeen = _passenger.getLastSeen();
@@ -611,6 +613,38 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
                                             iterator.remove();
                                             mPassengersAdapter.notifyDataSetChanged();
+
+                                            DatabaseReference refPassenger =
+                                                mCurrentRideRef
+                                                    .child("passengers")
+                                                    .child(_passenger.getRegistrationId());
+                                            refPassenger.removeValue()
+                                                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                    @Override
+                                                    public void onComplete(@NonNull Task<Void> task) {
+                                                        if (task.isSuccessful()) {
+
+                                                            // Passenger has been removed -
+                                                            // Restore implied UI elements
+                                                            if( mPassengers.size() < Globals.REQUIRED_PASSENGERS_NUMBER ) {
+                                                                hideSubmitButton();
+
+                                                                if( mPassengers.size() == 0 ) {
+                                                                    View vEmptyText = findViewById(R.id.empty_view);
+                                                                    vEmptyText.setVisibility(View.VISIBLE);
+                                                                    mEmptyTextShown = true;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }).addOnFailureListener(new OnFailureListener() {
+                                                @Override
+                                                public void onFailure(@NonNull Exception e) {
+                                                    Globals.__logException(LOG_TAG, e);
+                                                }
+                                            });
+
+
                                         }
                                     }
                                 }
@@ -925,11 +959,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     mEmptyTextShown = false;
 
                     if( mPassengers.size() >= Globals.REQUIRED_PASSENGERS_NUMBER ) {
-                        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
-                        if( fab != null ) {
-                            fab.setVisibility(View.VISIBLE);
-                            mSubmitButtonShown = true;
-                        }
+                        showSubmitButton();
                     }
                 }
             });
@@ -1736,9 +1766,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
 
     public void onSubmitRide(View view) {
 
-        boolean bRequestApprovalBySefies = false;
+        view.setEnabled(false);
 
-        if( bRequestApprovalBySefies )
+        boolean bRequestApprovalBySelfies = false;
+
+        if( bRequestApprovalBySelfies )
             onSubmitRidePics(null);
         else {
 
@@ -1767,6 +1799,11 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     Snackbar.make(v, R.string.ride_upload_failed, Snackbar.LENGTH_LONG)
                             .show();
             } else {
+
+                Intent serviceIntent = new Intent(DriverRoleActivity.this,
+                                                  ChildEventListenerService.class);
+                stopService(serviceIntent);
+
                 mCurrentRide.setApproved(Globals.RIDE_STATUS.APPROVED.ordinal());
                 new UpdateCurrentRide().execute();
             }
@@ -2150,10 +2187,19 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
     }
 
     @UiThread
+    private void hideSubmitButton() {
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.submit_ride_button);
+        if( fab != null ) {
+            fab.setVisibility(View.GONE);
+            mSubmitButtonShown = false;
+        }
+    }
+
+    @UiThread
     private void showSubmitButton() {
 
         FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.submit_ride_button);
-        Context ctx =  getApplicationContext();
+        Context ctx = getApplicationContext();
         if( fab != null) {
             fab.setVisibility(View.VISIBLE);
             fab.setImageDrawable(ContextCompat.getDrawable(ctx, R.drawable.ic_action_done));

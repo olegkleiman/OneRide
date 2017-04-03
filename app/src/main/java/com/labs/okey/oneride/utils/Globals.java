@@ -295,8 +295,8 @@ public class Globals {
     public static final int PREF_DISCOVERABLE_DURATION_DEFAULT = 300;
 
     public static final String PREF_LAST_SEEN_BEFORE = "last_seen_interval";
-    public static final int PREF_LAST_SEEN_DEFAULT_INTERVAL = 30;
-    public static long LAST_SEEN_INTERVAL = 30L;
+    public static final int PREF_LAST_SEEN_DEFAULT_INTERVAL = 40;
+    public static long LAST_SEEN_INTERVAL = 40L;
 
     public static final String WAMS_URL = "https://oneride.azurewebsites.net";
     //public static final String WAMS_API_KEY = "omCudOMCUJgIGbOklMKYckSiGKajJU91";

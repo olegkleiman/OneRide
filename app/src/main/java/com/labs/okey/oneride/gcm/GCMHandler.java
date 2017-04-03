@@ -42,6 +42,9 @@ public class GCMHandler extends NotificationsHandler {
     @Override
     public void onReceive(final Context context, Bundle bundle) {
 
+        if( !Globals.isPushNotificationsModeEnabled() )
+            return;
+
         String message = bundle.getString("message");
         if( message == null || message.isEmpty() )
             return;

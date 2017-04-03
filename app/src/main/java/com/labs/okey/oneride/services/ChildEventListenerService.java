@@ -36,8 +36,63 @@ import io.fabric.sdk.android.Fabric;
 
 public class ChildEventListenerService extends Service {
 
-    private final String    LOG_TAG = getClass().getSimpleName();
-    private static final int NOTIFICATION_ID = 1;
+    private final String        LOG_TAG = getClass().getSimpleName();
+    private static final int    NOTIFICATION_ID = 1;
+    private String              mRideCode;
+    private DatabaseReference   mRideRef;
+
+    private ChildEventListener  mChildEventListener = new ChildEventListener() {
+
+        @Override
+        public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
+            String passengerId = dataSnapshot.getKey();
+
+            Date lastSeen = getLastSeen(dataSnapshot.getValue());
+            processJoinNotification(getApplicationContext(), passengerId, lastSeen);
+        }
+
+        @Override
+        public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
+            String passengerId = dataSnapshot.getKey();
+
+            Date lastSeen = getLastSeen(dataSnapshot.getValue());
+            updateJoin(passengerId, lastSeen);
+        }
+
+        @Override
+        public void onChildRemoved(DataSnapshot dataSnapshot) {
+            Log.i(LOG_TAG, "child removed");
+        }
+
+        @Override
+        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+            Log.i(LOG_TAG, "child moved");
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+            Log.e(LOG_TAG, databaseError.getMessage());
+        }
+
+        private Date getLastSeen(Object map ) {
+
+            if( map == null )
+                return null;
+
+            Map<String, Object> propsMap = (Map<String, Object>)map;
+            Date lastSeen = null;
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy HH:mm:ss", Locale.US);
+                String strLastSeen = (String) propsMap.get("last_seen");
+                lastSeen = sdf.parse(strLastSeen);
+
+            } catch(ParseException ex) {
+                lastSeen = new Date();
+            }
+
+            return lastSeen;
+        }
+    };
 
     public ChildEventListenerService() {
     }
@@ -48,51 +103,21 @@ public class ChildEventListenerService extends Service {
     }
 
     @Override
+    public void onDestroy() {
+
+        if( mRideRef != null )
+            mRideRef.removeEventListener(mChildEventListener);
+    }
+
+    @Override
     public int onStartCommand(Intent intent, int flags, int startid) {
-        String rideCode = intent.getStringExtra("ridecode");
+        mRideCode = intent.getStringExtra("ridecode");
 
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference rideRef = database.getReference("rides").child(rideCode);
-
-        rideRef.child("passengers").addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
-                String passengerId = dataSnapshot.getKey();
-                Globals.__log(LOG_TAG, "passenger joined. UserId: " + passengerId);
-
-                processJoinNotification(getApplicationContext(), passengerId);
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String prevChildKey) {
-                String passengerId = dataSnapshot.getKey();
-                Map<String, Object> propsMap = (Map<String, Object>)dataSnapshot.getValue();
-                Date lastSeen = null;
-                try {
-                    SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy HH:mm:ss", Locale.US);
-                    String strLastSeen = (String) propsMap.get("last_seen");
-                    lastSeen = sdf.parse(strLastSeen);
-                } catch(ParseException ex) {
-                    lastSeen = new Date();
-                }
-                updateJoin(passengerId, lastSeen);
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-                Log.i(LOG_TAG, "child removed");
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-                Log.i(LOG_TAG, "child moved");
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.i(LOG_TAG, databaseError.getMessage());
-            }
-        });
+        if( database != null ) {
+            mRideRef = database.getReference("rides").child(mRideCode).child("passengers");
+            mRideRef.addChildEventListener(mChildEventListener);
+        }
 
         return START_STICKY;
     }
@@ -111,7 +136,7 @@ public class ChildEventListenerService extends Service {
         }
     }
 
-    private void processJoinNotification(final Context context, final String userId) {
+    private void processJoinNotification(final Context context, final String userId, final Date lastSeen) {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
         final boolean allowSamePassengers = sharedPrefs.getBoolean(Globals.PREF_ALLOW_SAME_PASSENGERS, false);
 
@@ -123,6 +148,7 @@ public class ChildEventListenerService extends Service {
             @Override
             public void onSuccess(MobileServiceList<User> users) {
                 User passenger = users.get(0);
+                passenger.setLastSeen(lastSeen);
 
                 DriverRoleActivity driverActivity = Globals.getDriverActivity();
                 if( driverActivity != null ) {
