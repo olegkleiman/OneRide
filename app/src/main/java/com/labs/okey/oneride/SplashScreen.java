@@ -245,29 +245,29 @@ public class SplashScreen extends AppCompatActivity {
 
                             AccessToken.refreshCurrentAccessTokenAsync();
 
-//                            AccessToken.refreshCurrentAccessTokenAsync(new AccessToken.AccessTokenRefreshCallback() {
-//                                @Override
-//                                public void OnTokenRefreshed(AccessToken accessToken) {
-//                                    AccessToken.setCurrentAccessToken(accessToken);
-//                                    bRes[0] = true;
-//
-//                                    refreshLatch.countDown();
-//                                }
-//
-//                                @Override
-//                                public void OnTokenRefreshFailed(FacebookException exception) {
-//                                    bRes[0] = false;
-//
-//                                    refreshLatch.countDown();
-//                                }
-//
-//                            });
+                            AccessToken.refreshCurrentAccessTokenAsync(new AccessToken.AccessTokenRefreshCallback() {
+                                @Override
+                                public void OnTokenRefreshed(AccessToken accessToken) {
+                                    AccessToken.setCurrentAccessToken(accessToken);
+                                    bRes[0] = true;
 
-//                            try {
-//                                refreshLatch.await();
-//                            } catch (InterruptedException ex) {
-//                                Globals.__logException(ex);
-//                            }
+                                    refreshLatch.countDown();
+                                }
+
+                                @Override
+                                public void OnTokenRefreshFailed(FacebookException exception) {
+                                    bRes[0] = false;
+
+                                    refreshLatch.countDown();
+                                }
+
+                            });
+
+                            try {
+                                refreshLatch.await();
+                            } catch (InterruptedException ex) {
+                                Globals.__logException(ex);
+                            }
 
                         } else {
                             Globals.initializeTokenTracker(getApplicationContext());

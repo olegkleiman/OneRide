@@ -1,8 +1,8 @@
 <component name="libraryTable">
   <library name="notification-hubs-android-sdk-0.4">
     <CLASSES>
-      <root url="jar://$USER_HOME$/.android/build-cache/fac7806298b1a8a23d17842f5095f595c2bed393/output/jars/classes.jar!/" />
-      <root url="file://$USER_HOME$/.android/build-cache/fac7806298b1a8a23d17842f5095f595c2bed393/output/res" />
+      <root url="jar://$USER_HOME$/.android/build-cache/51f9eda90f86615fd8ed7f5cca9376a0310b1277/output/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.android/build-cache/51f9eda90f86615fd8ed7f5cca9376a0310b1277/output/res" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

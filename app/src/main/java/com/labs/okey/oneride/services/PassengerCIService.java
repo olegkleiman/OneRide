@@ -31,7 +31,6 @@ public class PassengerCIService extends Service {
 
     private final String                LOG_TAG = getClass().getSimpleName();
     private SharedPreferences           mSharedPrefs = null;
-    private BluetoothAdapter            mBluetoothAdapter;
     private String                      mDriverId;
     private String                      mPassengerID;
     private String                      mRideCode;
@@ -61,6 +60,9 @@ public class PassengerCIService extends Service {
                     if( rssi >= -(currentRssiLevel) ) { // these are negative values
 
                         if (btDeviceUser.get_UserId().equals(mDriverId)) {
+
+                            Globals.__log(LOG_TAG, "Driver's device found");
+
                             FirebaseDatabase database = FirebaseDatabase.getInstance();
                             DatabaseReference ridesRef = database.getReference("rides");
 
@@ -126,14 +128,10 @@ public class PassengerCIService extends Service {
                 !Globals.FB_PROVIDER.equalsIgnoreCase(authProvider)){
             Globals.__log(LOG_TAG, "Unrecognized provider: " + authProvider);
             return null;
-        } else
-            Globals.__log(LOG_TAG, "Provider: " + authProvider);
+        }
 
         String userId = tokens[1];
-        Globals.__log(LOG_TAG, "User registration id: " + userId);
-
         String rideCode = tokens[2];
-        Globals.__log(LOG_TAG, "Ride code: " + rideCode);
 
         BtDeviceUser btDeviceUser = new BtDeviceUser(device);
         btDeviceUser.set_authProvider(authProvider);
@@ -153,16 +151,16 @@ public class PassengerCIService extends Service {
 
     private void renewBtDiscovery() {
 
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-        if( !mBluetoothAdapter.isDiscovering() )
-            mBluetoothAdapter.startDiscovery ();
+        if( !bluetoothAdapter.isDiscovering() )
+            bluetoothAdapter.startDiscovery ();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startid) {
 
-        if( intent == null ) {
+        if( intent != null ) {
 
             mSharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 

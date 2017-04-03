@@ -23,16 +23,16 @@
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="6dp"
+            android:padding="6sp"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp">
+            android:layout_marginTop="8sp"
+            android:layout_marginBottom="8sp">
 
             <com.pkmmte.view.CircularImageView
-                android:layout_width="72dp"
-                android:layout_height="72dp"
-                android:layout_marginStart="2dip"
-                android:layout_marginLeft="2dip"
+                android:layout_width="72sp"
+                android:layout_height="72sp"
+                android:layout_marginStart="2sp"
+                android:layout_marginLeft="2sp"
                 android:contentDescription="@string/driver_pic"
                 app:border="true"
                 app:border_color="#FFFFFFFF"
@@ -41,8 +41,8 @@
                 android:src="@drawable/driver_office"/>
 
             <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+                android:layout_width="32sp"
+                android:layout_height="32sp"
                 android:id="@+id/imgStatus"
                 android:src="@drawable/load"
                 android:contentDescription="@string/driver_status"
@@ -50,9 +50,9 @@
                 android:layout_alignBottom="@+id/userPicture"
                 android:layout_toStartOf="@+id/linearLayout"
                 android:layout_toLeftOf="@+id/linearLayout"
-                android:layout_marginRight="-8dp"
-                android:layout_marginEnd="-8dp"
-                android:layout_marginBottom="-2dp"
+                android:layout_marginRight="-8sp"
+                android:layout_marginEnd="-8sp"
+                android:layout_marginBottom="-2sp"
                 android:visibility="gone"/>
 
             <ProgressBar
@@ -69,14 +69,14 @@
                 android:layout_marginBottom="-2dp"
                 android:progressDrawable="@drawable/circular_progress"/>
 
-            <LinearLayout
+            <android.support.v7.widget.LinearLayoutCompat
                 android:orientation="vertical"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"
+                android:layout_centerVertical="true"
                 android:layout_marginStart="18dp"
                 android:layout_marginLeft="18dp"
-                android:gravity="center_vertical|start"
+                android:gravity="center_vertical"
                 android:layout_toEndOf="@+id/userPicture"
                 android:layout_toRightOf="@+id/userPicture"
                 android:id="@+id/linearLayout">
@@ -88,24 +88,26 @@
                     android:ellipsize="marquee"
                     android:maxLines="1"
                     android:text="@string/driver_name"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    style="@android:style/TextAppearance.Medium"
                     tools:text="@string/driver_name" />
 
                 <LinearLayout
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent"
-                    android:gravity="center_vertical|start"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:layout_marginTop="4dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        style="@android:style/TextAppearance.Small"
                         android:text="@string/rssi_label"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        style="@android:style/TextAppearance.Small"
                         android:layout_marginLeft="4dp"
                         android:layout_marginStart="4dp"
                         android:id="@+id/txt_rssi"/>
@@ -115,20 +117,22 @@
                 <LinearLayout
                     android:layout_height="wrap_content"
                     android:layout_width="match_parent"
-                    android:gravity="center_vertical|start"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:layout_marginTop="4dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        style="@android:style/TextAppearance.Small"
                         android:text="@string/ride_code_label" />
 
                     <TextView
-                        android:id="@+id/txt_ride_code"
-                        android:textStyle="bold"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:id="@+id/txt_ride_code"
+                        style="@android:style/TextAppearance.Small"
+                        android:textStyle="bold"
                         android:maxLines="1"
                         android:ellipsize="marquee"
                         android:layout_marginLeft="4dp"
@@ -136,7 +140,7 @@
 
                 </LinearLayout>
 
-            </LinearLayout>
+            </android.support.v7.widget.LinearLayoutCompat>
 
         </RelativeLayout>
 
