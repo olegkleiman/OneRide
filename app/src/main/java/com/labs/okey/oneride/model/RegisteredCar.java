@@ -1,9 +1,12 @@
 package com.labs.okey.oneride.model;
 
+import android.databinding.BaseObservable;
+
 /**
- * Created by Oleg Kleiman on 17-Jun-15.
+ * @author Oleg Kleiman
+ * created 17-Jun-15
  */
-public class RegisteredCar {
+public class RegisteredCar extends BaseObservable {
 
     private String carNumber;
     public String getCarNumber() {

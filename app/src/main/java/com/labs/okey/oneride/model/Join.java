@@ -5,7 +5,8 @@ import com.google.gson.annotations.Expose;
 import java.util.Date;
 
 /**
- * Created by Oleg Kleiman on 14-Apr-15.
+ * @author Oleg Kleiman
+ * created 14-Apr-15.
  */
 public class Join {
 

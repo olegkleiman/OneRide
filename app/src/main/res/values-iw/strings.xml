@@ -32,7 +32,7 @@
     <string name="reclaim_tutorial_fragment">הדרכת ערעור</string>
     <string name="title_activity_driver_role">מצב נהג</string>
     <string name="title_activity_my_rides">הנסיעות שלי</string>
-    <string name="edit_car_button_title">עריכה</string>
+    <string name="edit">עריכה</string>
     <string name="edit_car_dialog_caption1">בחר\י את רכב הנוסע</string>
     <string name="add_car_dialog_caption">הוסף רכב</string>
     <string name="yes">כן</string>
@@ -159,6 +159,5 @@
     <string name="picture_request">בקשה לתמונה</string>
     <string name="registration_exists">חשבון משתמש זה כבר רשום במערכת. להחליף את הרישום הקודם?</string>
     <string name="lastSeen">"נצפה לאחרונה ב "</string>
-
 
 </resources>

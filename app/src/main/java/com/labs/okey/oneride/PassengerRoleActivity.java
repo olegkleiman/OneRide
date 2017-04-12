@@ -78,7 +78,6 @@ import com.labs.okey.oneride.model.GFCircle;
 import com.labs.okey.oneride.model.Join;
 import com.labs.okey.oneride.model.User;
 import com.labs.okey.oneride.model.WifiP2pDeviceUser;
-import com.labs.okey.oneride.services.ChildEventListenerService;
 import com.labs.okey.oneride.services.PassengerCIService;
 import com.labs.okey.oneride.utils.Globals;
 import com.labs.okey.oneride.utils.IRecyclerClickListener;
@@ -1520,6 +1519,7 @@ public class PassengerRoleActivity extends BaseActivityWithGeofences
                     .onPositive(new MaterialDialog.SingleButtonCallback(){
                         @Override
                         public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            Globals.passengerState.setText("Now you're participating in ride");
                             ((Activity)getContext()).finish();
                         }
                     })

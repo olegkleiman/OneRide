@@ -1,6 +1,9 @@
 package com.labs.okey.oneride.adapters;
 
 import android.content.Context;
+import android.databinding.DataBindingUtil;
+import android.support.annotation.NonNull;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,75 +11,96 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import com.labs.okey.oneride.R;
+import com.labs.okey.oneride.SettingsActivity;
+import com.labs.okey.oneride.databinding.CarItemRowBinding;
 import com.labs.okey.oneride.model.RegisteredCar;
 
 import java.util.List;
 
 /**
- * Created by Oleg on 05-Jun-15.
+ * @author Oleg Kleiman
+ * created 05-Jun-15,
+ * updated to use DataBinding 11-Apr-17
  */
-public class CarsAdapter extends ArrayAdapter<RegisteredCar> {
+public class CarsAdapter extends RecyclerView.Adapter<CarsAdapter.ViewHolder>
+                         {
 
-    Context context;
-    int layoutResourceId;
-    List<RegisteredCar> mItems;
-
-    LayoutInflater mInflater;
+    private List<RegisteredCar> mItems;
+    private SettingsActivity.ActionListener actionListener;
 
     public CarsAdapter(Context context,
-                       int viewResourceId,
-                       List<RegisteredCar> objects){
-        super(context, viewResourceId, objects);
-
-        this.context = context;
-        this.layoutResourceId = viewResourceId;
-        mItems = objects;
-
-        mInflater = (LayoutInflater) context
-                        .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                       List<RegisteredCar> cars,
+                       SettingsActivity.ActionListener listener){
+        mItems = cars;
+        this.actionListener = listener;
     }
 
     @Override
-    public int getCount() {
+    public int getItemCount() {
         return mItems.size();
     }
 
-    @Override
-    public RegisteredCar getItem(int position) {
+    private RegisteredCar getItem(int position) {
         return mItems.get(position);
     }
 
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        View row = convertView;
-        CarHolder holder = null;
-
-        RegisteredCar car = this.getItem(position);
-
-        if( row == null ) {
-            row = mInflater.inflate(layoutResourceId, parent, false);
-            holder = new CarHolder();
-            
-            holder.txtViewNumber = (TextView)row.findViewById(R.id.txtCarNumber);
-            row.setTag(holder);
-
-        } else {
-            holder = (CarHolder)row.getTag();
-        }
-
-        String s = "";
-        String carNick = car.getCarNick();
-        if( carNick != null &&  !carNick.isEmpty() ) {
-            s = " (" + carNick + ")";
-        }
-
-        s += car.getCarNumber();
-        holder.txtViewNumber.setText(s);
-
-        return row;
+    public void add(RegisteredCar car) {
+        mItems.add(car);
     }
 
-    static class CarHolder {
-        TextView txtViewNumber;
+    public void remove(RegisteredCar car) {
+        mItems.remove(car);
+    }
+
+    @Override
+    public ViewHolder onCreateViewHolder(ViewGroup parent,
+                                         int viewType) {
+        if( parent instanceof RecyclerView ) {
+            LayoutInflater layoutInflater = LayoutInflater.
+                    from(parent.getContext());
+            CarItemRowBinding binging = CarItemRowBinding.inflate(layoutInflater, parent, false);
+
+            return new ViewHolder(binging, actionListener);
+        } else {
+            throw new RuntimeException("Something is wrong with Cars Recycler");
+        }
+    }
+
+    @Override
+    public void onBindViewHolder(ViewHolder holder,
+                                 int position) {
+        RegisteredCar car = this.getItem(position);
+        holder.bind(car);
+        holder.binding.executePendingBindings();
+    }
+
+    public static class ViewHolder extends RecyclerView.ViewHolder
+                                   implements View.OnClickListener {
+
+        private final CarItemRowBinding binding;
+        private SettingsActivity.ActionListener actionListener;
+
+        public ViewHolder(CarItemRowBinding binding,
+                          SettingsActivity.ActionListener actionListener) {
+
+            super(binding.getRoot());
+
+            this.actionListener = actionListener;
+            binding.getRoot().setOnClickListener(this);
+
+            this.binding = binding;
+        }
+
+        public void bind(RegisteredCar car) {
+            binding.setCar(car);
+            binding.executePendingBindings();
+        }
+
+        @Override
+        public void onClick(View v) {
+            RegisteredCar car = binding.getCar();
+            if( actionListener != null )
+                actionListener.showChangeCarDialog(car);
+        }
     }
 }

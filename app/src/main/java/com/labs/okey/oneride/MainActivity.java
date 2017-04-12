@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
+import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -51,9 +52,9 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FacebookAuthProvider;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.JsonObject;
 import com.labs.okey.oneride.adapters.ModesPeersAdapter;
+import com.labs.okey.oneride.databinding.ActivityMainBinding;
 import com.labs.okey.oneride.model.FRMode;
 import com.labs.okey.oneride.model.GeoFence;
 import com.labs.okey.oneride.model.User;
@@ -142,7 +143,11 @@ public class MainActivity extends BaseActivity
 //        faceapiUtils.dumpVerificationMatrix(mDepth);
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+
+        final ActivityMainBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        binding.setState(Globals.passengerState);
+
+        //setContentView(R.layout.activity_main);
 
         setupUI(getString(R.string.title_activity_main), "");
 
@@ -303,6 +308,8 @@ public class MainActivity extends BaseActivity
     @Override
     public void onResume() {
         super.onResume();
+
+        Globals.passengerState.getText();
     }
 
     @Override
@@ -406,6 +413,8 @@ public class MainActivity extends BaseActivity
     }
 
     public void onPassengerClicked(View v) {
+        Globals.passengerState.resetText();
+
         Intent intent = new Intent(this, PassengerRoleActivity.class);
         startActivity(intent);
     }

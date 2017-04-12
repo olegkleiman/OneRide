@@ -22,6 +22,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.labs.okey.oneride.DriverRoleActivity;
 import com.labs.okey.oneride.model.GlobalSettings;
 import com.labs.okey.oneride.model.PassengerFace;
+import com.labs.okey.oneride.model.PassengerState;
 import com.labs.okey.oneride.model.User;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
@@ -229,6 +230,8 @@ public class Globals {
             Globals.__logException(e);
         }
     }
+
+    public static PassengerState passengerState = new PassengerState();
 
     public static void __log(String tag, String message) {
         if (Fabric.isInitialized() && Crashlytics.getInstance() != null) {

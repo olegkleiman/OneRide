@@ -55,78 +55,9 @@
                         android:layout_width="match_parent"
                         android:scrollbars="vertical"/>
 
-                    <!--<FrameLayout-->
-                        <!--android:layout_width="wrap_content"-->
-                        <!--android:layout_height="wrap_content"-->
-                        <!--android:layout_alignParentBottom="true"-->
-                        <!--android:layout_alignParentRight="true"-->
-                        <!--android:layout_alignParentEnd="true">-->
-
-                        <!--<android.support.design.widget.FloatingActionButton-->
-                            <!--android:id="@+id/join_ride_button"-->
-                            <!--android:layout_width="wrap_content"-->
-                            <!--android:layout_height="wrap_content"-->
-                            <!--android:src="@drawable/ic_action_camera"-->
-
-                            <!--app:fabSize="normal"-->
-                            <!--app:elevation="4dp"-->
-                            <!--app:backgroundTint="@color/ColorAccent"-->
-                            <!--app:borderWidth="0dp"-->
-
-                            <!--android:onClick="onCameraCV"-->
-                            <!--android:visibility="visible"-->
-                            <!--android:layout_marginBottom="0dp"-->
-                            <!--android:layout_marginRight="0dp"-->
-                            <!--android:layout_marginEnd="0dp"/>-->
-                    <!--</FrameLayout>-->
-
                 </RelativeLayout>
 
             </RelativeLayout>
-
-            <!--<LinearLayout-->
-                <!--android:id="@+id/passenger_snackbar"-->
-                <!--android:layout_width="fill_parent"-->
-                <!--android:layout_height="@dimen/snackbar_height"-->
-                <!--android:orientation="horizontal"-->
-                <!--android:background="@color/ColorPrimary"-->
-                <!--android:animateLayoutChanges="true"-->
-                <!--android:weightSum="10"-->
-                <!--android:visibility="visible">-->
-    <!-- -->
-                <!--<TextSwitcher-->
-                    <!--android:id="@+id/passenger_monitor_text_switcher"-->
-                    <!--android:layout_weight="10"-->
-                    <!--android:layout_width="0dp"-->
-                    <!--android:layout_height="fill_parent"-->
-                    <!--android:paddingLeft="@dimen/snackbar_leftpadding"-->
-                    <!--android:paddingStart="@dimen/snackbar_leftpadding"-->
-                    <!--android:paddingRight="@dimen/snackbar_rightpadding"-->
-                    <!--android:paddingEnd="@dimen/snackbar_rightpadding">-->
-    <!-- -->
-                    <!--<TextView-->
-                        <!--android:layout_width="fill_parent"-->
-                        <!--android:layout_height="fill_parent"-->
-    <!-- -->
-                        <!--android:background="@color/ColorPrimary"-->
-                        <!--android:textAppearance="?android:attr/textAppearanceMedium"-->
-                        <!--android:textColor="@color/white"-->
-                        <!--android:text="@string/geofence_outside_title"-->
-    <!-- -->
-                        <!--android:gravity="center_vertical|fill_vertical|start|center_horizontal" />-->
-    <!-- -->
-                    <!--<TextView-->
-                        <!--android:layout_width="fill_parent"-->
-                        <!--android:layout_height="fill_parent"-->
-                        <!--android:background="@color/ColorPrimary"-->
-                        <!--android:textAppearance="?android:attr/textAppearanceMedium"-->
-                        <!--android:textColor="@color/white"-->
-                        <!--android:text="@string/geofence_outside_title"-->
-                        <!--android:gravity="center_vertical|fill_vertical|start|center_horizontal" />-->
-    <!-- -->
-                <!--</TextSwitcher>-->
-    <!-- -->
-            <!--</LinearLayout>-->
 
         </LinearLayout>
 

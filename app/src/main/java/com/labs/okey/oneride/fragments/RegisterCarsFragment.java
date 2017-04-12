@@ -5,6 +5,9 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -58,9 +61,12 @@ public class RegisterCarsFragment extends Fragment {
                 }
             }
 
-            ListView listView = (ListView)v.findViewById(R.id.carsListView);
-            mCarsAdapter = new CarsAdapter(getActivity(), R.layout.car_item_row, mCars);
-            listView.setAdapter(mCarsAdapter);
+            RecyclerView recycler = (RecyclerView)v.findViewById(R.id.carsListView);
+            recycler.setHasFixedSize(true);
+            recycler.setLayoutManager(new LinearLayoutManager(getActivity()));
+            recycler.setItemAnimator(new DefaultItemAnimator());
+            mCarsAdapter = new CarsAdapter(getActivity(), mCars, null);
+            recycler.setAdapter(mCarsAdapter);
 
             View addButton = v.findViewById(R.id.add_car_button);
             addButton.setOnClickListener(new View.OnClickListener() {

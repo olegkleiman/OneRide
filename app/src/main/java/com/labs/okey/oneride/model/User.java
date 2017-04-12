@@ -2,11 +2,17 @@ package com.labs.okey.oneride.model;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.databinding.BaseObservable;
+import android.databinding.Bindable;
+import android.databinding.BindingAdapter;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
+import android.widget.ImageView;
 
+import com.labs.okey.oneride.BR;
 import com.labs.okey.oneride.utils.Globals;
+import com.labs.okey.oneride.utils.VolleyImageLoader;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -15,7 +21,8 @@ import java.util.Date;
  * @author Oleg Kleiman
  * created 11-Apr-15.
  */
-public class User implements Parcelable, Serializable {
+public class User extends BaseObservable
+        implements Parcelable, Serializable  {
 
     @com.google.gson.annotations.SerializedName("id")
     public String Id;
@@ -54,8 +61,18 @@ public class User implements Parcelable, Serializable {
 
     @com.google.gson.annotations.SerializedName("picture_url")
     private String picture_url;
+    @Bindable
     public String getPictureURL() { return this.picture_url; }
-    public void setPictureURL(String value) { this.picture_url = value; }
+    public void setPictureURL(String url) { this.picture_url = url; }
+    @BindingAdapter(value={"android:src"})
+    public static void loadPictureUrl(ImageView imageView, String url) {
+        if( url == null ) {
+            imageView.setImageDrawable(null);
+        } else {
+            VolleyImageLoader.loadInto(imageView, url);
+        }
+
+    }
 
     @com.google.gson.annotations.SerializedName("email")
     private String email;
@@ -64,13 +81,17 @@ public class User implements Parcelable, Serializable {
 
     @com.google.gson.annotations.SerializedName("phone")
     private String phone;
+    @Bindable
     public String getPhone() { return this.phone; }
-    public void setPhone(String value) { this.phone = value; }
+    public void setPhone(String value) {
+        this.phone = value;
+        notifyPropertyChanged(BR.phone);
+    }
 
     @com.google.gson.annotations.SerializedName("use_phone")
     private Boolean usePhone = true;
-    public Boolean getUsePhone() { return this.usePhone; }
-    public void setUsePhone(Boolean value) { this.usePhone = value; }
+    private Boolean getUsePhone() { return this.usePhone; }
+    private void setUsePhone(Boolean value) { this.usePhone = value; }
 
     @com.google.gson.annotations.SerializedName("platform")
     private String platform;

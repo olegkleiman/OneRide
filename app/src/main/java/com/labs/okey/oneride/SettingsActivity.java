@@ -3,8 +3,6 @@ package com.labs.okey.oneride;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.databinding.DataBindingUtil;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -15,24 +13,21 @@ import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.android.volley.Cache;
-import com.android.volley.RequestQueue;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.ImageLoader;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.labs.okey.oneride.adapters.CarsAdapter;
 import com.labs.okey.oneride.databinding.ActivitySettingsBinding;
@@ -40,14 +35,12 @@ import com.labs.okey.oneride.model.GeoFence;
 import com.labs.okey.oneride.model.RegisteredCar;
 import com.labs.okey.oneride.model.User;
 import com.labs.okey.oneride.utils.Globals;
-import com.labs.okey.oneride.utils.VolleySingletone;
 import com.labs.okey.oneride.utils.WAMSVersionTable;
 import com.labs.okey.oneride.utils.wamsUtils;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
 import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
-import com.pkmmte.view.CircularImageView;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -74,7 +67,7 @@ public class SettingsActivity extends BaseActivity
         super.onCreate(savedInstanceState);
         //setContentView(R.layout.activity_settings);
 
-        ActivitySettingsBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_settings);
+        final ActivitySettingsBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_settings);
 
         setupUI(binding, getString(R.string.title_activity_settings), "");
     }
@@ -218,54 +211,6 @@ public class SettingsActivity extends BaseActivity
             providerLogoImageView.setImageDrawable(ContextCompat
                                 .getDrawable(this, drawableLogoId));
         }
-
-        // Retrieves an image through Volley
-        final CircularImageView profileImageView = (CircularImageView)findViewById(R.id.imageProfileView);
-        if( profileImageView == null )
-            return;
-
-        VolleySingletone volley = Globals.volley;
-        if( volley == null )
-            return;
-
-        RequestQueue requestQueue = Globals.volley.getRequestQueue();
-        if( requestQueue == null )
-            return;
-
-        Cache cache = requestQueue.getCache();
-        if( cache == null )
-            return;
-
-        Cache.Entry entry = cache.get(mUser.getPictureURL());
-        if( entry != null ) {
-            Bitmap bitmap = BitmapFactory.decodeByteArray(entry.data, 0, entry.data.length);
-            profileImageView.setImageBitmap(bitmap);
-        } else {
-
-            ImageLoader imageLoader = Globals.volley.getImageLoader();
-            String pictureURL = mUser.getPictureURL();
-            if( pictureURL.isEmpty() )
-                return;
-
-            if( !pictureURL.contains("https") )
-                pictureURL = pictureURL.replace("http", "https");
-            imageLoader.get(pictureURL,
-                    new ImageLoader.ImageListener() {
-                    @Override
-                    public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
-
-                        Bitmap bitmap = response.getBitmap();
-                        if (bitmap != null )
-                            profileImageView.setImageBitmap(bitmap);
-                    }
-
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Globals.__log(LOG_TAG, error.toString());
-                    }
-            });
-        }
-
     }
 
 //    private void setUserPicture(Bitmap bitmap) {
@@ -282,6 +227,84 @@ public class SettingsActivity extends BaseActivity
 //        if( userPicture != null )
 //            userPicture.setImageDrawable(drawable);
 //    }
+
+    public class ActionListener {
+        public void showChangeCarDialog(final RegisteredCar car) {
+
+            MaterialDialog dialog = new MaterialDialog.Builder(SettingsActivity.this)
+                    .title(R.string.edit_car_dialog_caption)
+                    .customView(R.layout.dialog_add_car, true)
+                    .positiveText(R.string.edit_car_button_save)
+                    .negativeText(android.R.string.cancel)
+                    .neutralText(R.string.edit_car_button_delete)
+                    .autoDismiss(false)
+                    .cancelable(true)
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog,
+                                            @NonNull DialogAction which) {
+                            String strCarNumber = mCarInput.getText().toString();
+                            if (strCarNumber.length() < 7) {
+                                mCarInput.setError(getString(R.string.car_number_validation_error));
+                                return;
+                            }
+
+                            mCars.remove(car);
+
+                            String carNick = mCarNick.getText().toString();
+                            RegisteredCar registeredCar = new RegisteredCar();
+                            registeredCar.setCarNumber(strCarNumber);
+                            registeredCar.setCarNick(carNick);
+
+                            mCars.add(registeredCar);
+
+                            // Adapter's items will be updated since underlaying list changes
+                            mCarsAdapter.notifyDataSetChanged();
+
+                            saveCars();
+
+                            dialog.dismiss();
+                        }
+                    })
+                    .onNegative(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog,
+                                            @NonNull DialogAction which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .onNeutral(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog,
+                                            @NonNull DialogAction which) {
+                            String carNumber = mCarInput.getText().toString();
+
+                            Iterator<RegisteredCar> iterator = mCars.iterator();
+                            while( iterator.hasNext() ) {
+                                RegisteredCar _car = iterator.next();
+                                if (_car.getCarNumber().equals(carNumber)) {
+                                    iterator.remove();
+
+                                    mCarsAdapter.remove(_car);
+                                    mCarsAdapter.notifyDataSetChanged();
+
+                                    saveCars();
+                                }
+                            }
+
+                            dialog.dismiss();
+                        }
+                    })
+                    .build();
+
+                    mCarInput = (EditText) dialog.getCustomView().findViewById(R.id.txtCarNumber);
+                    mCarInput.setText(car.getCarNumber());
+                    mCarNick = (EditText) dialog.getCustomView().findViewById(R.id.txtCarNick);
+                    mCarNick.setText(car.getCarNick());
+
+                    dialog.show();
+        }
+    }
 
     protected void setupUI(ActivitySettingsBinding binding, String title, String subTitle) {
         super.setupUI(title, subTitle);
@@ -317,98 +340,13 @@ public class SettingsActivity extends BaseActivity
                 }
             }
 
-            mCarsAdapter = new CarsAdapter(this, R.layout.car_item_row, mCars);
-            ListView listView = (ListView)findViewById(R.id.carsListView);
-            if( listView == null )
-                return;
-
-            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent,
-                                        final View view,
-                                        int position, long id) {
-
-                    final RegisteredCar currentCar =  mCarsAdapter.getItem(position);
-
-                    MaterialDialog dialog = new MaterialDialog.Builder(SettingsActivity.this)
-                            .title(R.string.edit_car_dialog_caption)
-                            .customView(R.layout.dialog_add_car, true)
-                            .positiveText(R.string.edit_car_button_save)
-                            .negativeText(android.R.string.cancel)
-                            .neutralText(R.string.edit_car_button_delete)
-                            .autoDismiss(false)
-                            .cancelable(true)
-                            .onPositive(new MaterialDialog.SingleButtonCallback() {
-                                @Override
-                                public void onClick(@NonNull MaterialDialog dialog,
-                                                    @NonNull DialogAction which) {
-                                    String strCarNumber = mCarInput.getText().toString();
-                                    if (strCarNumber.length() < 7) {
-                                        mCarInput.setError(getString(R.string.car_number_validation_error));
-                                        return;
-                                    }
-
-                                    mCars.remove(currentCar);
-
-                                    String carNick = mCarNick.getText().toString();
-
-                                    RegisteredCar registeredCar = new RegisteredCar();
-                                    registeredCar.setCarNumber(strCarNumber);
-                                    registeredCar.setCarNick(carNick);
-
-                                    mCars.add(registeredCar);
-
-                                    // Adapter's items will be updated since underlaying list changes
-                                    mCarsAdapter.notifyDataSetChanged();
-
-                                    saveCars();
-
-
-                                    dialog.dismiss();
-
-                                }
-                            })
-                            .onNegative(new MaterialDialog.SingleButtonCallback() {
-                                @Override
-                                public void onClick(@NonNull MaterialDialog dialog,
-                                                    @NonNull DialogAction which) {
-                                    dialog.dismiss();
-                                }
-                            })
-                            .onNeutral(new MaterialDialog.SingleButtonCallback() {
-                                @Override
-                                public void onClick(@NonNull MaterialDialog dialog,
-                                                    @NonNull DialogAction which) {
-                                    String carNumber = mCarInput.getText().toString();
-
-                                    RegisteredCar carToRemove = null;
-                                    for (RegisteredCar car : mCars) {
-                                        if (car.getCarNumber().equals(carNumber)) {
-                                            carToRemove = car;
-                                        }
-                                    }
-
-                                    if (carToRemove != null) {
-
-                                        mCarsAdapter.remove(carToRemove);
-                                        mCarsAdapter.notifyDataSetChanged();
-
-                                        saveCars();
-                                    }
-                                    dialog.dismiss();
-                                }
-                            })
-                            .build();
-                    mCarInput = (EditText) dialog.getCustomView().findViewById(R.id.txtCarNumber);
-                    mCarInput.setText(currentCar.getCarNumber());
-                    mCarNick = (EditText) dialog.getCustomView().findViewById(R.id.txtCarNick);
-                    mCarNick.setText(currentCar.getCarNick());
-
-                    dialog.show();
-
-                }
-            });
-            listView.setAdapter(mCarsAdapter);
+            ActionListener actionListener = new ActionListener();
+            mCarsAdapter = new CarsAdapter(this, mCars, actionListener);
+            RecyclerView recycler = (RecyclerView)findViewById(R.id.carsListView);
+            recycler.setHasFixedSize(true);
+            recycler.setLayoutManager(new LinearLayoutManager(this));
+            recycler.setItemAnimator(new DefaultItemAnimator());
+            recycler.setAdapter(mCarsAdapter);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -556,7 +494,7 @@ public class SettingsActivity extends BaseActivity
         editor.apply();
     }
 
-    public void onPhoneClick(View v) {
+    public void onPhoneNumberClick(View v) {
         MaterialDialog dialog = new MaterialDialog.Builder(this)
                 .title(R.string.edit_phone_dialog_caption)
                 .input(mUser.getPhone(), mUser.getPhone(), new MaterialDialog.InputCallback() {

@@ -656,10 +656,10 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                  , 0, 5000);
         }
 
-        TextView vEmptyText = (TextView)findViewById(R.id.empty_view);
+        TextView txtNoPassengers = (TextView)findViewById(R.id.empty_view);
         String txt = String.format(getString(R.string.no_passengers_placeholder),
                                    Globals.REQUIRED_PASSENGERS_NUMBER);
-        vEmptyText.setText(txt);
+        txtNoPassengers.setText(txt);
 
         int min = 100000;
         int max = 1000000;
@@ -708,7 +708,7 @@ public class DriverRoleActivity extends BaseActivityWithGeofences
                     .autoDismiss(true)
                     .cancelable(false)
                     .items(cars)
-                    .positiveText(getString(R.string.edit_car_button_title))
+                    .positiveText(getString(R.string.edit))
                     .itemsCallback(new MaterialDialog.ListCallback() {
                         @Override
                         public void onSelection(MaterialDialog dialog,

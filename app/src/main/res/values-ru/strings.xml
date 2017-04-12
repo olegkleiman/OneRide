@@ -36,7 +36,7 @@
     <string name="edit_car_dialog_caption1">Укажите номер машины, которой вы управляете сейчас</string>
     <string name="dialog_confirm_registration">Заменить предыдущую регистрацию?</string>
     <string name="driver_tutorial_fragment">Подсказки водителю</string>
-    <string name="edit_car_button_title">Изменить</string>
+    <string name="edit">Изменить</string>
     <string name="edit_car_dialog_caption2">Укажите номер машины</string>
     <string name="enable_wifi_question">Включить Wi-Fi?</string>
     <string name="no">Нет</string>
@@ -151,7 +151,7 @@
     <string name="prompt_take_picture">В целях контроля система просят пассажиров сделать групповую фотографию</string>
     <string name="picture_required_dialog_title">Групповое фото</string>
     <string name="approval_nosend_title">Не удалось загрузить фотографию</string>
-    <string name="no_passengers_placeholder">Список пассажиров пуст\n.Необходимо %d пассажиров</string>
+    <string name="no_passengers_placeholder">Список пассажиров пуст.\nНеобходимо %d пассажиров.</string>
     <string name="uploading">Загрузка фотографии</string>
     <string name="approval_sending_title">Ваша фотография загружается</string>
     <string name="picture_request">Запрос на фотографию</string>

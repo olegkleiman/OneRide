@@ -126,7 +126,7 @@
 
     <string name="operating_modes">Operating modes</string>
 
-    <string name="edit_car_button_title">Edit</string>
+    <string name="edit">Edit</string>
     <string name="edit_car_button_title2">Specify</string>
     <string name="driver_no_name">No name</string>
     <string name="offline">You are offline</string>
@@ -342,7 +342,7 @@ limitations under the License.</string>
     <string name="ride_not_uploaded">The ride has not been uploaded</string>
     <string name="location_inaccurate">Location is inaccurate. Considered as out of Gfs</string>
     <string name="no_passengers">No passengers yet</string>
-    <string name="no_passengers_placeholder">No passengers yet\n%d passengers required</string>
+    <string name="no_passengers_placeholder">No passengers yet.\n%d passengers required.</string>
 
     <string name="camera_tag" translatable="false">camera_tag</string>
     <string name="submit_tag" translatable="false">submit_tag</string>
@@ -351,6 +351,9 @@ limitations under the License.</string>
 
     <string name="error_no_google_map">Unable to connect to Google Maps API</string>
 
+    <string name="auth_provider">Authentication Provider</string>
+    <string name="email_description">E-mail address</string>
+    <string name="phone_number_description">Phone number</string>
     <string name="title_activity_adv_settings" translatable="false">Advanced Settings</string>
     <string name="txt_rssi_level">RSSI Level: </string>
     <string name="local_link_transport" translatable="false">Transport</string>

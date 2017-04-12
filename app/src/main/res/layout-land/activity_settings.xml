@@ -41,7 +41,7 @@
                     <com.pkmmte.view.CircularImageView
                         android:layout_width="@dimen/avatar_settings_size"
                         android:layout_height="@dimen/avatar_settings_size"
-                        android:src="@drawable/driver64"
+                        android:src="@{user.pictureURL}"
                         android:id="@+id/imageProfileView"
                         app:border="true"
                         app:border_color="#FFFFFFFF"
@@ -61,6 +61,7 @@
                         android:layout_marginStart="4dp">
                         <ImageView
                             android:id="@+id/provider_logo"
+                            android:contentDescription="@string/auth_provider"
                             android:layout_width="32dp"
                             android:layout_height="32dp"
                             android:scaleType="fitXY" />
@@ -69,7 +70,7 @@
                             android:layout_height="wrap_content"
                             android:textAppearance="?android:attr/textAppearanceLarge"
                             android:textColor="@color/white"
-                            android:text="@{user.firstName + ' ' + user.lastName}"
+                            android:text="@{user.firstName + ' ' + user.lastName, default=USER_NAME}"
                             android:id="@+id/textUserName"
                             android:layout_gravity="top|center_vertical"
                             android:layout_marginStart="12dp"
@@ -94,33 +95,21 @@
                         android:layout_marginRight="@dimen/card_horizontal_margin"
                         android:layout_marginTop="@dimen/card_horizontal_margin">
 
-                        <LinearLayout
-                            android:layout_width="fill_parent"
-                            android:layout_height="@dimen/settings_card_row_height"
-                            android:orientation="horizontal">
-
-                            <ImageView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="12dp"
-                                android:layout_marginLeft="12dp"
-                                android:id="@+id/imageView"
-                                android:src="@drawable/ic_email_blue_24dp"
-                                android:layout_gravity="center_vertical" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="12dp"
-                                android:layout_marginLeft="12dp"
-                                android:textAppearance="?android:attr/textAppearanceMedium"
-                                android:ellipsize="end"
-                                android:maxLines="1"
-                                android:scrollHorizontally="true"
-                                android:text="@{user.email}"
-                                android:id="@+id/textUserEmail"
-                                android:layout_gravity="center_vertical" />
-                        </LinearLayout>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_marginLeft="12dp"
+                            android:layout_marginTop="12dp"
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:scrollHorizontally="true"
+                            android:text="@{user.email, default=EMAIL}"
+                            android:id="@+id/textUserEmail"
+                            android:drawableStart="@drawable/ic_email_blue_24dp"
+                            android:drawableLeft="@drawable/ic_email_blue_24dp"
+                            android:drawablePadding="12dp" />
 
                         <LinearLayout
                             android:layout_width="fill_parent"
@@ -128,13 +117,19 @@
                             android:orientation="horizontal"
                             android:layout_marginTop="@dimen/settings_card_row_height">
 
-                            <ImageView
+                            <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="12dp"
                                 android:layout_marginLeft="12dp"
-                                android:id="@+id/imageView2"
-                                android:src="@drawable/ic_phone_blue_24dp"
+                                android:clickable="true"
+                                android:onClick="onPhoneNumberClick"
+                                android:textAppearance="?android:attr/textAppearanceMedium"
+                                android:text="@{user.phone, default=PHONE_NUMBER}"
+                                android:id="@+id/textUserPhone"
+                                android:drawableStart="@drawable/ic_phone_blue_24dp"
+                                android:drawableLeft="@drawable/ic_phone_blue_24dp"
+                                android:drawablePadding="12dp"
                                 android:layout_gravity="center_vertical" />
 
                             <TextView
@@ -142,12 +137,11 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="12dp"
                                 android:layout_marginLeft="12dp"
-                                android:clickable="true"
-                                android:onClick="onPhoneClick"
-                                android:textAppearance="?android:attr/textAppearanceMedium"
-                                android:text="@{user.phone}"
-                                android:id="@+id/textUserPhone"
+                                android:onClick="onPhoneNumberClick"
+                                android:text="@string/edit"
+                                android:textColor="@color/ColorPrimary"
                                 android:layout_gravity="center_vertical" />
+
                         </LinearLayout>
 
                     </android.support.v7.widget.CardView>
@@ -175,7 +169,7 @@
                         android:layout_marginBottom="@dimen/card_horizontal_margin"
                         android:layout_marginTop="@dimen/card_vertical_margin">
 
-                        <ListView
+                        <android.support.v7.widget.RecyclerView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:id="@+id/carsListView" />
